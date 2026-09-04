@@ -1,0 +1,41 @@
+# Rider / JetBrains IDE junk
+.idea/
+*.sln.iml
+*.iml
+
+# Build output
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Ll]og/
+[Ll]ogs/
+
+# VS/Rider user-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# NuGet
+*.nupkg
+**/packages/*
+!**/packages/build/
+*.nuget.props
+*.nuget.targets
+
+# Test results
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+
+# OS trash
+.DS_Store
+Thumbs.db
+
+# Misc build artifacts
+*.pdb
+*.cache
