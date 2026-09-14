@@ -18,7 +18,14 @@ public class HomeController : Controller
 
     public IActionResult Homepage()
     {
-        return View();
+        if (User.Identity != null)
+        {
+            if (User.Identity.IsAuthenticated)
+            {
+                return View();
+            }
+        }
+        return View(Index());
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
