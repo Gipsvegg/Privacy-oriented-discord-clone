@@ -1,8 +1,428 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Umbra — conversations the server can't read";
+    ViewData["Description"] = "Umbra is an end-to-end encrypted alternative to Discord. Text, voice, and communities — without a company reading your messages.";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<main>
+
+    <!-- ============ HERO ============ -->
+    <section class="hero" id="product">
+        <div class="wrap">
+            <div class="doc-meta">
+                <span class="mono-tag">UMBRA / PROTOCOL BRIEF NO. 3</span>
+                <span class="mono-tag">STATUS: PUBLIC BETA</span>
+            </div>
+
+            <div class="hero-grid">
+                <div>
+                    <h1>Conversations the server can't read.</h1>
+
+                    <p class="hero-sub">
+                        Umbra is a text and voice platform for communities — built so that
+                        messages, calls, and member lists stay unreadable to us, not just to
+                        outsiders. No message scanning. No ad profile. No phone number required.
+                    </p>
+
+                    <div class="hero-actions">
+                        <a href="#product" class="btn btn-solid">Get started</a>
+                        <a href="#privacy" class="btn btn-line">Read the protocol</a>
+                    </div>
+                </div>
+
+                <div class="chat-panel" aria-label="Example of an encrypted conversation">
+                    <div class="chat-panel-head">
+                        <span class="mono-tag">#late-night-builds</span>
+                        <span class="mono-tag">E2EE</span>
+                    </div>
+
+                    <div class="chat-panel-body">
+                        <div class="msg">
+                            <div class="msg-avatar"></div>
+
+                            <div>
+                                <div class="msg-name">
+                                    marta<span class="msg-time">22:41</span>
+                                </div>
+
+                                <div class="msg-body">
+                                    pushed the fix, can someone check the
+                                    <span class="redact" style="--d:0.1s">staging server logs</span>
+                                    before I merge
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="msg">
+                            <div class="msg-avatar"></div>
+
+                            <div>
+                                <div class="msg-name">
+                                    devi<span class="msg-time">22:43</span>
+                                </div>
+
+                                <div class="msg-body">
+                                    on it — also my
+                                    <span class="redact" style="--d:0.25s">home address</span>
+                                    is still wrong on the meetup form, ignore that one
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="msg">
+                            <div class="msg-avatar"></div>
+
+                            <div>
+                                <div class="msg-name">
+                                    marta<span class="msg-time">22:44</span>
+                                </div>
+
+                                <div class="msg-body">
+                                    will fix it — and yeah nobody at Umbra can see this
+                                    thread either way
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chat-panel-foot">
+                        <span class="mono-tag">3 members, 1 typing</span>
+                        <span class="mono-tag">content unreadable server-side</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ============ WHAT WE DON'T COLLECT ============ -->
+    <section id="privacy">
+        <div class="wrap">
+            <div class="section-head">
+                <h2>
+                    The industry default,<br />
+                    overwritten.
+                </h2>
+
+                <p class="desc">
+                    Most chat platforms are built to observe you as a side effect of
+                    running the service. Umbra was built the other way: the defaults below
+                    are things we simply removed, not settings you have to go find.
+                </p>
+            </div>
+
+            <div class="defaults">
+                <div class="default-row">
+                    <span class="old">
+                        Message content stored in plaintext on our servers
+                    </span>
+
+                    <span class="arrow">→</span>
+
+                    <span class="new">
+                        Messages encrypted end-to-end; we hold ciphertext only
+                    </span>
+                </div>
+
+                <div class="default-row">
+                    <span class="old">
+                        Real name or phone number required to sign up
+                    </span>
+
+                    <span class="arrow">→</span>
+
+                    <span class="new">
+                        Sign up with a username and a device key
+                    </span>
+                </div>
+
+                <div class="default-row">
+                    <span class="old">
+                        Voice channels recorded for "quality and safety"
+                    </span>
+
+                    <span class="arrow">→</span>
+
+                    <span class="new">
+                        Voice streams encrypted peer-to-peer, never recorded
+                    </span>
+                </div>
+
+                <div class="default-row">
+                    <span class="old">
+                        Behavioural data shared with ad and analytics partners
+                    </span>
+
+                    <span class="arrow">→</span>
+
+                    <span class="new">
+                        No third-party trackers anywhere in the client
+                    </span>
+                </div>
+
+                <div class="default-row">
+                    <span class="old">
+                        Automated scanning of message content
+                    </span>
+
+                    <span class="arrow">→</span>
+
+                    <span class="new">
+                        Moderation runs locally, inside the community you're in
+                    </span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ============ FEATURES / DOSSIER ============ -->
+    <section>
+        <div class="wrap">
+            <div class="section-head">
+                <h2>What's in the build.</h2>
+
+                <p class="desc">
+                    Everything below ships in the current beta — nothing here is a roadmap promise.
+                </p>
+            </div>
+
+            <div class="dossier">
+                <div class="dossier-item">
+                    <span class="name">Encrypted DMs &amp; groups</span>
+                    <span class="leader"></span>
+                    <span class="desc">
+                        Double-ratchet encryption on every conversation, on by default
+                    </span>
+                    <span class="tag">E2EE</span>
+                </div>
+
+                <div class="dossier-item">
+                    <span class="name">Encrypted voice channels</span>
+                    <span class="leader"></span>
+                    <span class="desc">
+                        Peer-to-peer audio; nothing is buffered or recorded server-side
+                    </span>
+                    <span class="tag">P2P</span>
+                </div>
+
+                <div class="dossier-item">
+                    <span class="name">Self-hostable servers</span>
+                    <span class="leader"></span>
+                    <span class="desc">
+                        Run your own community on your own infrastructure
+                    </span>
+                    <span class="tag">SELF-HOST</span>
+                </div>
+
+                <div class="dossier-item">
+                    <span class="name">Open-source clients</span>
+                    <span class="leader"></span>
+                    <span class="desc">
+                        Desktop, mobile, and web clients — auditable, not just auditable-in-theory
+                    </span>
+                    <span class="tag">OSS</span>
+                </div>
+
+                <div class="dossier-item">
+                    <span class="name">Disappearing messages</span>
+                    <span class="leader"></span>
+                    <span class="desc">
+                        Configurable per channel, with a sane default in every new server
+                    </span>
+                    <span class="tag">TTL</span>
+                </div>
+
+                <div class="dossier-item">
+                    <span class="name">Portable communities</span>
+                    <span class="leader"></span>
+                    <span class="desc">
+                        Export a server's history and membership; nothing is locked in
+                    </span>
+                    <span class="tag">EXPORT</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ============ VOICE ============ -->
+    <section class="voice">
+        <div class="wrap">
+            <div class="section-head">
+                <h2>Voice, without the recording.</h2>
+
+                <p class="desc">
+                    Call quality shouldn't require trusting a company with your audio.
+                </p>
+            </div>
+
+            <div class="voice-grid">
+                <div class="voice-copy">
+                    <p>
+                        Voice channels connect members directly to each other wherever
+                        the network allows it, encrypting the stream end-to-end. When a
+                        direct path isn't possible, traffic is relayed — but the relay
+                        can't decrypt it, and nothing is ever written to disk.
+                    </p>
+
+                    <p>
+                        There's no "recording started" banner to worry about, because
+                        there's no recording feature pointed at our servers to build one for.
+                    </p>
+                </div>
+
+                <div>
+                    <div
+                        class="waveform"
+                        id="waveform"
+                        aria-hidden="true">
+                    </div>
+
+                    <div class="voice-meta">
+                        <span>voice-channel-04 · 3 connected</span>
+                        <span>relay: encrypted, 0 bytes retained</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ============ SELF-HOST ============ -->
+    <section id="selfhost">
+        <div class="wrap">
+            <div class="section-head">
+                <h2>Or run the whole thing yourself.</h2>
+
+                <p class="desc">
+                    Umbra's server is a single open-source binary. Point it at a domain
+                    and a Postgres instance, and your community's data never touches
+                    our infrastructure.
+                </p>
+            </div>
+
+            <div class="selfhost-grid">
+                <div class="code-block">
+                    <span class="comment"># pull and run the server image</span><br />
+                    docker run -d \<br />
+                    &nbsp;&nbsp;--name umbra-server \<br />
+                    &nbsp;&nbsp;-p 8443:8443 \<br />
+                    &nbsp;&nbsp;-e UMBRA_DOMAIN=<span class="accent-text">chat.yourcommunity.org</span> \<br />
+                    &nbsp;&nbsp;-v umbra-data:/var/lib/umbra \<br />
+                    &nbsp;&nbsp;umbra/server:latest<br /><br />
+
+                    <span class="comment"># server is now reachable at</span><br />
+                    <span class="accent-text">wss://chat.yourcommunity.org</span>
+                </div>
+
+                <div>
+                    <p class="selfhost-description">
+                        Self-hosted servers speak the same protocol as our hosted ones,
+                        so members can join with the standard Umbra client — no separate
+                        app for the communities that go it alone.
+                    </p>
+
+                    <a href="#selfhost" class="btn btn-line">
+                        Get the self-host docs
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ============ COMPARISON ============ -->
+    <section id="compare">
+        <div class="wrap">
+            <div class="section-head">
+                <h2>Side by side.</h2>
+
+                <p class="desc">
+                    A plain comparison against the platform most communities are
+                    migrating away from.
+                </p>
+            </div>
+
+            <div class="compare">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col"></th>
+                            <th scope="col">Umbra</th>
+                            <th scope="col">Typical platform</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr>
+                            <td>Company can read message content</td>
+                            <td class="mark-no">no</td>
+                            <td class="mark-yes">yes</td>
+                        </tr>
+
+                        <tr>
+                            <td>Voice calls retained after the call ends</td>
+                            <td class="mark-no">no</td>
+                            <td class="mark-yes">yes</td>
+                        </tr>
+
+                        <tr>
+                            <td>Phone number required to sign up</td>
+                            <td class="mark-no">no</td>
+                            <td class="mark-yes">optional</td>
+                        </tr>
+
+                        <tr>
+                            <td>Third-party ad trackers in the client</td>
+                            <td class="mark-no">no</td>
+                            <td class="mark-yes">yes</td>
+                        </tr>
+
+                        <tr>
+                            <td>Self-hosting available</td>
+                            <td class="mark-yes">yes</td>
+                            <td class="mark-no">no</td>
+                        </tr>
+
+                        <tr>
+                            <td>Client source code public</td>
+                            <td class="mark-yes">yes</td>
+                            <td class="mark-no">no</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+
+@section Scripts {
+    <script>
+        // Build the waveform from fixed data.
+        (function () {
+            var el = document.getElementById('waveform');
+
+            if (!el) return;
+
+            var heights = [
+                18, 34, 22, 48, 30, 60, 40, 72, 52, 80, 58, 90,
+                64, 84, 54, 70, 44, 56, 32, 46, 26, 38, 20, 30, 16, 24
+            ];
+
+            var frag = document.createDocumentFragment();
+
+            heights.forEach(function (h, i) {
+                var bar = document.createElement('span');
+
+                bar.style.height = h + '%';
+                bar.style.opacity = (0.55 + (i % 5) * 0.09).toFixed(2);
+
+                frag.appendChild(bar);
+            });
+
+            el.appendChild(frag);
+        })();
+    </script>
+}
