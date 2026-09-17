@@ -7,6 +7,7 @@
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
+    @await RenderSectionAsync("Styles", required: false)
     <link rel="stylesheet" href="~/ikt201_project.styles.css" asp-append-version="true"/>
     
     <!-- Fonts used in Index.cshtml.css (landing page) -->
@@ -32,7 +33,7 @@
                         <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                     </li>
                     <li class="nav-item">
-                        <a class = "nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Homepage">Homepage</a>
+                        <a class = "nav-link text-dark" asp-area="" asp-controller="Dashboard" asp-action="Homepage">Homepage</a>
                     </li>
                 </ul>
                 <partial name="_LoginPartial"/>

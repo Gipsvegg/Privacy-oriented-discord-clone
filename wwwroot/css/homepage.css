@@ -1,0 +1,86 @@
+﻿.sidebar {
+    position: sticky;
+    width: 250px;
+    overflow-y: auto;
+    background-color: #2c2f33;
+    color: antiquewhite;
+    padding: 1rem;
+    border-right: 3px solid gray;
+}
+
+.sidebar-section {
+    margin-bottom: 1.5rem;
+}
+
+.sidebar-section h6 {
+    border-bottom: 2px solid antiquewhite;
+    padding-bottom: 0.5rem;
+}
+
+/*hvor alt app ting går så hele siden ikke kan bli skrollet(kun individuelle elementer skal skrolle)*/
+.app-shell {
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-main {
+    flex: 1;
+    overflow: hidden;
+    display: flex;   
+}
+
+.page-layout {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+.main-content {
+    flex: 1;
+    overflow-y: auto;
+    background-color: #2c2f33;
+    color: antiquewhite;
+    padding-left: 20px;
+}
+
+/*Baren på bunnen av homepage som lar deg gå til settings og kanskje andre ting(har ikke planlagt ennå)*/
+.info-bar{
+    display: flex;
+    position: static;
+    /*flex-shrink: 0;*/
+    align-items: center;
+    text-align: center;
+    padding: 0 5px;
+    height: 60px;
+    background-color: #2c2f33;
+    color: antiquewhite;
+    border-top: 1px solid gray;
+}
+
+.info-bar a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding-left: 0.4rem;
+    padding-right: 0.4rem;
+    color: antiquewhite;
+    text-decoration: none;
+}
+
+.settings {
+    display: flex;
+    align-items: center;
+}
+
+.icon-link {
+    color: white;
+    text-decoration: none;
+    font-size: 1.5rem;
+}
+
+.icon-link:hover {
+    opacity: 0.7;
+}

@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using ikt201_project.Models;
-using Microsoft.AspNetCore.Authorization;
 
 namespace ikt201_project.Controllers;
 
@@ -13,12 +12,6 @@ public class HomeController : Controller
     }
 
     public IActionResult Privacy()
-    {
-        return View();
-    }
-
-    [Authorize]
-    public IActionResult Homepage()
     {
         return View();
     }
