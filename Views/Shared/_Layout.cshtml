@@ -10,11 +10,8 @@
     <link rel="stylesheet" href="~/ikt201_project.styles.css" asp-append-version="true"/>
     
     <!-- Fonts used in Index.cshtml.css (landing page) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
-          rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
     
 </head>
 <body>
@@ -43,11 +40,24 @@
         </div>
     </nav>
 </header>
-<div class="container">
-    <main role="main" class="pb-3">
+@{
+    var fullWidth = ViewData["FullWidth"] as bool? ?? false;
+}
+
+@if (fullWidth)
+{
+    <main role="main">
         @RenderBody()
     </main>
-</div>
+}
+else
+{
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+}
 
 <footer class="border-top footer text-muted">
     <div class="container">

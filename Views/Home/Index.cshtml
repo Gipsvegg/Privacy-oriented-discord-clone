@@ -1,428 +1,120 @@
 ﻿@{
-    ViewData["Title"] = "Umbra — conversations the server can't read";
-    ViewData["Description"] = "Umbra is an end-to-end encrypted alternative to Discord. Text, voice, and communities — without a company reading your messages.";
+    ViewData["Title"] = "Haven — Private chat and voice for real communities";
+    ViewData["FullWidth"] = true;
 }
 
-<main>
+@* Add haven--bleed to this div only if you are NOT using the FullWidth flag in _Layout. *@
+<div class="haven">
 
-    <!-- ============ HERO ============ -->
-    <section class="hero" id="product">
-        <div class="wrap">
-            <div class="doc-meta">
-                <span class="mono-tag">UMBRA / PROTOCOL BRIEF NO. 3</span>
-                <span class="mono-tag">STATUS: PUBLIC BETA</span>
+    <section class="haven-hero">
+        <div class="haven-hero__text">
+            <h1>Your community's conversations, with no onlookers.</h1>
+            <p class="haven-hero__sub">
+                Haven is made for people to connect, without having to worry about being used as a data source.
+                End-to-end encryption by default, locally stored messages and locally hosted servers, all in one easy to use <b>FREE</b> website.
+            </p>
+            <div class="haven-hero__actions">
+                <a class="haven-btn haven-btn--primary haven-btn--lg"
+                   href="@Url.Page("/Account/Register", new { area = "Identity" })">Register here</a>
+                <a class="haven-hero__secondary" href="#security">See the security model</a>
             </div>
+            <p class="haven-hero__trust">No unnecessary info collected&nbsp;&middot; Nothing sold&nbsp;&middot; Completely free</p>
+        </div>
 
-            <div class="hero-grid">
-                <div>
-                    <h1>Conversations the server can't read.</h1>
-
-                    <p class="hero-sub">
-                        Umbra is a text and voice platform for communities — built so that
-                        messages, calls, and member lists stay unreadable to us, not just to
-                        outsiders. No message scanning. No ad profile. No phone number required.
-                    </p>
-
-                    <div class="hero-actions">
-                        <a href="#product" class="btn btn-solid">Get started</a>
-                        <a href="#privacy" class="btn btn-line">Read the protocol</a>
-                    </div>
-                </div>
-
-                <div class="chat-panel" aria-label="Example of an encrypted conversation">
-                    <div class="chat-panel-head">
-                        <span class="mono-tag">#late-night-builds</span>
-                        <span class="mono-tag">E2EE</span>
-                    </div>
-
-                    <div class="chat-panel-body">
-                        <div class="msg">
-                            <div class="msg-avatar"></div>
-
-                            <div>
-                                <div class="msg-name">
-                                    marta<span class="msg-time">22:41</span>
-                                </div>
-
-                                <div class="msg-body">
-                                    pushed the fix, can someone check the
-                                    <span class="redact" style="--d:0.1s">staging server logs</span>
-                                    before I merge
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="msg">
-                            <div class="msg-avatar"></div>
-
-                            <div>
-                                <div class="msg-name">
-                                    devi<span class="msg-time">22:43</span>
-                                </div>
-
-                                <div class="msg-body">
-                                    on it — also my
-                                    <span class="redact" style="--d:0.25s">home address</span>
-                                    is still wrong on the meetup form, ignore that one
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="msg">
-                            <div class="msg-avatar"></div>
-
-                            <div>
-                                <div class="msg-name">
-                                    marta<span class="msg-time">22:44</span>
-                                </div>
-
-                                <div class="msg-body">
-                                    will fix it — and yeah nobody at Umbra can see this
-                                    thread either way
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="chat-panel-foot">
-                        <span class="mono-tag">3 members, 1 typing</span>
-                        <span class="mono-tag">content unreadable server-side</span>
-                    </div>
-                </div>
+        <div class="haven-hero__art" aria-hidden="true">
+            <div class="haven-art__bubble">
+                <span class="haven-art__dot"></span>
+                <span class="haven-art__dot"></span>
+                <span class="haven-art__dot"></span>
             </div>
+            <div class="haven-art__seal">
+                <svg viewBox="0 0 24 24" class="haven-art__lock">
+                    <path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                    <rect x="4.5" y="10" width="15" height="10" rx="2.5" fill="currentColor" />
+                    <circle cx="12" cy="14.6" r="1.3" fill="#12161A" />
+                    <rect x="11.35" y="15.3" width="1.3" height="2.4" rx="0.5" fill="#12161A" />
+                </svg>
+            </div>
+            <span class="haven-art__particle haven-art__particle--1"></span>
+            <span class="haven-art__particle haven-art__particle--2"></span>
+            <span class="haven-art__particle haven-art__particle--3"></span>
         </div>
     </section>
 
+    <section class="haven-nots" aria-labelledby="nots-heading">
+        <h2 id="nots-heading">What Haven doesn't do</h2>
 
-    <!-- ============ WHAT WE DON'T COLLECT ============ -->
-    <section id="privacy">
-        <div class="wrap">
-            <div class="section-head">
-                <h2>
-                    The industry default,<br />
-                    overwritten.
-                </h2>
+        <ul class="haven-nots__list">
+            <li>
+                <p class="haven-nots__claim">We don't scan messages for ad targeting.</p>
+                <p class="haven-nots__detail">Not the message body, not "just metadata." There's no process reading your conversations in the background.</p>
+            </li>
+            <li>
+                <p class="haven-nots__claim">We don't keep a permanent log.</p>
+                <p class="haven-nots__detail">Delete a message and it's removed from our servers within seconds — not just hidden from your view.</p>
+            </li>
+            <li>
+                <p class="haven-nots__claim">We don't ask for a phone number.</p>
+                <p class="haven-nots__detail">A username and a password are enough to stand up a server and start inviting people.</p>
+            </li>
+            <li>
+                <p class="haven-nots__claim">We don't sell data to anyone.</p>
+                <p class="haven-nots__detail">There's nothing to sell — voice and text are end-to-end encrypted by default, so we can't read them either.</p>
+            </li>
+        </ul>
+    </section>
 
-                <p class="desc">
-                    Most chat platforms are built to observe you as a side effect of
-                    running the service. Umbra was built the other way: the defaults below
-                    are things we simply removed, not settings you have to go find.
-                </p>
-            </div>
+    <section class="haven-features" aria-labelledby="features-heading">
+        <h2 id="features-heading">Built for servers, not for engagement metrics</h2>
 
-            <div class="defaults">
-                <div class="default-row">
-                    <span class="old">
-                        Message content stored in plaintext on our servers
-                    </span>
-
-                    <span class="arrow">→</span>
-
-                    <span class="new">
-                        Messages encrypted end-to-end; we hold ciphertext only
-                    </span>
-                </div>
-
-                <div class="default-row">
-                    <span class="old">
-                        Real name or phone number required to sign up
-                    </span>
-
-                    <span class="arrow">→</span>
-
-                    <span class="new">
-                        Sign up with a username and a device key
-                    </span>
-                </div>
-
-                <div class="default-row">
-                    <span class="old">
-                        Voice channels recorded for "quality and safety"
-                    </span>
-
-                    <span class="arrow">→</span>
-
-                    <span class="new">
-                        Voice streams encrypted peer-to-peer, never recorded
-                    </span>
-                </div>
-
-                <div class="default-row">
-                    <span class="old">
-                        Behavioural data shared with ad and analytics partners
-                    </span>
-
-                    <span class="arrow">→</span>
-
-                    <span class="new">
-                        No third-party trackers anywhere in the client
-                    </span>
-                </div>
-
-                <div class="default-row">
-                    <span class="old">
-                        Automated scanning of message content
-                    </span>
-
-                    <span class="arrow">→</span>
-
-                    <span class="new">
-                        Moderation runs locally, inside the community you're in
-                    </span>
-                </div>
-            </div>
+        <div class="haven-features__list">
+            <article class="haven-feature haven-feature--lead">
+                <h3>Voice that stays private</h3>
+                <p>Calls are end-to-end encrypted, with a key exchange your admins can see and verify. No one listening in — including us.</p>
+            </article>
+            <article class="haven-feature">
+                <h3>Screen share without exposure</h3>
+                <p>Participant-only broadcast by default. Recording is opt-in and encrypted the same way as voice.</p>
+            </article>
+            <article class="haven-feature">
+                <h3>Moderation without surveillance</h3>
+                <p>Mods can remove people and content without Haven needing to read every message to make that possible.</p>
+            </article>
+            <article class="haven-feature">
+                <h3>Bring your community with you</h3>
+                <p>Import roles, channels, and emoji from your existing server in one pass. Nobody has to start over.</p>
+            </article>
         </div>
     </section>
 
-
-    <!-- ============ FEATURES / DOSSIER ============ -->
-    <section>
-        <div class="wrap">
-            <div class="section-head">
-                <h2>What's in the build.</h2>
-
-                <p class="desc">
-                    Everything below ships in the current beta — nothing here is a roadmap promise.
-                </p>
-            </div>
-
-            <div class="dossier">
-                <div class="dossier-item">
-                    <span class="name">Encrypted DMs &amp; groups</span>
-                    <span class="leader"></span>
-                    <span class="desc">
-                        Double-ratchet encryption on every conversation, on by default
-                    </span>
-                    <span class="tag">E2EE</span>
-                </div>
-
-                <div class="dossier-item">
-                    <span class="name">Encrypted voice channels</span>
-                    <span class="leader"></span>
-                    <span class="desc">
-                        Peer-to-peer audio; nothing is buffered or recorded server-side
-                    </span>
-                    <span class="tag">P2P</span>
-                </div>
-
-                <div class="dossier-item">
-                    <span class="name">Self-hostable servers</span>
-                    <span class="leader"></span>
-                    <span class="desc">
-                        Run your own community on your own infrastructure
-                    </span>
-                    <span class="tag">SELF-HOST</span>
-                </div>
-
-                <div class="dossier-item">
-                    <span class="name">Open-source clients</span>
-                    <span class="leader"></span>
-                    <span class="desc">
-                        Desktop, mobile, and web clients — auditable, not just auditable-in-theory
-                    </span>
-                    <span class="tag">OSS</span>
-                </div>
-
-                <div class="dossier-item">
-                    <span class="name">Disappearing messages</span>
-                    <span class="leader"></span>
-                    <span class="desc">
-                        Configurable per channel, with a sane default in every new server
-                    </span>
-                    <span class="tag">TTL</span>
-                </div>
-
-                <div class="dossier-item">
-                    <span class="name">Portable communities</span>
-                    <span class="leader"></span>
-                    <span class="desc">
-                        Export a server's history and membership; nothing is locked in
-                    </span>
-                    <span class="tag">EXPORT</span>
-                </div>
-            </div>
+    <section class="haven-security" id="security" aria-labelledby="security-heading">
+        <div class="haven-security__text">
+            <h2 id="security-heading">Every conversation has a fingerprint</h2>
+            <p>
+                Compare it with the person you're talking to — in person, or over a second channel —
+                and you'll know no one is sitting in the middle. It's the same idea behind a safety
+                number, applied to every direct message and call.
+            </p>
+        </div>
+        <div class="haven-security__code">
+            <p class="haven-security__label">Safety number for this conversation</p>
+            <p class="haven-security__hash">4F2A&nbsp;9C11&nbsp;88DE&nbsp;5B07<br />3341&nbsp;AA9F&nbsp;0021&nbsp;7E6C</p>
+            <span class="haven-security__verified">Verified match</span>
         </div>
     </section>
 
-
-    <!-- ============ VOICE ============ -->
-    <section class="voice">
-        <div class="wrap">
-            <div class="section-head">
-                <h2>Voice, without the recording.</h2>
-
-                <p class="desc">
-                    Call quality shouldn't require trusting a company with your audio.
-                </p>
-            </div>
-
-            <div class="voice-grid">
-                <div class="voice-copy">
-                    <p>
-                        Voice channels connect members directly to each other wherever
-                        the network allows it, encrypting the stream end-to-end. When a
-                        direct path isn't possible, traffic is relayed — but the relay
-                        can't decrypt it, and nothing is ever written to disk.
-                    </p>
-
-                    <p>
-                        There's no "recording started" banner to worry about, because
-                        there's no recording feature pointed at our servers to build one for.
-                    </p>
-                </div>
-
-                <div>
-                    <div
-                        class="waveform"
-                        id="waveform"
-                        aria-hidden="true">
-                    </div>
-
-                    <div class="voice-meta">
-                        <span>voice-channel-04 · 3 connected</span>
-                        <span>relay: encrypted, 0 bytes retained</span>
-                    </div>
-                </div>
-            </div>
+    <section class="haven-cta" aria-labelledby="cta-heading">
+        <h2 id="cta-heading">Start a server in about a minute</h2>
+        <p>
+            Pick a name, invite your people, and you're talking. No phone number, no credit card,
+            nothing to configure before the first message goes out.
+        </p>
+        <div class="haven-cta__actions">
+            <a class="haven-btn haven-btn--primary haven-btn--lg"
+               href="@Url.Page("/Account/Register", new { area = "Identity" })">Register here</a>
+            <a class="haven-btn haven-btn--ghost haven-btn--lg"
+               href="@Url.Page("/Account/Login", new { area = "Identity" })">Sign in</a>
         </div>
     </section>
 
-
-    <!-- ============ SELF-HOST ============ -->
-    <section id="selfhost">
-        <div class="wrap">
-            <div class="section-head">
-                <h2>Or run the whole thing yourself.</h2>
-
-                <p class="desc">
-                    Umbra's server is a single open-source binary. Point it at a domain
-                    and a Postgres instance, and your community's data never touches
-                    our infrastructure.
-                </p>
-            </div>
-
-            <div class="selfhost-grid">
-                <div class="code-block">
-                    <span class="comment"># pull and run the server image</span><br />
-                    docker run -d \<br />
-                    &nbsp;&nbsp;--name umbra-server \<br />
-                    &nbsp;&nbsp;-p 8443:8443 \<br />
-                    &nbsp;&nbsp;-e UMBRA_DOMAIN=<span class="accent-text">chat.yourcommunity.org</span> \<br />
-                    &nbsp;&nbsp;-v umbra-data:/var/lib/umbra \<br />
-                    &nbsp;&nbsp;umbra/server:latest<br /><br />
-
-                    <span class="comment"># server is now reachable at</span><br />
-                    <span class="accent-text">wss://chat.yourcommunity.org</span>
-                </div>
-
-                <div>
-                    <p class="selfhost-description">
-                        Self-hosted servers speak the same protocol as our hosted ones,
-                        so members can join with the standard Umbra client — no separate
-                        app for the communities that go it alone.
-                    </p>
-
-                    <a href="#selfhost" class="btn btn-line">
-                        Get the self-host docs
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-
-    <!-- ============ COMPARISON ============ -->
-    <section id="compare">
-        <div class="wrap">
-            <div class="section-head">
-                <h2>Side by side.</h2>
-
-                <p class="desc">
-                    A plain comparison against the platform most communities are
-                    migrating away from.
-                </p>
-            </div>
-
-            <div class="compare">
-                <table>
-                    <thead>
-                        <tr>
-                            <th scope="col"></th>
-                            <th scope="col">Umbra</th>
-                            <th scope="col">Typical platform</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        <tr>
-                            <td>Company can read message content</td>
-                            <td class="mark-no">no</td>
-                            <td class="mark-yes">yes</td>
-                        </tr>
-
-                        <tr>
-                            <td>Voice calls retained after the call ends</td>
-                            <td class="mark-no">no</td>
-                            <td class="mark-yes">yes</td>
-                        </tr>
-
-                        <tr>
-                            <td>Phone number required to sign up</td>
-                            <td class="mark-no">no</td>
-                            <td class="mark-yes">optional</td>
-                        </tr>
-
-                        <tr>
-                            <td>Third-party ad trackers in the client</td>
-                            <td class="mark-no">no</td>
-                            <td class="mark-yes">yes</td>
-                        </tr>
-
-                        <tr>
-                            <td>Self-hosting available</td>
-                            <td class="mark-yes">yes</td>
-                            <td class="mark-no">no</td>
-                        </tr>
-
-                        <tr>
-                            <td>Client source code public</td>
-                            <td class="mark-yes">yes</td>
-                            <td class="mark-no">no</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
-
-</main>
-
-
-@section Scripts {
-    <script>
-        // Build the waveform from fixed data.
-        (function () {
-            var el = document.getElementById('waveform');
-
-            if (!el) return;
-
-            var heights = [
-                18, 34, 22, 48, 30, 60, 40, 72, 52, 80, 58, 90,
-                64, 84, 54, 70, 44, 56, 32, 46, 26, 38, 20, 30, 16, 24
-            ];
-
-            var frag = document.createDocumentFragment();
-
-            heights.forEach(function (h, i) {
-                var bar = document.createElement('span');
-
-                bar.style.height = h + '%';
-                bar.style.opacity = (0.55 + (i % 5) * 0.09).toFixed(2);
-
-                frag.appendChild(bar);
-            });
-
-            el.appendChild(frag);
-        })();
-    </script>
-}
+</div>
