@@ -1,0 +1,38 @@
+@page
+@{
+    ViewData["Title"] = "Audio";
+    ViewData["ActivePage"] = ManageNavPages.Audio;
+}
+
+<h3>@ViewData["Title"]</h3>
+<p class="text-muted">Audio settings test.</p>
+
+<div class="row">
+    <div class="col-md-6">
+        <h5>Input</h5>
+        <div class="mb-3">
+            <label for="audio-input" class="form-label">Microphone</label>
+            <select id="audio-input" class="form-select">
+                <option>System default</option>
+            </select>
+        </div>
+        <div class="mb-4">
+            <label for="input-volume" class="form-label">Input volume</label>
+            <input type="range" class="form-range" id="input-volume" min="0" max="100" value="80" />
+        </div>
+
+        <h5>Output</h5>
+        <div class="mb-3">
+            <label for="audio-output" class="form-label">Speakers</label>
+            <select id="audio-output" class="form-select">
+                <option>System default</option>
+            </select>
+        </div>
+        <div class="mb-4">
+            <label for="output-volume" class="form-label">Output volume</label>
+            <input type="range" class="form-range" id="output-volume" min="0" max="100" value="60" />
+        </div>
+
+        <button type="button" class="btn btn-primary" disabled>Save changes</button>
+    </div>
+</div>
