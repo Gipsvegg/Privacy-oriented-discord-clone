@@ -7,7 +7,13 @@
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
+    @await RenderSectionAsync("Styles", required: false)
     <link rel="stylesheet" href="~/ikt201_project.styles.css" asp-append-version="true"/>
+    
+    <!-- Fonts used in Index.cshtml.css (landing page) -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+    
 </head>
 <body>
 <header>
@@ -27,7 +33,7 @@
                         <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                     </li>
                     <li class="nav-item">
-                        <a class = "nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Homepage">Homepage</a>
+                        <a class = "nav-link text-dark" asp-area="" asp-controller="Dashboard" asp-action="Homepage">Homepage</a>
                     </li>
                 </ul>
                 <partial name="_LoginPartial"/>
@@ -35,11 +41,24 @@
         </div>
     </nav>
 </header>
-<div class="container">
-    <main role="main" class="pb-3">
+@{
+    var fullWidth = ViewData["FullWidth"] as bool? ?? false;
+}
+
+@if (fullWidth)
+{
+    <main role="main">
         @RenderBody()
     </main>
-</div>
+}
+else
+{
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+}
 
 <footer class="border-top footer text-muted">
     <div class="container">

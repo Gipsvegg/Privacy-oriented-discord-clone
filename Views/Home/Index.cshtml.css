@@ -1,0 +1,450 @@
+﻿/* Haven landing page. */
+
+.haven {
+    --ink-950: #12161A;
+    --ink-900: #191F24;
+    --ink-800: #222A30;
+    --paper: #E9E5DB;
+    --muted: #93A0A3;
+    --accent: #7FB5A6;
+    --accent-strong: #5C9686;
+    --accent-soft: rgba(127, 181, 166, 0.14);
+    --line: rgba(233, 229, 219, 0.12);
+
+    --font-display: 'Space Grotesk', 'Segoe UI', sans-serif;
+    --font-body: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+    --font-mono: 'IBM Plex Mono', 'Consolas', monospace;
+
+    /* Inner measure of the content. Change this one value to widen/narrow everything. */
+    --measure: 1180px;
+    --gutter: 2rem;
+
+    width: 100%;
+    background: var(--ink-950);
+    color: var(--paper);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Fallback only: escapes Bootstrap's .container in _Layout without editing it.
+   Prefer the FullWidth flag — this version can add a horizontal scrollbar on
+   Windows, since 100vw counts the scrollbar's width. If you use it, also put
+   html, body { overflow-x: hidden; } in site.css. */
+.haven--bleed {
+    width: 100vw;
+    max-width: 100vw;
+    margin-inline: calc(50% - 50vw);
+}
+
+.haven * {
+    box-sizing: border-box;
+}
+
+.haven h1,
+.haven h2,
+.haven h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.15;
+    margin: 0;
+    color: var(--paper);
+}
+
+.haven p {
+    margin: 0;
+    color: var(--muted);
+    max-width: 62ch;
+}
+
+.haven a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.haven a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
+/* Shared section shell — every section uses the same measure and gutters,
+   so nothing here fights with the per-section padding below. */
+.haven > section {
+    max-width: calc(var(--measure) + (var(--gutter) * 2));
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+}
+
+/* Buttons */
+
+.haven-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.7rem 1.35rem;
+    border-radius: 7px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.haven-btn--primary {
+    background: var(--accent);
+    color: var(--ink-950);
+}
+
+.haven-btn--primary:hover {
+    background: var(--accent-strong);
+}
+
+.haven-btn--ghost {
+    border-color: var(--line);
+    color: var(--paper);
+}
+
+.haven-btn--ghost:hover {
+    border-color: var(--accent);
+}
+
+.haven-btn--lg {
+    padding: 0.85rem 1.6rem;
+    font-size: 1rem;
+}
+
+/* Hero */
+
+.haven-hero {
+    padding-block: 5.5rem 6rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+    gap: 3rem;
+    align-items: center;
+}
+
+.haven-hero__text h1 {
+    font-size: clamp(2.35rem, 4.2vw, 3.5rem);
+    letter-spacing: -0.015em;
+    max-width: 14ch;
+}
+
+.haven-hero__sub {
+    margin-top: 1.4rem;
+    font-size: 1.1rem;
+    max-width: 48ch;
+}
+
+.haven-hero__actions {
+    margin-top: 2.1rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.haven-hero__secondary {
+    font-size: 0.95rem;
+    color: var(--paper);
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 2px;
+}
+
+.haven-hero__secondary:hover {
+    border-color: var(--accent);
+}
+
+.haven-hero__trust {
+    margin-top: 2.25rem;
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+/* Hero illustration: a chat bubble being sealed shut */
+
+.haven-hero__art {
+    position: relative;
+    height: 340px;
+}
+
+.haven-art__bubble {
+    position: absolute;
+    left: 10%;
+    top: 18%;
+    width: 230px;
+    height: 140px;
+    background: var(--ink-800);
+    border: 1px solid var(--line);
+    border-radius: 22px 22px 22px 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 30px 60px -25px rgba(0, 0, 0, 0.6);
+}
+
+.haven-art__dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--muted);
+    opacity: 0.55;
+}
+
+.haven-art__seal {
+    position: absolute;
+    right: 8%;
+    bottom: 12%;
+    width: 118px;
+    height: 118px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 20px 40px -15px rgba(127, 181, 166, 0.45);
+    animation: haven-seal-in 0.9s ease-out;
+}
+
+.haven-art__lock {
+    width: 42px;
+    height: 42px;
+    color: var(--ink-950);
+}
+
+.haven-art__particle {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.5;
+}
+
+.haven-art__particle--1 { top: 8%; right: 30%; }
+.haven-art__particle--2 { bottom: 30%; left: 4%; width: 4px; height: 4px; }
+.haven-art__particle--3 { top: 52%; right: 6%; width: 5px; height: 5px; }
+
+@keyframes haven-seal-in {
+    from {
+        opacity: 0;
+        transform: scale(0.6) rotate(-12deg);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+/* What Haven doesn't do */
+
+.haven-nots {
+    padding-block: 5rem;
+    border-top: 1px solid var(--line);
+}
+
+.haven-nots h2 {
+    font-size: clamp(1.6rem, 2.4vw, 2.1rem);
+    max-width: 20ch;
+    margin-bottom: 2.5rem;
+}
+
+.haven-nots__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.haven-nots__list li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 2rem;
+    padding-block: 1.6rem;
+    border-top: 1px solid var(--line);
+}
+
+.haven-nots__list li:last-child {
+    border-bottom: 1px solid var(--line);
+}
+
+.haven-nots__claim {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.15rem;
+    color: var(--paper);
+    max-width: 26ch;
+}
+
+.haven-nots__detail {
+    font-size: 0.95rem;
+    align-self: center;
+}
+
+/* Features */
+
+.haven-features {
+    padding-block: 5rem;
+    border-top: 1px solid var(--line);
+}
+
+.haven-features h2 {
+    font-size: clamp(1.6rem, 2.4vw, 2.1rem);
+    max-width: 24ch;
+    margin-bottom: 2.75rem;
+}
+
+.haven-features__list {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 1.5rem;
+}
+
+.haven-feature {
+    grid-column: span 3;
+    padding: 1.75rem;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--ink-900);
+}
+
+.haven-feature--lead {
+    grid-column: span 6;
+    background: linear-gradient(135deg, var(--accent-soft), transparent 70%);
+    border-color: rgba(127, 181, 166, 0.35);
+}
+
+.haven-feature h3 {
+    font-size: 1.05rem;
+    margin-bottom: 0.6rem;
+}
+
+.haven-feature p {
+    font-size: 0.95rem;
+}
+
+/* Security / fingerprint */
+
+.haven-security {
+    padding-block: 5rem;
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 380px);
+    gap: 3rem;
+    align-items: center;
+}
+
+.haven-security__text h2 {
+    font-size: clamp(1.6rem, 2.4vw, 2.1rem);
+    max-width: 18ch;
+    margin-bottom: 1.1rem;
+}
+
+.haven-security__text p {
+    font-size: 1rem;
+}
+
+.haven-security__code {
+    background: var(--ink-900);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1.5rem;
+}
+
+.haven-security__label {
+    font-size: 0.8rem;
+    margin-bottom: 0.9rem;
+}
+
+.haven-security__hash {
+    font-family: var(--font-mono);
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+    color: var(--accent);
+    line-height: 1.7;
+}
+
+.haven-security__verified {
+    display: inline-block;
+    margin-top: 1.1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent);
+    padding: 0.3rem 0.65rem;
+    border: 1px solid rgba(127, 181, 166, 0.4);
+    border-radius: 999px;
+}
+
+/* Closing call to action */
+
+.haven-cta {
+    padding-block: 6rem 7rem;
+    border-top: 1px solid var(--line);
+}
+
+.haven-cta h2 {
+    font-size: clamp(1.75rem, 3vw, 2.4rem);
+    margin-bottom: 1rem;
+    max-width: 18ch;
+}
+
+.haven-cta p {
+    font-size: 1.05rem;
+    max-width: 52ch;
+}
+
+.haven-cta__actions {
+    margin-top: 2rem;
+    display: flex;
+    gap: 0.9rem;
+    flex-wrap: wrap;
+}
+
+/* Responsive */
+
+@media (max-width: 960px) {
+    .haven-hero {
+        grid-template-columns: 1fr;
+        padding-top: 3.5rem;
+    }
+
+    .haven-hero__art {
+        height: 260px;
+        order: -1;
+    }
+
+    .haven-security {
+        grid-template-columns: 1fr;
+    }
+
+    .haven-feature {
+        grid-column: span 6;
+    }
+}
+
+@media (max-width: 640px) {
+    .haven {
+        --gutter: 1.25rem;
+    }
+
+    .haven-nots__list li {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .haven-cta__actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .haven-art__seal {
+        animation: none;
+    }
+
+    .haven-btn {
+        transition: none;
+    }
+}
