@@ -1,6 +1,4 @@
-﻿
-
-.sidebar {
+﻿.sidebar {
     position: sticky;
     width: 250px;
     overflow-y: auto;
