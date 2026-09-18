@@ -93,18 +93,15 @@
 .messages {
     display: flex;
     flex-direction: column;
-    flex: 1;
 }
 
 .message-area {
     display: flex;
     flex-direction: column;
-    flex-grow: 10000;
     margin-bottom: 10px;
 }
 
 .input-field {
-    align-items: center;
     width: 100%;
     margin-top: auto;
 }
@@ -115,10 +112,10 @@
     border: 2px solid gray;
     border-radius: 5px;
     resize: none;
-    overflow: hidden;
+    overflow-y: hidden;
 }
 
-.input-field input:focus {
+.input-field textarea:focus {
     outline: none;
     border-color: #e3a9a9;
 }

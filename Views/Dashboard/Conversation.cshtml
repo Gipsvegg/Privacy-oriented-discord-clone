@@ -1,12 +1,21 @@
 ﻿@model List<Message>
 
 <div class="messages">
-<div>
-    @foreach (var msg in Model)
-    {
-        <p><strong>@msg.SenderId:</strong> @msg.Text</p>
-    }
-</div>
+    <div>
+        @{ int? prevSenderId = 0; }
+        @foreach (var msg in Model)
+        {
+            bool showSender = msg.SenderId != prevSenderId;
+            prevSenderId = msg.SenderId;
+
+            if (showSender)
+            {
+                <p>@msg.SenderId:</p>
+            }
+            <p>@msg.Text</p>
+            
+        }
+    </div>
 
 <form id="send-form" class="input-field">
     <textarea id="message-input" name="text" rows="1" autocomplete="off"></textarea>
