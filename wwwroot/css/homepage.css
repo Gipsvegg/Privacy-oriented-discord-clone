@@ -10,6 +10,8 @@
 
 .sidebar-section {
     margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar-section h6 {
@@ -38,11 +40,14 @@
 }
 
 .main-content {
+    display: flex;
+    flex-direction: column;
     flex: 1;
     overflow-y: auto;
     background-color: #2c2f33;
     color: antiquewhite;
     padding-left: 20px;
+    padding-right: 20px;
 }
 
 /*Baren på bunnen av homepage som lar deg gå til settings og kanskje andre ting(har ikke planlagt ennå)*/
@@ -84,3 +89,37 @@
 .icon-link:hover {
     opacity: 0.7;
 }
+
+.messages {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.message-area {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 10000;
+    margin-bottom: 10px;
+}
+
+.input-field {
+    align-items: center;
+    width: 100%;
+    margin-top: auto;
+}
+
+.input-field textarea {
+    width: 80%;
+    background-color: #d8c2b7;
+    border: 2px solid gray;
+    border-radius: 5px;
+    resize: none;
+    overflow: hidden;
+}
+
+.input-field input:focus {
+    outline: none;
+    border-color: #e3a9a9;
+}
+

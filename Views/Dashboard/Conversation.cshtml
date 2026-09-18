@@ -1,0 +1,17 @@
+﻿@model List<Message>
+
+<div class="messages">
+<div>
+    @foreach (var msg in Model)
+    {
+        <p><strong>@msg.SenderId:</strong> @msg.Text</p>
+    }
+</div>
+
+<form id="send-form" class="input-field">
+    <textarea id="message-input" name="text" rows="1" autocomplete="off"></textarea>
+    <button type="submit">Send</button>
+</form>
+</div>
+
+
