@@ -16,7 +16,18 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddSignalR();
+
 var app = builder.Build();
+
+app.MapHub<ikt201_project.Hubs.ChatHub>("/chathub");
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+    db.Messages.ExecuteDelete();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

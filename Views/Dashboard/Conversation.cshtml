@@ -1,26 +1,24 @@
 ﻿@model List<Message>
 
+
 <div class="messages">
-    <div>
-        @{ int? prevSenderId = 0; }
-        @foreach (var msg in Model)
-        {
-            bool showSender = msg.SenderId != prevSenderId;
-            prevSenderId = msg.SenderId;
+    @{ string? prevSenderId = ""; }
+    @foreach (var msg in Model)
+       {
+           bool showSender = !string.Equals(msg.SenderId, prevSenderId);
+           prevSenderId = msg.SenderId;
 
-            if (showSender)
-            {
-                <p>@msg.SenderId:</p>
-            }
-            <p>@msg.Text</p>
-            
-        }
-    </div>
-
-<form id="send-form" class="input-field">
-    <textarea id="message-input" name="text" rows="1" autocomplete="off"></textarea>
-    <button type="submit">Send</button>
-</form>
+          if (showSender)
+           {
+               <p>@msg.SenderId:</p>
+           }
+           <p data-sender-id="@msg.SenderId">@msg.Text</p>
+           
+       }
 </div>
+<form id="send-form" class="input-field" data-friend-id="@ViewBag.FriendId">
+    <textarea id="message-input" name="text" rows="1" autocomplete="off"></textarea>
+</form>
+
 
 
