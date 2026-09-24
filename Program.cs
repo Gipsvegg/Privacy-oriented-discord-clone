@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ikt201_project.Data;
+using ikt201_project.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,8 +17,12 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
 
 var app = builder.Build();
+
+// For reverse proxy
+app.UseForwardedHeaders(new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.XForwardedProto });
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -45,5 +51,7 @@ app.MapControllerRoute(
 
 app.MapRazorPages()
     .WithStaticAssets();
+
+app.MapHub<VoiceHub>("/voiceHub");
 
 app.Run();
