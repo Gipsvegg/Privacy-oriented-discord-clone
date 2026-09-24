@@ -8,6 +8,12 @@ public class HomeController : Controller
 {
     public IActionResult Index()
     {
+        /* Dette sender alltid brukeren til til dashboardet, vet ikke hvor bra det er.
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return RedirectToAction("Homepage", "Dashboard");
+        }
+        */
         return View();
     }
 
