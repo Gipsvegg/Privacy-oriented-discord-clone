@@ -1,0 +1,13 @@
+.main-content {
+    padding-right: 20px;
+}
+
+.sidebar .nav-link {
+    color: antiquewhite;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+    background-color: #40444b;
+    color: white;
+}
