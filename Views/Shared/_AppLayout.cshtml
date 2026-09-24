@@ -20,7 +20,7 @@
     </main>
 
 
-    <footer class="info-bar">
+    <div class="info-bar">
         <div>
             <a asp-area="Identity" asp-page="/Account/Manage/Index">
                 <i class="bi bi-gear-fill"></i>
@@ -29,10 +29,12 @@
         <div class="settings">
             &copy; 2026 - ikt201_project - <a asp-area="" asp-controller="Home" asp-action="Privacy"> Privacy</a>
         </div>
-    </footer>
+    </div>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8/dist/browser/signalr.min.js"></script>
+    <script src="~/js/messageGetter.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </div>
 </body>
