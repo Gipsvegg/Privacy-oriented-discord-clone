@@ -3,8 +3,9 @@
     if (box) box.scrollTop = box.scrollHeight;
 }
 
-document.querySelectorAll('.sidebar a').forEach(link => {
+document.querySelectorAll('.sidebar a[id]').forEach(link => {
     link.addEventListener('click', async (e) => {
+        if(link.id !== 'friend') return;
         e.preventDefault();
         const res = await fetch(link.href);
         document.getElementById('message-area').innerHTML = await res.text();

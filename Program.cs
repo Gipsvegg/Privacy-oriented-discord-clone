@@ -24,7 +24,7 @@ var app = builder.Build();
 // For reverse proxy
 app.UseForwardedHeaders(new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.XForwardedProto });
 
-app.MapHub<ikt201_project.Hubs.ChatHub>("/chathub");
+app.MapHub<ChatHub>("/chathub");
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
