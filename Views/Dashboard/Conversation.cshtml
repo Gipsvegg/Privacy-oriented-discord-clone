@@ -1,0 +1,28 @@
+﻿@model List<Message>
+
+
+<div class="messages">
+    @{ string prevSenderId = ""; }
+    @foreach (var msg in Model)
+    {
+        bool showSender = !string.Equals(msg.SenderId, prevSenderId);
+        prevSenderId = msg.SenderId;
+
+        if (showSender)
+        {
+            <p>@msg.SenderId:</p>
+        }
+        <p data-sender-id="@msg.SenderId">@msg.Text</p>
+    }
+</div>
+
+
+<form id="send-form" class="input-field" data-friend-id="@ViewBag.FriendId">
+    <button type="button" class="icon-btn">
+        <i class="bi bi-plus"></i>
+    </button>
+    <textarea id="message-input" name="text" rows="1" autocomplete="off"></textarea>
+</form>
+
+
+

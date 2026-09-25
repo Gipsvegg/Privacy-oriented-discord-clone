@@ -1,4 +1,5 @@
-﻿@{
+﻿@using System.Security.Claims
+@{
     ViewData["Title"] = "Home Page";
     Layout = "_AppLayout";
 }
@@ -11,14 +12,32 @@
 <div class="page-layout">
     <div class="sidebar">
         <div class="sidebar-section">
+            <h6 class="text-center">Username and UUID</h6>
+            <p>@User.FindFirstValue(ClaimTypes.Name)</p>
+            <p>@User.FindFirstValue(ClaimTypes.NameIdentifier)</p>
+
+        </div>
+        <div class="sidebar-section">
             <h6 class="text-center">Friends & Groups</h6>
+            @if (User.FindFirstValue(ClaimTypes.NameIdentifier) == "8b619ee5-5e13-4154-9843-582bfee5b97c")
+            {
+                <a id="friend" asp-controller="Dashboard" asp-action="Conversation" asp-route-id="f3746277-afdb-4cef-9da0-149068536ebb">admin@test.com</a>
+            }
+            else
+            {
+                <a id="friend" asp-controller="Dashboard" asp-action="Conversation" asp-route-id="8b619ee5-5e13-4154-9843-582bfee5b97c">test@test.no</a>
+            }
+            
+            
         </div>
         <div class="sidebar-section">
             <h6 class="text-center">Servers</h6>
+
         </div>
     </div>
     
     <div class="main-content">
         <h2 class="text-center">Homepage</h2>
+        <div id="message-area" class="message-area"></div>
     </div>
 </div>
