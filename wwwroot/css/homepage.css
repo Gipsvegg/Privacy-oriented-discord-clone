@@ -1,4 +1,9 @@
-﻿.sidebar {
+﻿body {
+    font-family: 'Outfit', sans-serif;
+}
+
+
+.sidebar {
     position: sticky;
     width: 250px;
     overflow-y: auto;
@@ -116,24 +121,49 @@
 }
 
 .input-field {
+    display: flex;
+    align-items: flex-end;
     position: static;
-    width: 80%;
+    width: 90%;
     margin-top: auto;
     background-color: #d8c2b7;
     border: 2px solid gray;
     border-radius: 5px;
-    height: 3rem !important;
+    min-height: 2rem;
 }
 
 .input-field textarea {
-    width: 100%;
+    flex: 1;
     background-color: transparent;
+    border: none;
+    outline: none;
     resize: none;
-    overflow-y: hidden;
+    overflow-y: auto;
+    max-height: 200px;
+    padding: 0;
+    margin: 0;
+    line-height: 2rem;
 }
 
 .input-field textarea:focus {
     outline: none;
     border-color: #e3a9a9;
+}
+
+.input-field .icon-btn {
+    width: 2rem;
+    height: 2rem;
+    font-size: 1.4rem;                                              /*Dette bytter størrelse på knappen*/
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.input-field .icon-btn:hover {
+    background-color: rgb(250 235 215 / 0.75);
+    border-radius: 9px;
 }
 
