@@ -109,7 +109,13 @@
 .messages {
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
+    overflow-wrap: anywhere;
+    max-width: 90%;
+}
+
+.messages p {
+    line-height: 1rem;
+    margin-bottom: 0.4rem;
 }
 
 .message-area {
@@ -153,7 +159,7 @@
 .input-field .icon-btn {
     width: 2rem;
     height: 2rem;
-    font-size: 1.4rem;                                              /*Dette bytter størrelse på knappen*/
+    font-size: 1.4rem;                       /*Dette bytter størrelse på knappen*/
     display: flex;
     align-items: center;
     justify-content: center;
