@@ -32,7 +32,7 @@ if (app.Environment.IsDevelopment())
     db.Database.Migrate();
     Console.ForegroundColor = ConsoleColor.Red;
     Console.Out.WriteLine("THE DATABASE TABLE FOR MESSAGES IS GETTING DELETED");
-    Console.ForegroundColor = ConsoleColor.Black;
+    Console.ResetColor();
     db.Messages.ExecuteDelete();
     db.Users.ExecuteDelete();
     

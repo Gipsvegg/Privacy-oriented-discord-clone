@@ -10166,7 +10166,7 @@ function calcWOpts(W, scalarBits) {
   const shiftBy = BigInt(W);
   return { windows, windowSize, mask, maxNumber, shiftBy };
 }
-function calcOffsets(n, window, wOpts) {
+function calcOffsets(n, window2, wOpts) {
   const { windowSize, mask, maxNumber, shiftBy } = wOpts;
   let wbits = Number(n & mask);
   let nextN = n >> shiftBy;
@@ -10174,11 +10174,11 @@ function calcOffsets(n, window, wOpts) {
     wbits -= maxNumber;
     nextN += _1n4;
   }
-  const offsetStart = window * windowSize;
+  const offsetStart = window2 * windowSize;
   const offset = offsetStart + Math.abs(wbits) - 1;
   const isZero = wbits === 0;
   const isNeg = wbits < 0;
-  const isNegF = window % 2 !== 0;
+  const isNegF = window2 % 2 !== 0;
   const offsetF = offsetStart;
   return { nextN, offset, isZero, isNeg, isNegF, offsetF };
 }
@@ -10346,7 +10346,7 @@ var init_curve2 = __esm({
         const points = [];
         let p = point;
         let base = p;
-        for (let window = 0; window < windows; window++) {
+        for (let window2 = 0; window2 < windows; window2++) {
           base = p;
           points.push(base);
           for (let i = 1; i < windowSize; i++) {
@@ -10369,8 +10369,8 @@ var init_curve2 = __esm({
         let p = this.ZERO;
         let f = this.BASE;
         const wo = calcWOpts(W, this.bits);
-        for (let window = 0; window < wo.windows; window++) {
-          const { nextN, offset, isZero, isNeg, isNegF, offsetF } = calcOffsets(n, window, wo);
+        for (let window2 = 0; window2 < wo.windows; window2++) {
+          const { nextN, offset, isZero, isNeg, isNegF, offsetF } = calcOffsets(n, window2, wo);
           n = nextN;
           if (isZero) {
             f = f.add(negateCt(isNegF, precomputes[offsetF]));
@@ -10388,10 +10388,10 @@ var init_curve2 = __esm({
        */
       wNAFUnsafe(W, precomputes, n, acc = this.ZERO) {
         const wo = calcWOpts(W, this.bits);
-        for (let window = 0; window < wo.windows; window++) {
+        for (let window2 = 0; window2 < wo.windows; window2++) {
           if (n === _0n4)
             break;
-          const { nextN, offset, isZero, isNeg } = calcOffsets(n, window, wo);
+          const { nextN, offset, isZero, isNeg } = calcOffsets(n, window2, wo);
           n = nextN;
           if (isZero) {
             continue;
@@ -14008,22 +14008,43 @@ var init_src = __esm({
 var require_crypto = __commonJS({
   "ClientApp/crypto.js"() {
     init_src();
-    console.log({
-      getCiphersuiteImpl,
-      getCiphersuiteFromName,
-      generateKeyPackage,
-      createGroup,
-      createCommit,
-      joinGroup,
-      createApplicationMessage,
-      processPrivateMessage,
-      encodeMlsMessage,
-      decodeMlsMessage,
-      defaultCapabilities,
-      defaultLifetime,
-      emptyPskIndex,
-      zeroOutUint8Array
-    });
+    var toBytes = (text) => new TextEncoder().encode(text);
+    var toText = (bytes) => new TextDecoder().decode(bytes);
+    var SUITE = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519";
+    async function makeUser(name, impl) {
+      const credential = { credentialType: "basic", identity: toBytes(name) };
+      return generateKeyPackage(credential, defaultCapabilities(), defaultLifetime, [], impl);
+    }
+    async function demo(text = "Hello Bob!") {
+      const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
+      const alice = await makeUser("alice", impl);
+      const bob = await makeUser("bob", impl);
+      let aliceGroup = await createGroup(toBytes("chat-1"), alice.publicPackage, alice.privatePackage, [], impl);
+      const addBob = { proposalType: "add", add: { keyPackage: bob.publicPackage } };
+      const commit = await createCommit({ state: aliceGroup, cipherSuite: impl }, { extraProposals: [addBob] });
+      aliceGroup = commit.newState;
+      commit.consumed.forEach(zeroOutUint8Array);
+      let bobGroup = await joinGroup(commit.welcome, bob.publicPackage, bob.privatePackage, emptyPskIndex, impl, aliceGroup.ratchetTree);
+      const sent = await createApplicationMessage(aliceGroup, toBytes(text), impl);
+      aliceGroup = sent.newState;
+      sent.consumed.forEach(zeroOutUint8Array);
+      const wireBytes = encodeMlsMessage({
+        privateMessage: sent.privateMessage,
+        wireformat: "mls_private_message",
+        version: "mls10"
+      });
+      console.log("What the server sees:", wireBytes);
+      const decoded = decodeMlsMessage(wireBytes, 0)[0];
+      const received = await processPrivateMessage(bobGroup, decoded.privateMessage, emptyPskIndex, impl);
+      bobGroup = received.newState;
+      if (received.kind === "newState") throw new Error("Expected a chat message, got a group change");
+      received.consumed.forEach(zeroOutUint8Array);
+      const plain = toText(received.message);
+      console.log("What Bob reads:", plain);
+      return plain;
+    }
+    window.e2ee = { demo };
+    console.log("e2ee loaded. Try in the console:  await e2ee.demo('hi')");
   }
 });
 export default require_crypto();
