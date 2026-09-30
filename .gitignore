@@ -3,6 +3,9 @@
 *.sln.iml
 *.iml
 
+# Node.js
+node_modules/
+
 # Build output
 [Bb]in/
 [Oo]bj/

@@ -1,0 +1,28 @@
+{
+  "name": "ikt201",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "esbuild ClientApp/crypto.js --bundle --format=esm --outfile=wwwroot/js/crypto.bundle.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://gitea.internal.uia.no/ikt201g26h/group-06"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@noble/curves": "^2.0.1",
+    "ts-mls": "^1.6.4"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  }
+}
