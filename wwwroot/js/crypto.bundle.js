@@ -14043,6 +14043,12 @@ function set(key, value, customStore = defaultGetStore()) {
     return promisifyRequest(store.transaction);
   });
 }
+function del(key, customStore = defaultGetStore()) {
+  return customStore("readwrite", (store) => {
+    store.delete(key);
+    return promisifyRequest(store.transaction);
+  });
+}
 var defaultGetStoreFunc;
 var init_dist = __esm({
   "node_modules/idb-keyval/dist/index.js"() {
@@ -14057,6 +14063,8 @@ var require_crypto = __commonJS({
     init_dist();
     var toBytes = (text) => new TextEncoder().encode(text);
     var toText = (bytes) => new TextDecoder().decode(bytes);
+    var toBase64 = (bytes) => bytes.toBase64();
+    var fromBase64 = (text) => Uint8Array.fromBase64(text);
     var SUITE = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519";
     async function makeUser(userId, impl) {
       let user;
@@ -14069,54 +14077,53 @@ var require_crypto = __commonJS({
       await set(`user:${userId}`, user);
       return user;
     }
-    async function demo(text = "Hello Bob!") {
-      const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
-      const alice = await makeUser("alice", impl);
-      const bob = await makeUser("bob", impl);
-      let aliceGroup = await createGroup(toBytes("chat-1"), alice.publicPackage, alice.privatePackage, [], impl);
-      const addBob = { proposalType: "add", add: { keyPackage: bob.publicPackage } };
-      const commit = await createCommit({ state: aliceGroup, cipherSuite: impl }, { extraProposals: [addBob] });
-      aliceGroup = commit.newState;
-      commit.consumed.forEach(zeroOutUint8Array);
-      let bobGroup = await joinGroup(commit.welcome, bob.publicPackage, bob.privatePackage, emptyPskIndex, impl, aliceGroup.ratchetTree);
-      const sent = await createApplicationMessage(aliceGroup, toBytes(text), impl);
-      aliceGroup = sent.newState;
-      sent.consumed.forEach(zeroOutUint8Array);
-      console.log("Encrypted message: ", sent.privateMessage);
-      const wireBytes = encodeMlsMessage({
-        privateMessage: sent.privateMessage,
-        wireformat: "mls_private_message",
-        version: "mls10"
-      });
-      console.log("What the server sees:", wireBytes);
-      const decoded = decodeMlsMessage(wireBytes, 0)[0];
-      const received = await processPrivateMessage(bobGroup, decoded.privateMessage, emptyPskIndex, impl);
-      bobGroup = received.newState;
-      if (received.kind === "newState") throw new Error("Expected a chat message, got a group change");
-      received.consumed.forEach(zeroOutUint8Array);
-      const plain = toText(received.message);
-      console.log("What Bob reads:", plain);
-      return plain;
+    async function resetTestGroups(chat, users) {
+      for (const user of users) {
+        await del(`${user}:group:${chat}`);
+      }
     }
     async function testGroupFlow() {
-      const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
-      const bob = await makeUser("test-bob", impl);
-      const welcomeBytes = await groupCreation("test-alice", "test-chat", [{ keyPackage: bob.publicPackage }]);
+      const chat = "test-chat";
+      await resetTestGroups(chat, ["test-alice", "test-bob"]);
+      const bobKeyPackage = await getMyKeyPackage("test-bob");
+      console.log("0. Bob's key package bytes:", bobKeyPackage.length);
+      const welcomeBytes = await groupCreation("test-alice", chat, [{ keyPackage: bobKeyPackage }]);
       console.log("1. Welcome bytes:", welcomeBytes.length);
-      await inviteAccept("test-bob", "test-chat", welcomeBytes);
+      const welcomeFromServer = fromBase64(toBase64(welcomeBytes));
+      await inviteAccept("test-bob", chat, welcomeFromServer);
       console.log(
         "2. Both saved a group:",
-        !!await get("test-alice:group:test-chat"),
-        !!await get("test-bob:group:test-chat")
+        !!await get(`test-alice:group:${chat}`),
+        !!await get(`test-bob:group:${chat}`)
       );
-      let message = "Hello Bob!";
-      let sent = await encryptMessage(message, "test-alice", "test-chat");
-      let got = await decryptMessage(sent, "test-bob", "test-chat");
-      console.log("3. Bob reads:", got);
-      message = "hay Alice:)";
-      sent = await encryptMessage(message, "test-bob", "test-chat");
-      got = await decryptMessage(sent, "test-alice", "test-chat");
-      console.log("4. Alice reads:", got);
+      let sent = await encryptMessage("Hello Bob!", "test-alice", chat);
+      console.log("3. Bob reads:", await decryptMessage(sent, "test-bob", chat));
+      sent = await encryptMessage("hay Alice:)", "test-bob", chat);
+      console.log("4. Alice reads:", await decryptMessage(sent, "test-alice", chat));
+    }
+    async function testInviteFlow() {
+      const chat = "test-invite-chat";
+      await resetTestGroups(chat, ["test-alice", "test-bob", "test-carol"]);
+      const bobKeyPackage = await getMyKeyPackage("test-bob");
+      const carolKeyPackage = await getMyKeyPackage("test-carol");
+      const welcomeForBob = await groupCreation("test-alice", chat, [{ keyPackage: bobKeyPackage }]);
+      await inviteAccept("test-bob", chat, welcomeForBob);
+      console.log("1. Bob reads:", await decryptMessage(
+        await encryptMessage("hi Bob", "test-alice", chat),
+        "test-bob",
+        chat
+      ));
+      const invite = await inviteUsersToGroup("test-alice", chat, [{ keyPackage: carolKeyPackage }]);
+      console.log("2. Invite made. Welcome bytes:", invite.welcome.length, "Commit bytes:", invite.commit.length);
+      console.log("3. Bob processes commit, returns:", await decryptMessage(invite.commit, "test-bob", chat));
+      await inviteAccept("test-carol", chat, invite.welcome);
+      console.log("4. Carol joined");
+      const fromAlice = await encryptMessage("welcome Carol!", "test-alice", chat);
+      console.log("5. Bob reads:", await decryptMessage(fromAlice, "test-bob", chat));
+      console.log("   Carol reads:", await decryptMessage(fromAlice, "test-carol", chat));
+      const fromCarol = await encryptMessage("thanks for the invite", "test-carol", chat);
+      console.log("6. Alice reads:", await decryptMessage(fromCarol, "test-alice", chat));
+      console.log("   Bob reads:", await decryptMessage(fromCarol, "test-bob", chat));
     }
     async function loadGroupState(userId, conversationId) {
       const encodedGroupState = await get(`${userId}:group:${conversationId}`);
@@ -14162,19 +14169,11 @@ var require_crypto = __commonJS({
     }
     async function groupCreation(userId, conversationId, groupMembers) {
       const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
-      let addMembers = [];
       const user = await makeUser(userId, impl);
       let userGroup = await createGroup(toBytes(conversationId), user.publicPackage, user.privatePackage, [], impl);
-      for (const member of groupMembers) {
-        const addMember = { proposalType: "add", add: { keyPackage: member.keyPackage } };
-        addMembers.push(addMember);
-      }
-      const commit = await createCommit({ state: userGroup, cipherSuite: impl }, { extraProposals: addMembers, ratchetTreeExtension: true });
-      userGroup = commit.newState;
-      commit.consumed.forEach(zeroOutUint8Array);
-      const welcome = commit.welcome;
       await saveGroupState(userId, conversationId, userGroup);
-      return encodeMlsMessage({ welcome, wireformat: "mls_welcome", version: "mls10" });
+      const result = await inviteUsersToGroup(userId, conversationId, groupMembers);
+      return result.welcome;
     }
     async function inviteAccept(userId, conversationId, welcome) {
       const checkGroupStatus = await get(`${userId}:group:${conversationId}`);
@@ -14190,9 +14189,51 @@ var require_crypto = __commonJS({
       let acceptInvite = await joinGroup(decodedWelcome.welcome, user.publicPackage, user.privatePackage, emptyPskIndex, impl);
       await saveGroupState(userId, conversationId, acceptInvite);
     }
-    window.e2ee = { demo };
-    window.e2ee = { demo, testGroupFlow };
-    console.log("e2ee loaded. Try in the console:  await e2ee.demo('hi')");
+    async function inviteUsersToGroup(userId, conversationId, newMembers) {
+      if (newMembers.length === 0) {
+        throw new Error("Not inviting anyone");
+      }
+      let groupState = await loadGroupState(userId, conversationId);
+      const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
+      let addNewMembers = [];
+      for (const member of newMembers) {
+        const decodedMemberPackage = decodeMlsMessage(member.keyPackage, 0)[0];
+        if (decodedMemberPackage.wireformat === "mls_key_package") {
+          const addMember = { proposalType: "add", add: { keyPackage: decodedMemberPackage.keyPackage } };
+          addNewMembers.push(addMember);
+        } else {
+          throw new Error("Member does not have keyPackage");
+        }
+      }
+      const commit = await createCommit({ state: groupState, cipherSuite: impl }, { extraProposals: addNewMembers, ratchetTreeExtension: true });
+      groupState = commit.newState;
+      commit.consumed.forEach(zeroOutUint8Array);
+      await saveGroupState(userId, conversationId, groupState);
+      const welcome = commit.welcome;
+      const encodedCommit = encodeMlsMessage(commit.commit);
+      const encodedWelcome = encodeMlsMessage({ welcome, wireformat: "mls_welcome", version: "mls10" });
+      return { welcome: encodedWelcome, commit: encodedCommit };
+    }
+    async function getMyKeyPackage(userId) {
+      let keyPackage = await get(`user:${userId}`);
+      if (keyPackage === void 0) {
+        const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
+        keyPackage = await makeUser(userId, impl);
+      }
+      return encodeMlsMessage({ keyPackage: keyPackage.publicPackage, wireformat: "mls_key_package", version: "mls10" });
+    }
+    window.e2ee = {
+      encryptMessage,
+      decryptMessage,
+      groupCreation,
+      inviteUsersToGroup,
+      inviteAccept,
+      getMyKeyPackage,
+      // tests, remove later
+      testGroupFlow,
+      testInviteFlow
+    };
+    console.log("e2ee loaded. Try in the console:  await e2ee.testGroupFlow()");
   }
 });
 export default require_crypto();
