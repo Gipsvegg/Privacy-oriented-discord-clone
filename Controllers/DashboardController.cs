@@ -37,12 +37,13 @@ public class DashboardController : Controller
             .OrderBy(m => m.Timestamp)
             .ToList();
     }
-    
+    [Authorize]
     public IActionResult Homepage()
     {
         return View();
     }
     
+    [Authorize]
     public IActionResult Conversation(string id)
     {
         //Henter iden til vennen som er valgt i homepage

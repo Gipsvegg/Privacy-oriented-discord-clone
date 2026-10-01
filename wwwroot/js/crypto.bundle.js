@@ -4587,8 +4587,8 @@ async function applyUpdatePathSecret(tree, privatePath, senderLeafIndex, gc, pat
   throw new InternalError("No overlap between provided private keys and update path");
 }
 function filterNewLeaves(resolution2, excludeNodes) {
-  const set = new Set(excludeNodes);
-  return resolution2.filter((i) => !set.has(i));
+  const set2 = new Set(excludeNodes);
+  return resolution2.filter((i) => !set2.has(i));
 }
 var init_createCommit = __esm({
   "node_modules/ts-mls/dist/src/createCommit.js"() {
@@ -14004,16 +14004,70 @@ var init_src = __esm({
   }
 });
 
+// node_modules/idb-keyval/dist/index.js
+function promisifyRequest(request) {
+  return new Promise((resolve, reject) => {
+    request.oncomplete = request.onsuccess = () => resolve(request.result);
+    request.onabort = request.onerror = () => reject(request.error);
+  });
+}
+function createStore(dbName, storeName) {
+  let dbp;
+  const getDB = () => {
+    if (dbp)
+      return dbp;
+    const request = indexedDB.open(dbName);
+    request.onupgradeneeded = () => request.result.createObjectStore(storeName);
+    dbp = promisifyRequest(request);
+    dbp.then((db) => {
+      db.onclose = () => dbp = void 0;
+    }, () => {
+      dbp = void 0;
+    });
+    return dbp;
+  };
+  return (txMode, callback) => getDB().then((db) => callback(db.transaction(storeName, txMode).objectStore(storeName)));
+}
+function defaultGetStore() {
+  if (!defaultGetStoreFunc) {
+    defaultGetStoreFunc = createStore("keyval-store", "keyval");
+  }
+  return defaultGetStoreFunc;
+}
+function get(key, customStore = defaultGetStore()) {
+  return customStore("readonly", (store) => promisifyRequest(store.get(key)));
+}
+function set(key, value, customStore = defaultGetStore()) {
+  return customStore("readwrite", (store) => {
+    store.put(value, key);
+    return promisifyRequest(store.transaction);
+  });
+}
+var defaultGetStoreFunc;
+var init_dist = __esm({
+  "node_modules/idb-keyval/dist/index.js"() {
+  }
+});
+
 // ClientApp/crypto.js
 var require_crypto = __commonJS({
   "ClientApp/crypto.js"() {
     init_src();
+    init_clientConfig();
+    init_dist();
     var toBytes = (text) => new TextEncoder().encode(text);
     var toText = (bytes) => new TextDecoder().decode(bytes);
     var SUITE = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519";
-    async function makeUser(name, impl) {
-      const credential = { credentialType: "basic", identity: toBytes(name) };
-      return generateKeyPackage(credential, defaultCapabilities(), defaultLifetime, [], impl);
+    async function makeUser(userId, impl) {
+      let user;
+      const credential = { credentialType: "basic", identity: toBytes(userId) };
+      const saved = await get(`user:${userId}`);
+      if (saved !== void 0) {
+        return saved;
+      }
+      user = await generateKeyPackage(credential, defaultCapabilities(), defaultLifetime, [], impl);
+      await set(`user:${userId}`, user);
+      return user;
     }
     async function demo(text = "Hello Bob!") {
       const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
@@ -14028,6 +14082,7 @@ var require_crypto = __commonJS({
       const sent = await createApplicationMessage(aliceGroup, toBytes(text), impl);
       aliceGroup = sent.newState;
       sent.consumed.forEach(zeroOutUint8Array);
+      console.log("Encrypted message: ", sent.privateMessage);
       const wireBytes = encodeMlsMessage({
         privateMessage: sent.privateMessage,
         wireformat: "mls_private_message",
@@ -14043,7 +14098,100 @@ var require_crypto = __commonJS({
       console.log("What Bob reads:", plain);
       return plain;
     }
+    async function testGroupFlow() {
+      const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
+      const bob = await makeUser("test-bob", impl);
+      const welcomeBytes = await groupCreation("test-alice", "test-chat", [{ keyPackage: bob.publicPackage }]);
+      console.log("1. Welcome bytes:", welcomeBytes.length);
+      await inviteAccept("test-bob", "test-chat", welcomeBytes);
+      console.log(
+        "2. Both saved a group:",
+        !!await get("test-alice:group:test-chat"),
+        !!await get("test-bob:group:test-chat")
+      );
+      let message = "Hello Bob!";
+      let sent = await encryptMessage(message, "test-alice", "test-chat");
+      let got = await decryptMessage(sent, "test-bob", "test-chat");
+      console.log("3. Bob reads:", got);
+      message = "hay Alice:)";
+      sent = await encryptMessage(message, "test-bob", "test-chat");
+      got = await decryptMessage(sent, "test-alice", "test-chat");
+      console.log("4. Alice reads:", got);
+    }
+    async function loadGroupState(userId, conversationId) {
+      const encodedGroupState = await get(`${userId}:group:${conversationId}`);
+      if (encodedGroupState === void 0) {
+        throw new Error(`No such group state in DB for user: ${userId} and conversationId: ${conversationId}`);
+      }
+      const groupState = decodeGroupState(encodedGroupState, 0)[0];
+      return { ...groupState, clientConfig: defaultClientConfig };
+    }
+    async function saveGroupState(userId, conversationId, groupState) {
+      await set(`${userId}:group:${conversationId}`, encodeGroupState(groupState));
+    }
+    async function encryptMessage(message, userId, conversationId) {
+      let groupState = await loadGroupState(userId, conversationId);
+      const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
+      const encryptedMessage = await createApplicationMessage(groupState, toBytes(message), impl);
+      groupState = encryptedMessage.newState;
+      encryptedMessage.consumed.forEach(zeroOutUint8Array);
+      await saveGroupState(userId, conversationId, groupState);
+      const messageBytes = encodeMlsMessage({
+        privateMessage: encryptedMessage.privateMessage,
+        wireformat: "mls_private_message",
+        version: "mls10"
+      });
+      return messageBytes;
+    }
+    async function decryptMessage(message, userId, conversationId) {
+      const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
+      const decoded = decodeMlsMessage(message, 0)[0];
+      if (decoded.wireformat !== "mls_private_message") {
+        throw new Error("Not a private message");
+      }
+      let groupState = await loadGroupState(userId, conversationId);
+      const decryptedMessage = await processPrivateMessage(groupState, decoded.privateMessage, emptyPskIndex, impl);
+      groupState = decryptedMessage.newState;
+      decryptedMessage.consumed.forEach(zeroOutUint8Array);
+      await saveGroupState(userId, conversationId, groupState);
+      if (decryptedMessage.kind === "applicationMessage") {
+        return toText(decryptedMessage.message);
+      } else {
+        return null;
+      }
+    }
+    async function groupCreation(userId, conversationId, groupMembers) {
+      const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
+      let addMembers = [];
+      const user = await makeUser(userId, impl);
+      let userGroup = await createGroup(toBytes(conversationId), user.publicPackage, user.privatePackage, [], impl);
+      for (const member of groupMembers) {
+        const addMember = { proposalType: "add", add: { keyPackage: member.keyPackage } };
+        addMembers.push(addMember);
+      }
+      const commit = await createCommit({ state: userGroup, cipherSuite: impl }, { extraProposals: addMembers, ratchetTreeExtension: true });
+      userGroup = commit.newState;
+      commit.consumed.forEach(zeroOutUint8Array);
+      const welcome = commit.welcome;
+      await saveGroupState(userId, conversationId, userGroup);
+      return encodeMlsMessage({ welcome, wireformat: "mls_welcome", version: "mls10" });
+    }
+    async function inviteAccept(userId, conversationId, welcome) {
+      const checkGroupStatus = await get(`${userId}:group:${conversationId}`);
+      if (checkGroupStatus !== void 0) {
+        throw new Error("Invite already accepted");
+      }
+      const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
+      const decodedWelcome = decodeMlsMessage(welcome, 0)[0];
+      if (decodedWelcome.wireformat !== "mls_welcome") {
+        throw new Error("Expected a welcome");
+      }
+      const user = await makeUser(userId, impl);
+      let acceptInvite = await joinGroup(decodedWelcome.welcome, user.publicPackage, user.privatePackage, emptyPskIndex, impl);
+      await saveGroupState(userId, conversationId, acceptInvite);
+    }
     window.e2ee = { demo };
+    window.e2ee = { demo, testGroupFlow };
     console.log("e2ee loaded. Try in the console:  await e2ee.demo('hi')");
   }
 });

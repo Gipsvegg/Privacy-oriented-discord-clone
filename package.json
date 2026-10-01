@@ -17,6 +17,7 @@
   "type": "commonjs",
   "dependencies": {
     "@noble/curves": "^2.0.1",
+    "idb-keyval": "^6.3.0",
     "ts-mls": "^1.6.4"
   },
   "devDependencies": {
