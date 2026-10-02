@@ -14148,11 +14148,11 @@ var require_crypto = __commonJS({
         wireformat: "mls_private_message",
         version: "mls10"
       });
-      return messageBytes;
+      return toBase64(messageBytes);
     }
     async function decryptMessage(message, userId, conversationId) {
       const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
-      const decoded = decodeMlsMessage(message, 0)[0];
+      const decoded = decodeMlsMessage(fromBase64(message), 0)[0];
       if (decoded.wireformat !== "mls_private_message") {
         throw new Error("Not a private message");
       }
@@ -14181,7 +14181,7 @@ var require_crypto = __commonJS({
         throw new Error("Invite already accepted");
       }
       const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
-      const decodedWelcome = decodeMlsMessage(welcome, 0)[0];
+      const decodedWelcome = decodeMlsMessage(fromBase64(welcome), 0)[0];
       if (decodedWelcome.wireformat !== "mls_welcome") {
         throw new Error("Expected a welcome");
       }
@@ -14197,7 +14197,7 @@ var require_crypto = __commonJS({
       const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
       let addNewMembers = [];
       for (const member of newMembers) {
-        const decodedMemberPackage = decodeMlsMessage(member.keyPackage, 0)[0];
+        const decodedMemberPackage = decodeMlsMessage(fromBase64(member.keyPackage), 0)[0];
         if (decodedMemberPackage.wireformat === "mls_key_package") {
           const addMember = { proposalType: "add", add: { keyPackage: decodedMemberPackage.keyPackage } };
           addNewMembers.push(addMember);
@@ -14210,8 +14210,8 @@ var require_crypto = __commonJS({
       commit.consumed.forEach(zeroOutUint8Array);
       await saveGroupState(userId, conversationId, groupState);
       const welcome = commit.welcome;
-      const encodedCommit = encodeMlsMessage(commit.commit);
-      const encodedWelcome = encodeMlsMessage({ welcome, wireformat: "mls_welcome", version: "mls10" });
+      const encodedCommit = toBase64(encodeMlsMessage(commit.commit));
+      const encodedWelcome = toBase64(encodeMlsMessage({ welcome, wireformat: "mls_welcome", version: "mls10" }));
       return { welcome: encodedWelcome, commit: encodedCommit };
     }
     async function getMyKeyPackage(userId) {
@@ -14220,7 +14220,7 @@ var require_crypto = __commonJS({
         const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
         keyPackage = await makeUser(userId, impl);
       }
-      return encodeMlsMessage({ keyPackage: keyPackage.publicPackage, wireformat: "mls_key_package", version: "mls10" });
+      return toBase64(encodeMlsMessage({ keyPackage: keyPackage.publicPackage, wireformat: "mls_key_package", version: "mls10" }));
     }
     window.e2ee = {
       encryptMessage,

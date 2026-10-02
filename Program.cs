@@ -24,7 +24,6 @@ var app = builder.Build();
 // For reverse proxy
 app.UseForwardedHeaders(new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.XForwardedProto });
 
-app.MapHub<ChatHub>("/chathub");
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
@@ -87,5 +86,6 @@ app.MapRazorPages()
     .WithStaticAssets();
 
 app.MapHub<VoiceHub>("/voiceHub");
+app.MapHub<ChatHub>("/chathub");
 
 app.Run();

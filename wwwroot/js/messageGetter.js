@@ -1,4 +1,57 @@
-﻿function scrollToBottom() {
+﻿const userId = document.getElementById('uuid')?.dataset.uuid;
+console.log(userId);
+async function getWelcomes(){
+    
+    if(!userId) return;
+
+    const res = await fetch(`/Dashboard/DownloadWelcome`)
+    
+    if(!res.ok) return;
+    
+    const data = await res.json();
+    
+    for (const welcome of data) {
+        try {
+            await e2ee.inviteAccept(userId, welcome.conversationId, welcome.data); 
+            await deleteWelcome(welcome.id)
+        }catch(err) {
+            if(err.message === "Invite already accepted"){
+                try {
+                    await deleteWelcome(welcome.id)
+                } catch (err){
+                    console.error(err);
+                }
+            }
+            console.error(err);
+        }
+    }
+}
+
+async function deleteWelcome(id) {
+    const res = await fetch(`/Dashboard/DeleteWelcome?id=${id}`, {
+        method: 'DELETE',
+    });
+    if(!res.ok) throw new Error("Could not delete Welcome");
+}
+
+window.addEventListener('load', async () => {
+    if(!userId) return;
+    console.log(userId);
+    
+    await getWelcomes();
+    const res = await fetch('/Dashboard/UploadKeyPackage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ keyPackage: await e2ee.getMyKeyPackage(userId) })
+    })
+    if (!res.ok) {
+        console.error('Key Package failed to upload: ', res.status);
+    }
+})
+
+
+
+function scrollToBottom() {
     const box = document.querySelector('.messages');
     if (box) box.scrollTop = box.scrollHeight;
 }
@@ -18,6 +71,7 @@ document.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const text = document.getElementById('message-input').value;
+    
     if (!text.trim()) return;                    // 1. don't even send empty messages
 
     const friendId = e.target.dataset.friendId;
@@ -76,4 +130,8 @@ connection.on('ReceiveMessage', (senderId, text) => {
     if (nearBottom) scrollToBottom();
 });
 
-connection.start().catch(console.error);
+connection.on('ReceiveGroupInvite', async () => {
+    await getWelcomes();
+});
+
+connection.start().catch(console.error)

@@ -14,7 +14,7 @@
         <div class="sidebar-section">
             <h6 class="text-center">Username and UUID</h6>
             <p>@User.FindFirstValue(ClaimTypes.Name)</p>
-            <p>@User.FindFirstValue(ClaimTypes.NameIdentifier)</p>
+            <p data-uuid="@User.FindFirstValue(ClaimTypes.NameIdentifier)" id="uuid">@User.FindFirstValue(ClaimTypes.NameIdentifier)</p>
 
         </div>
         <div class="sidebar-section">
