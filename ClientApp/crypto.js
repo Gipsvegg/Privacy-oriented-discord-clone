@@ -21,7 +21,7 @@ import {
 
 import { defaultClientConfig } from "ts-mls/clientConfig.js";
 
-import { get, set, del } from "idb-keyval";
+import { get, set, del, update } from "idb-keyval";
 
 // ─── STEP 2: helpers to turn text into bytes and back ─────────────────
 // Crypto only works on bytes (Uint8Array), never on strings.
@@ -305,6 +305,23 @@ async function getMyKeyPackage(userId){
     return toBase64(encodeMlsMessage({ keyPackage: keyPackage.publicPackage, wireformat: "mls_key_package", version: "mls10" }));
 }
 
+async function saveToHistory(userId, conversationId, entry) {
+    await update(`${userId}:history:${conversationId}`, (oldValue) => {
+        let history;
+        if(oldValue == null) {
+            history = []
+        } else{
+            history = oldValue
+        }
+        history.push({id: entry.id, senderId: entry.senderId, text: entry.text, time: Date.now()});
+        return history;
+    });
+}
+
+async function loadFromHistory(conversationId) {
+    return (await get(`${userId}:history:${conversationId}`) ?? []);
+}
+
 // ─── STEP 6: make it reachable from outside this module ───────────────
 window.e2ee = {
     encryptMessage,
@@ -313,6 +330,8 @@ window.e2ee = {
     inviteUsersToGroup,
     inviteAccept,
     getMyKeyPackage,
+    saveToHistory,
+    loadFromHistory,
     // tests, remove later
     testGroupFlow,
     testInviteFlow,

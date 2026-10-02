@@ -1493,9 +1493,9 @@ var init_proposal = __esm({
     };
     encodeProposal = encode(proposalEncoder);
     decodeProposalAdd = mapDecoder(decodeAdd, (add3) => ({ proposalType: "add", add: add3 }));
-    decodeProposalUpdate = mapDecoder(decodeUpdate, (update) => ({
+    decodeProposalUpdate = mapDecoder(decodeUpdate, (update2) => ({
       proposalType: "update",
-      update
+      update: update2
     }));
     decodeProposalRemove = mapDecoder(decodeRemove, (remove) => ({
       proposalType: "remove",
@@ -14043,6 +14043,25 @@ function set(key, value, customStore = defaultGetStore()) {
     return promisifyRequest(store.transaction);
   });
 }
+function update(key, updater, customStore = defaultGetStore()) {
+  return customStore("readwrite", (store) => (
+    // Need to create the promise manually.
+    // If I try to chain promises, the transaction closes in browsers
+    // that use a promise polyfill (IE10/11).
+    new Promise((resolve, reject) => {
+      const req = store.get(key);
+      req.onsuccess = function() {
+        try {
+          store.put(updater(req.result), key);
+          resolve(promisifyRequest(store.transaction));
+        } catch (err) {
+          reject(err);
+        }
+      };
+      req.onerror = () => reject(req.error);
+    })
+  ));
+}
 function del(key, customStore = defaultGetStore()) {
   return customStore("readwrite", (store) => {
     store.delete(key);
@@ -14066,15 +14085,15 @@ var require_crypto = __commonJS({
     var toBase64 = (bytes) => bytes.toBase64();
     var fromBase64 = (text) => Uint8Array.fromBase64(text);
     var SUITE = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519";
-    async function makeUser(userId, impl) {
+    async function makeUser(userId2, impl) {
       let user;
-      const credential = { credentialType: "basic", identity: toBytes(userId) };
-      const saved = await get(`user:${userId}`);
+      const credential = { credentialType: "basic", identity: toBytes(userId2) };
+      const saved = await get(`user:${userId2}`);
       if (saved !== void 0) {
         return saved;
       }
       user = await generateKeyPackage(credential, defaultCapabilities(), defaultLifetime, [], impl);
-      await set(`user:${userId}`, user);
+      await set(`user:${userId2}`, user);
       return user;
     }
     async function resetTestGroups(chat, users) {
@@ -14125,24 +14144,24 @@ var require_crypto = __commonJS({
       console.log("6. Alice reads:", await decryptMessage(fromCarol, "test-alice", chat));
       console.log("   Bob reads:", await decryptMessage(fromCarol, "test-bob", chat));
     }
-    async function loadGroupState(userId, conversationId) {
-      const encodedGroupState = await get(`${userId}:group:${conversationId}`);
+    async function loadGroupState(userId2, conversationId) {
+      const encodedGroupState = await get(`${userId2}:group:${conversationId}`);
       if (encodedGroupState === void 0) {
-        throw new Error(`No such group state in DB for user: ${userId} and conversationId: ${conversationId}`);
+        throw new Error(`No such group state in DB for user: ${userId2} and conversationId: ${conversationId}`);
       }
       const groupState = decodeGroupState(encodedGroupState, 0)[0];
       return { ...groupState, clientConfig: defaultClientConfig };
     }
-    async function saveGroupState(userId, conversationId, groupState) {
-      await set(`${userId}:group:${conversationId}`, encodeGroupState(groupState));
+    async function saveGroupState(userId2, conversationId, groupState) {
+      await set(`${userId2}:group:${conversationId}`, encodeGroupState(groupState));
     }
-    async function encryptMessage(message, userId, conversationId) {
-      let groupState = await loadGroupState(userId, conversationId);
+    async function encryptMessage(message, userId2, conversationId) {
+      let groupState = await loadGroupState(userId2, conversationId);
       const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
       const encryptedMessage = await createApplicationMessage(groupState, toBytes(message), impl);
       groupState = encryptedMessage.newState;
       encryptedMessage.consumed.forEach(zeroOutUint8Array);
-      await saveGroupState(userId, conversationId, groupState);
+      await saveGroupState(userId2, conversationId, groupState);
       const messageBytes = encodeMlsMessage({
         privateMessage: encryptedMessage.privateMessage,
         wireformat: "mls_private_message",
@@ -14150,33 +14169,33 @@ var require_crypto = __commonJS({
       });
       return toBase64(messageBytes);
     }
-    async function decryptMessage(message, userId, conversationId) {
+    async function decryptMessage(message, userId2, conversationId) {
       const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
       const decoded = decodeMlsMessage(fromBase64(message), 0)[0];
       if (decoded.wireformat !== "mls_private_message") {
         throw new Error("Not a private message");
       }
-      let groupState = await loadGroupState(userId, conversationId);
+      let groupState = await loadGroupState(userId2, conversationId);
       const decryptedMessage = await processPrivateMessage(groupState, decoded.privateMessage, emptyPskIndex, impl);
       groupState = decryptedMessage.newState;
       decryptedMessage.consumed.forEach(zeroOutUint8Array);
-      await saveGroupState(userId, conversationId, groupState);
+      await saveGroupState(userId2, conversationId, groupState);
       if (decryptedMessage.kind === "applicationMessage") {
         return toText(decryptedMessage.message);
       } else {
         return null;
       }
     }
-    async function groupCreation(userId, conversationId, groupMembers) {
+    async function groupCreation(userId2, conversationId, groupMembers) {
       const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
-      const user = await makeUser(userId, impl);
+      const user = await makeUser(userId2, impl);
       let userGroup = await createGroup(toBytes(conversationId), user.publicPackage, user.privatePackage, [], impl);
-      await saveGroupState(userId, conversationId, userGroup);
-      const result = await inviteUsersToGroup(userId, conversationId, groupMembers);
+      await saveGroupState(userId2, conversationId, userGroup);
+      const result = await inviteUsersToGroup(userId2, conversationId, groupMembers);
       return result.welcome;
     }
-    async function inviteAccept(userId, conversationId, welcome) {
-      const checkGroupStatus = await get(`${userId}:group:${conversationId}`);
+    async function inviteAccept(userId2, conversationId, welcome) {
+      const checkGroupStatus = await get(`${userId2}:group:${conversationId}`);
       if (checkGroupStatus !== void 0) {
         throw new Error("Invite already accepted");
       }
@@ -14185,15 +14204,15 @@ var require_crypto = __commonJS({
       if (decodedWelcome.wireformat !== "mls_welcome") {
         throw new Error("Expected a welcome");
       }
-      const user = await makeUser(userId, impl);
+      const user = await makeUser(userId2, impl);
       let acceptInvite = await joinGroup(decodedWelcome.welcome, user.publicPackage, user.privatePackage, emptyPskIndex, impl);
-      await saveGroupState(userId, conversationId, acceptInvite);
+      await saveGroupState(userId2, conversationId, acceptInvite);
     }
-    async function inviteUsersToGroup(userId, conversationId, newMembers) {
+    async function inviteUsersToGroup(userId2, conversationId, newMembers) {
       if (newMembers.length === 0) {
         throw new Error("Not inviting anyone");
       }
-      let groupState = await loadGroupState(userId, conversationId);
+      let groupState = await loadGroupState(userId2, conversationId);
       const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
       let addNewMembers = [];
       for (const member of newMembers) {
@@ -14208,19 +14227,34 @@ var require_crypto = __commonJS({
       const commit = await createCommit({ state: groupState, cipherSuite: impl }, { extraProposals: addNewMembers, ratchetTreeExtension: true });
       groupState = commit.newState;
       commit.consumed.forEach(zeroOutUint8Array);
-      await saveGroupState(userId, conversationId, groupState);
+      await saveGroupState(userId2, conversationId, groupState);
       const welcome = commit.welcome;
       const encodedCommit = toBase64(encodeMlsMessage(commit.commit));
       const encodedWelcome = toBase64(encodeMlsMessage({ welcome, wireformat: "mls_welcome", version: "mls10" }));
       return { welcome: encodedWelcome, commit: encodedCommit };
     }
-    async function getMyKeyPackage(userId) {
-      let keyPackage = await get(`user:${userId}`);
+    async function getMyKeyPackage(userId2) {
+      let keyPackage = await get(`user:${userId2}`);
       if (keyPackage === void 0) {
         const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
-        keyPackage = await makeUser(userId, impl);
+        keyPackage = await makeUser(userId2, impl);
       }
       return toBase64(encodeMlsMessage({ keyPackage: keyPackage.publicPackage, wireformat: "mls_key_package", version: "mls10" }));
+    }
+    async function saveToHistory(userId2, conversationId, entry) {
+      await update(`${userId2}:history:${conversationId}`, (oldValue) => {
+        let history;
+        if (oldValue == null) {
+          history = [];
+        } else {
+          history = oldValue;
+        }
+        history.push({ id: entry.id, senderId: entry.senderId, text: entry.text, time: Date.now() });
+        return history;
+      });
+    }
+    async function loadFromHistory(conversationId) {
+      return await get(`${userId}:history:${conversationId}`) ?? [];
     }
     window.e2ee = {
       encryptMessage,
@@ -14229,6 +14263,8 @@ var require_crypto = __commonJS({
       inviteUsersToGroup,
       inviteAccept,
       getMyKeyPackage,
+      saveToHistory,
+      loadFromHistory,
       // tests, remove later
       testGroupFlow,
       testInviteFlow

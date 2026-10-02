@@ -52,14 +52,39 @@ public class DashboardController : Controller
         //sender tilbake alle meldingene mellom to personer
         return PartialView(GetConversation(id));
     }
+
+    [HttpGet]
+    public IActionResult Mailbox()
+    {
+        var userId = CurrentUserId;
+
+        var messages = _db.Messages
+            .Where(m => m.ReceiverId == userId)
+            .OrderBy(m => m.Id)
+            .ToList();
+        
+        return Ok(messages);
+    }
+
+    [HttpDelete]
+    public IActionResult DeleteMessageFromDb(int id)
+    {
+        _db.Messages.RemoveRange(_db.Messages.Where(m => m.Id == id && m.ReceiverId == CurrentUserId));
+        _db.SaveChanges();
+        
+        return Ok();
+    }
     
     //sender meldingen til serveren og setter den inn i databasen
     //[ValidateAntiForgeryToken] ADD THIS LATER
     [HttpPost]
-    public async Task<IActionResult> SendMessage(string friendId, string text)
+    public async Task<IActionResult> SendMessage(string friendId, string conversationId, string text)
     {
         //om du sender ingenting blir du skutt
         if (string.IsNullOrWhiteSpace(text)) return BadRequest();
+        //sjekker at en melding ikke blir sendt til seg selv
+        if (friendId == CurrentUserId) return BadRequest();
+        
 
         //database ting
         _db.Messages.Add(new Message
@@ -69,19 +94,14 @@ public class DashboardController : Controller
             Text = text,
             Timestamp = DateTime.UtcNow
         });
-        _db.SaveChanges();
+        await _db.SaveChangesAsync();
 
-        //sjekker at en melding ikke blir sendt til seg selv
-        if (friendId != CurrentUserId)
-        {
-            await _hub.Clients.User(friendId).SendAsync("ReceiveMessage", CurrentUserId, text);
-        }
-
-        //når man velger en venn i fanen blir det satt har sånn at man sender til riktig venn
-        ViewBag.FriendId = friendId;
         
         
-        return PartialView("Conversation", GetConversation(friendId));
+        await _hub.Clients.User(friendId).SendAsync("ReceiveMessage");
+        
+        
+        return Ok();
     }
 
     public record UploadKeyPackageRequest(byte[] KeyPackage);
