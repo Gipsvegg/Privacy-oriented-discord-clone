@@ -101,8 +101,8 @@ function appendMessage(senderId, text){
     const all = box.querySelectorAll('p[data-sender-id]');
     const last = all[all.length - 1];
 
-    if (!last || last.dataset.senderId !== senderId) {
-        const name = document.createElement('p');
+    if ((!last || last.dataset.senderId !== senderId)) {
+        const name = document.createElement('h6');
         name.textContent = `${senderId}:`;
         box.appendChild(name);
     }
@@ -203,9 +203,8 @@ document.addEventListener('submit', async (e) => {
     if (e.target.id !== 'send-form') return;
     e.preventDefault();
 
-    const text = document.getElementById('message-input').value;
-    
-    if (!text.trim()) return;                    // 1. don't even send empty messages
+    const text = document.getElementById('message-input').value.trim();
+    if (!text) return;                    // 1. don't even send empty messages
 
     const friendId = e.target.dataset.friendId;
     const conversationId = "test";
@@ -222,8 +221,10 @@ document.addEventListener('submit', async (e) => {
     await e2ee.saveToHistory(userId, conversationId, {senderId: userId, text: text, time: Date.now()});
     //document.getElementById('message-area').innerHTML = await res.text();
     scrollToBottom();
-    document.getElementById('message-input').value = '';
-    document.getElementById('message-input').focus();
+    const input = document.getElementById('message-input');
+    input.value = '';
+    input.style.height = '';      // setting .value doesn't fire 'input', so reset the auto-grow height by hand
+    input.focus();
 });
 
 document.addEventListener('input', (e) => {

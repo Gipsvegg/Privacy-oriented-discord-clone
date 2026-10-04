@@ -15,7 +15,6 @@
             <h6 class="text-center">Username and UUID</h6>
             <p>@User.FindFirstValue(ClaimTypes.Name)</p>
             <p data-uuid="@User.FindFirstValue(ClaimTypes.NameIdentifier)" id="uuid">@User.FindFirstValue(ClaimTypes.NameIdentifier)</p>
-
         </div>
         <div class="sidebar-section">
             <h6 class="text-center">Friends & Groups</h6>
@@ -27,12 +26,9 @@
             {
                 <a id="friend" asp-controller="Dashboard" asp-action="Conversation" asp-route-id="8b619ee5-5e13-4154-9843-582bfee5b97c">test@test.no</a>
             }
-            
-            
         </div>
         <div class="sidebar-section">
             <h6 class="text-center">Town-squares</h6>
-
         </div>
     </div>
     
