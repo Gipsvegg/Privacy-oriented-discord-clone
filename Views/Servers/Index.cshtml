@@ -1,0 +1,75 @@
+@using ikt201_project.Models
+@model ServersViewModel
+@{
+    Layout = "_ServerLayout";
+    ViewData["Title"] = Model.Current.Name;
+}
+
+<div class="app">
+    <nav class="server-rail">
+        <a asp-controller="Home" asp-action="Index" class="server-icon home" title="Home">⌂</a>
+        @foreach (var s in Model.Servers)
+        {
+            <a asp-action="Index" asp-route-id="@s.Id"
+               class="server-icon @(s.Id == Model.Current.Id ? "active" : "")"
+               title="@s.Name">@s.Icon</a>
+        }
+    </nav>
+
+    <aside class="channel-list">
+        <header>@Model.Current.Name</header>
+        <div class="channels-scroll">
+            @foreach (var cat in Model.Current.Categories)
+            {
+                <div class="category">@cat.Name</div>
+                @foreach (var ch in cat.Channels)
+                {
+                    <a asp-action="Index" asp-route-id="@Model.Current.Id" asp-route-channelId="@ch.Id"
+                       class="channel @(ch.Id == Model.CurrentChannel?.Id ? "active" : "")">
+                        <span class="icon">@(ch.Type == ChannelType.Voice ? "🔊" : "#")</span>
+                        @ch.Name
+                    </a>
+                }
+            }
+        </div>
+        <footer class="user-bar">
+            <span>@User.Identity?.Name</span>
+            <a asp-area="Identity" asp-page="/Account/Manage/Index" title="Settings">⚙</a>
+        </footer>
+    </aside>
+
+    <main class="chat">
+        <header>
+            <span class="icon">@(Model.CurrentChannel?.Type == ChannelType.Voice ? "🔊" : "#")</span>
+            @Model.CurrentChannel?.Name
+            <span class="lock" title="End-to-end encrypted">🔒</span>
+        </header>
+
+        <div class="messages">
+            @if (Model.CurrentChannel?.Type == ChannelType.Voice)
+            {
+                <div class="empty">Voice channel. <button class="btn">Join voice</button></div>
+            }
+            else
+            {
+                <div class="empty">This is the start of #@Model.CurrentChannel?.Name</div>
+            }
+        </div>
+
+        @if (Model.CurrentChannel?.Type == ChannelType.Text && !Model.CurrentChannel.ReadOnly)
+        {
+            <div class="composer">
+                <input type="text" placeholder="Message #@Model.CurrentChannel.Name" />
+            </div>
+        }
+        else if (Model.CurrentChannel?.ReadOnly == true)
+        {
+            <div class="composer readonly">This channel is read-only.</div>
+        }
+    </main>
+
+    <aside class="member-list">
+        <header>Members</header>
+        <div class="member">@User.Identity?.Name</div>
+    </aside>
+</div>

@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/servers.css" asp-append-version="true" />
+</head>
+<body class="servers-body">
+@RenderBody()
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
