@@ -14085,17 +14085,18 @@ var require_crypto = __commonJS({
     var toBase64 = (bytes) => bytes.toBase64();
     var fromBase64 = (text) => Uint8Array.fromBase64(text);
     var SUITE = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519";
-    async function makeUser(userId2, impl) {
+    async function makeUser(userId, impl) {
       let user;
-      const credential = { credentialType: "basic", identity: toBytes(userId2) };
-      const saved = await get(`user:${userId2}`);
+      const credential = { credentialType: "basic", identity: toBytes(userId) };
+      const saved = await get(`user:${userId}`);
       if (saved !== void 0) {
         return saved;
       }
       user = await generateKeyPackage(credential, defaultCapabilities(), defaultLifetime, [], impl);
-      await set(`user:${userId2}`, user);
+      await set(`user:${userId}`, user);
       return user;
     }
+    var fakeServer = async () => true;
     async function resetTestGroups(chat, users) {
       for (const user of users) {
         await del(`${user}:group:${chat}`);
@@ -14106,9 +14107,9 @@ var require_crypto = __commonJS({
       await resetTestGroups(chat, ["test-alice", "test-bob"]);
       const bobKeyPackage = await getMyKeyPackage("test-bob");
       console.log("0. Bob's key package bytes:", bobKeyPackage.length);
-      const welcomeBytes = await groupCreation("test-alice", chat, [{ keyPackage: bobKeyPackage }]);
+      const welcomeBytes = await groupCreation("test-alice", chat, [{ keyPackage: bobKeyPackage }], fakeServer);
       console.log("1. Welcome bytes:", welcomeBytes.length);
-      const welcomeFromServer = fromBase64(toBase64(welcomeBytes));
+      const welcomeFromServer = welcomeBytes;
       await inviteAccept("test-bob", chat, welcomeFromServer);
       console.log(
         "2. Both saved a group:",
@@ -14125,14 +14126,14 @@ var require_crypto = __commonJS({
       await resetTestGroups(chat, ["test-alice", "test-bob", "test-carol"]);
       const bobKeyPackage = await getMyKeyPackage("test-bob");
       const carolKeyPackage = await getMyKeyPackage("test-carol");
-      const welcomeForBob = await groupCreation("test-alice", chat, [{ keyPackage: bobKeyPackage }]);
+      const welcomeForBob = await groupCreation("test-alice", chat, [{ keyPackage: bobKeyPackage }], fakeServer);
       await inviteAccept("test-bob", chat, welcomeForBob);
       console.log("1. Bob reads:", await decryptMessage(
         await encryptMessage("hi Bob", "test-alice", chat),
         "test-bob",
         chat
       ));
-      const invite = await inviteUsersToGroup("test-alice", chat, [{ keyPackage: carolKeyPackage }]);
+      const invite = await inviteUsersToGroup("test-alice", chat, [{ keyPackage: carolKeyPackage }], fakeServer);
       console.log("2. Invite made. Welcome bytes:", invite.welcome.length, "Commit bytes:", invite.commit.length);
       console.log("3. Bob processes commit, returns:", await decryptMessage(invite.commit, "test-bob", chat));
       await inviteAccept("test-carol", chat, invite.welcome);
@@ -14144,105 +14145,203 @@ var require_crypto = __commonJS({
       console.log("6. Alice reads:", await decryptMessage(fromCarol, "test-alice", chat));
       console.log("   Bob reads:", await decryptMessage(fromCarol, "test-bob", chat));
     }
-    async function loadGroupState(userId2, conversationId) {
-      const encodedGroupState = await get(`${userId2}:group:${conversationId}`);
+    async function testRemoveFlow() {
+      const chat = "test-remove-chat";
+      await resetTestGroups(chat, ["test-alice", "test-bob", "test-carol"]);
+      const bobKeyPackage = await getMyKeyPackage("test-bob");
+      const carolKeyPackage = await getMyKeyPackage("test-carol");
+      const welcome = await groupCreation("test-alice", chat, [{ keyPackage: bobKeyPackage }, { keyPackage: carolKeyPackage }], fakeServer);
+      await inviteAccept("test-bob", chat, welcome);
+      await inviteAccept("test-carol", chat, welcome);
+      const hello = await encryptMessage("hi both", "test-alice", chat);
+      console.log("1. Bob reads:", await decryptMessage(hello, "test-bob", chat));
+      console.log("   Carol reads:", await decryptMessage(hello, "test-carol", chat));
+      const { commit } = await removeUsersFromGroup("test-alice", chat, ["test-carol"], fakeServer);
+      console.log("2. Remove commit made, length:", commit.length);
+      console.log("3. Bob processes commit, returns:", await decryptMessage(commit, "test-bob", chat));
+      console.log("   Carol processes commit, returns:", await decryptMessage(commit, "test-carol", chat));
+      const carolState = await loadGroupState("test-carol", chat);
+      console.log("   Carol's state says:", carolState.groupActiveState.kind, "(should be removedFromGroup)");
+      const secret = await encryptMessage("carol is gone", "test-alice", chat);
+      console.log("4. Bob reads:", await decryptMessage(secret, "test-bob", chat));
+      try {
+        console.log("   Carol reads:", await decryptMessage(secret, "test-carol", chat), "<- BAD, she shouldn't");
+      } catch (err) {
+        console.log("   Carol can't read it (good):", err.message);
+      }
+      try {
+        await encryptMessage("let me back in", "test-carol", chat);
+        console.log("5. Carol sent a message <- BAD");
+      } catch (err) {
+        console.log("5. Carol can't send (good):", err.message);
+      }
+      for (const [who, label] of [["test-alice", "yourself"], ["test-carol", "someone already gone"]]) {
+        try {
+          await removeUsersFromGroup("test-alice", chat, [who], fakeServer);
+          console.log(`6. Removing ${label} worked <- BAD`);
+        } catch (err) {
+          console.log(`6. Removing ${label} throws (good):`, err.message);
+        }
+      }
+    }
+    function withGroupLock(userId, conversationId, fn) {
+      return navigator.locks.request(`mls:${userId}:${conversationId}`, fn);
+    }
+    async function loadGroupState(userId, conversationId) {
+      const encodedGroupState = await get(`${userId}:group:${conversationId}`);
       if (encodedGroupState === void 0) {
-        throw new Error(`No such group state in DB for user: ${userId2} and conversationId: ${conversationId}`);
+        throw new Error(`No such group state in DB for user: ${userId} and conversationId: ${conversationId}`);
       }
       const groupState = decodeGroupState(encodedGroupState, 0)[0];
       return { ...groupState, clientConfig: defaultClientConfig };
     }
-    async function saveGroupState(userId2, conversationId, groupState) {
-      await set(`${userId2}:group:${conversationId}`, encodeGroupState(groupState));
+    async function saveGroupState(userId, conversationId, groupState) {
+      await set(`${userId}:group:${conversationId}`, encodeGroupState(groupState));
     }
-    async function encryptMessage(message, userId2, conversationId) {
-      let groupState = await loadGroupState(userId2, conversationId);
-      const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
-      const encryptedMessage = await createApplicationMessage(groupState, toBytes(message), impl);
-      groupState = encryptedMessage.newState;
-      encryptedMessage.consumed.forEach(zeroOutUint8Array);
-      await saveGroupState(userId2, conversationId, groupState);
-      const messageBytes = encodeMlsMessage({
-        privateMessage: encryptedMessage.privateMessage,
-        wireformat: "mls_private_message",
-        version: "mls10"
+    async function encryptMessage(message, userId, conversationId) {
+      return withGroupLock(userId, conversationId, async () => {
+        let groupState = await loadGroupState(userId, conversationId);
+        const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
+        const encryptedMessage = await createApplicationMessage(groupState, toBytes(message), impl);
+        groupState = encryptedMessage.newState;
+        encryptedMessage.consumed.forEach(zeroOutUint8Array);
+        await saveGroupState(userId, conversationId, groupState);
+        const messageBytes = encodeMlsMessage({
+          privateMessage: encryptedMessage.privateMessage,
+          wireformat: "mls_private_message",
+          version: "mls10"
+        });
+        return toBase64(messageBytes);
       });
-      return toBase64(messageBytes);
     }
-    async function decryptMessage(message, userId2, conversationId) {
-      const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
-      const decoded = decodeMlsMessage(fromBase64(message), 0)[0];
-      if (decoded.wireformat !== "mls_private_message") {
-        throw new Error("Not a private message");
-      }
-      let groupState = await loadGroupState(userId2, conversationId);
-      const decryptedMessage = await processPrivateMessage(groupState, decoded.privateMessage, emptyPskIndex, impl);
-      groupState = decryptedMessage.newState;
-      decryptedMessage.consumed.forEach(zeroOutUint8Array);
-      await saveGroupState(userId2, conversationId, groupState);
-      if (decryptedMessage.kind === "applicationMessage") {
-        return toText(decryptedMessage.message);
-      } else {
-        return null;
-      }
+    async function decryptMessage(message, userId, conversationId) {
+      return withGroupLock(userId, conversationId, async () => {
+        const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
+        const decoded = decodeMlsMessage(fromBase64(message), 0)[0];
+        if (decoded.wireformat !== "mls_private_message") {
+          throw new Error("Not a private message");
+        }
+        let groupState = await loadGroupState(userId, conversationId);
+        const decryptedMessage = await processPrivateMessage(groupState, decoded.privateMessage, emptyPskIndex, impl);
+        groupState = decryptedMessage.newState;
+        decryptedMessage.consumed.forEach(zeroOutUint8Array);
+        await saveGroupState(userId, conversationId, groupState);
+        if (decryptedMessage.kind === "applicationMessage") {
+          return toText(decryptedMessage.message);
+        } else {
+          return null;
+        }
+      });
     }
-    async function groupCreation(userId2, conversationId, groupMembers) {
+    async function groupCreation(userId, conversationId, groupMembers, sendCommit) {
       const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
-      const user = await makeUser(userId2, impl);
+      const user = await makeUser(userId, impl);
       let userGroup = await createGroup(toBytes(conversationId), user.publicPackage, user.privatePackage, [], impl);
-      await saveGroupState(userId2, conversationId, userGroup);
-      const result = await inviteUsersToGroup(userId2, conversationId, groupMembers);
+      await saveGroupState(userId, conversationId, userGroup);
+      const result = await inviteUsersToGroup(userId, conversationId, groupMembers, sendCommit);
       return result.welcome;
     }
-    async function inviteAccept(userId2, conversationId, welcome) {
-      const checkGroupStatus = await get(`${userId2}:group:${conversationId}`);
-      if (checkGroupStatus !== void 0) {
-        throw new Error("Invite already accepted");
-      }
-      const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
-      const decodedWelcome = decodeMlsMessage(fromBase64(welcome), 0)[0];
-      if (decodedWelcome.wireformat !== "mls_welcome") {
-        throw new Error("Expected a welcome");
-      }
-      const user = await makeUser(userId2, impl);
-      let acceptInvite = await joinGroup(decodedWelcome.welcome, user.publicPackage, user.privatePackage, emptyPskIndex, impl);
-      await saveGroupState(userId2, conversationId, acceptInvite);
+    async function inviteAccept(userId, conversationId, welcome) {
+      return withGroupLock(userId, conversationId, async () => {
+        const checkGroupStatus = await get(`${userId}:group:${conversationId}`);
+        if (checkGroupStatus !== void 0) {
+          throw new Error("Invite already accepted");
+        }
+        const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
+        const decodedWelcome = decodeMlsMessage(fromBase64(welcome), 0)[0];
+        if (decodedWelcome.wireformat !== "mls_welcome") {
+          throw new Error("Expected a welcome");
+        }
+        const user = await makeUser(userId, impl);
+        let acceptInvite = await joinGroup(decodedWelcome.welcome, user.publicPackage, user.privatePackage, emptyPskIndex, impl);
+        await saveGroupState(userId, conversationId, acceptInvite);
+      });
     }
-    async function inviteUsersToGroup(userId2, conversationId, newMembers) {
+    async function inviteUsersToGroup(userId, conversationId, newMembers, sendCommit) {
       if (newMembers.length === 0) {
         throw new Error("Not inviting anyone");
       }
-      let groupState = await loadGroupState(userId2, conversationId);
-      const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
-      let addNewMembers = [];
-      for (const member of newMembers) {
-        const decodedMemberPackage = decodeMlsMessage(fromBase64(member.keyPackage), 0)[0];
-        if (decodedMemberPackage.wireformat === "mls_key_package") {
-          const addMember = { proposalType: "add", add: { keyPackage: decodedMemberPackage.keyPackage } };
-          addNewMembers.push(addMember);
-        } else {
-          throw new Error("Member does not have keyPackage");
+      return withGroupLock(userId, conversationId, async () => {
+        let groupState = await loadGroupState(userId, conversationId);
+        const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
+        let addNewMembers = [];
+        for (const member of newMembers) {
+          const decodedMemberPackage = decodeMlsMessage(fromBase64(member.keyPackage), 0)[0];
+          if (decodedMemberPackage.wireformat === "mls_key_package") {
+            const addMember = { proposalType: "add", add: { keyPackage: decodedMemberPackage.keyPackage } };
+            addNewMembers.push(addMember);
+          } else {
+            throw new Error("Member does not have keyPackage");
+          }
         }
-      }
-      const commit = await createCommit({ state: groupState, cipherSuite: impl }, { extraProposals: addNewMembers, ratchetTreeExtension: true });
-      groupState = commit.newState;
-      commit.consumed.forEach(zeroOutUint8Array);
-      await saveGroupState(userId2, conversationId, groupState);
-      const welcome = commit.welcome;
-      const encodedCommit = toBase64(encodeMlsMessage(commit.commit));
-      const encodedWelcome = toBase64(encodeMlsMessage({ welcome, wireformat: "mls_welcome", version: "mls10" }));
-      return { welcome: encodedWelcome, commit: encodedCommit };
+        const oldEpoch = Number(groupState.groupContext.epoch);
+        const commit = await createCommit({ state: groupState, cipherSuite: impl }, {
+          extraProposals: addNewMembers,
+          ratchetTreeExtension: true
+        });
+        groupState = commit.newState;
+        commit.consumed.forEach(zeroOutUint8Array);
+        const welcome = commit.welcome;
+        const encodedCommit = toBase64(encodeMlsMessage(commit.commit));
+        const encodedWelcome = toBase64(encodeMlsMessage({ welcome, wireformat: "mls_welcome", version: "mls10" }));
+        const ok = await sendCommit(encodedCommit, oldEpoch, conversationId);
+        if (!ok) {
+          throw new Error("Commit rejected");
+        }
+        await saveGroupState(userId, conversationId, groupState);
+        return { welcome: encodedWelcome, commit: encodedCommit };
+      });
     }
-    async function getMyKeyPackage(userId2) {
-      let keyPackage = await get(`user:${userId2}`);
+    async function removeUsersFromGroup(userId, conversationId, members, sendCommit) {
+      return withGroupLock(userId, conversationId, async () => {
+        let groupState = await loadGroupState(userId, conversationId);
+        const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
+        let removedMembers = [];
+        for (let memberId of members) {
+          if (memberId === userId) {
+            throw new Error("CAN'T REMOVE YOURSELF");
+          }
+          let leafIndex;
+          const tree = groupState.ratchetTree;
+          for (let i = 0; i < tree.length; i++) {
+            const node = tree[i];
+            if (node?.nodeType === "leaf" && toText(node.leaf.credential.identity) === memberId) {
+              leafIndex = i / 2;
+              break;
+            }
+          }
+          if (leafIndex === void 0) {
+            throw new Error("User not in group");
+          }
+          const removeUserProposal = { proposalType: "remove", remove: { removed: leafIndex } };
+          removedMembers.push(removeUserProposal);
+        }
+        const removeUserCommit = await createCommit({
+          state: groupState,
+          cipherSuite: impl
+        }, { extraProposals: removedMembers });
+        const oldEpoch = Number(groupState.groupContext.epoch);
+        groupState = removeUserCommit.newState;
+        removeUserCommit.consumed.forEach(zeroOutUint8Array);
+        const encodedCommit = toBase64(encodeMlsMessage(removeUserCommit.commit));
+        const ok = await sendCommit(encodedCommit, oldEpoch, conversationId);
+        if (!ok) {
+          throw new Error("Commit rejected");
+        }
+        await saveGroupState(userId, conversationId, groupState);
+        return { commit: encodedCommit };
+      });
+    }
+    async function getMyKeyPackage(userId) {
+      let keyPackage = await get(`user:${userId}`);
       if (keyPackage === void 0) {
         const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
-        keyPackage = await makeUser(userId2, impl);
+        keyPackage = await makeUser(userId, impl);
       }
       return toBase64(encodeMlsMessage({ keyPackage: keyPackage.publicPackage, wireformat: "mls_key_package", version: "mls10" }));
     }
-    async function saveToHistory(userId2, conversationId, entry) {
-      await update(`${userId2}:history:${conversationId}`, (oldValue) => {
+    async function saveToHistory(userId, conversationId, entry) {
+      await update(`${userId}:history:${conversationId}`, (oldValue) => {
         let history;
         if (oldValue == null) {
           history = [];
@@ -14253,7 +14352,7 @@ var require_crypto = __commonJS({
         return history;
       });
     }
-    async function loadFromHistory(conversationId) {
+    async function loadFromHistory(userId, conversationId) {
       return await get(`${userId}:history:${conversationId}`) ?? [];
     }
     window.e2ee = {
@@ -14265,9 +14364,11 @@ var require_crypto = __commonJS({
       getMyKeyPackage,
       saveToHistory,
       loadFromHistory,
+      removeUsersFromGroup,
       // tests, remove later
       testGroupFlow,
-      testInviteFlow
+      testInviteFlow,
+      testRemoveFlow
     };
     console.log("e2ee loaded. Try in the console:  await e2ee.testGroupFlow()");
   }
