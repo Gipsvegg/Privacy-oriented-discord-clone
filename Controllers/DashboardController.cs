@@ -85,7 +85,6 @@ public class DashboardController : Controller
         //sjekker at en melding ikke blir sendt til seg selv
         if (friendId == CurrentUserId) return BadRequest();
         
-
         //database ting
         _db.Messages.Add(new Message
         {
@@ -95,17 +94,12 @@ public class DashboardController : Controller
             Timestamp = DateTime.UtcNow
         });
         await _db.SaveChangesAsync();
-
-        
-        
         await _hub.Clients.User(friendId).SendAsync("ReceiveMessage");
-        
         
         return Ok();
     }
 
     public record UploadKeyPackageRequest(byte[] KeyPackage);
-    
     [HttpPost]
     public IActionResult UploadKeyPackage([FromBody] UploadKeyPackageRequest request)
     {
@@ -121,7 +115,6 @@ public class DashboardController : Controller
             exists.Data = request.KeyPackage;
         }
         _db.SaveChanges();
-        
         
         return Ok();
     }
@@ -141,11 +134,9 @@ public class DashboardController : Controller
     public async Task<IActionResult> UploadGroupInvite([FromBody] UploadWelcome? welcome)
     {
         if (welcome == null || welcome?.Welcome == null || welcome.Welcome.Length == 0 || string.IsNullOrWhiteSpace(welcome.ReceiverId) || string.IsNullOrWhiteSpace(welcome.ConversationId)) return BadRequest(); 
-        
         if (welcome.ReceiverId == CurrentUserId) return BadRequest();
 
         var exists = _db.GroupInvites.FirstOrDefault(m => (m.ReceiverId == welcome.ReceiverId && m.ConversationId == welcome.ConversationId)); 
-        
         if (exists == null)
         {
             _db.GroupInvites.Add(new GroupInvite { ReceiverId = welcome.ReceiverId, SenderId = CurrentUserId, ConversationId = welcome.ConversationId, Data = welcome.Welcome, Timestamp = DateTime.UtcNow });
@@ -158,7 +149,6 @@ public class DashboardController : Controller
         }
         
         await _db.SaveChangesAsync();
-        
         await _hub.Clients.User(welcome.ReceiverId).SendAsync("ReceiveGroupInvite");
         
         return Ok();

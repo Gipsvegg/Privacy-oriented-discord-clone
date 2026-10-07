@@ -2,18 +2,7 @@
 
 
 <div class="messages">
-    @{ string prevSenderId = ""; }
-    @foreach (var msg in Model)
-    {
-        bool showSender = !string.Equals(msg.SenderId, prevSenderId);
-        prevSenderId = msg.SenderId;
-
-        if (showSender)
-        {
-            <h6>@msg.SenderId:</h6>
-        }
-        <p data-sender-id="@msg.SenderId">@msg.Text</p>
-    }
+    
 </div>
 
 

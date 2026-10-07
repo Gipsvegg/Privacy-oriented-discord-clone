@@ -78,7 +78,10 @@ async function fetchPendingMessages(){
             continue
         }
         
-        if (decryptedText === null) continue;   // group change, not a chat message
+        if (decryptedText === null) {   // group change, not a chat message
+            await deleteFetchedMessages(message.id); 
+            continue;
+        }
         // later: save to IndexedDB here
         message.text = decryptedText;
         await e2ee.saveToHistory(userId, conversationId, message);

@@ -14238,8 +14238,13 @@ var require_crypto = __commonJS({
       const user = await makeUser(userId, impl);
       let userGroup = await createGroup(toBytes(conversationId), user.publicPackage, user.privatePackage, [], impl);
       await saveGroupState(userId, conversationId, userGroup);
-      const result = await inviteUsersToGroup(userId, conversationId, groupMembers, sendCommit);
-      return result.welcome;
+      try {
+        const result = await inviteUsersToGroup(userId, conversationId, groupMembers, sendCommit);
+        return result.welcome;
+      } catch (err) {
+        await del(`${userId}:group:${conversationId}`);
+        throw err;
+      }
     }
     async function inviteAccept(userId, conversationId, welcome) {
       return withGroupLock(userId, conversationId, async () => {

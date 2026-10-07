@@ -305,10 +305,14 @@ async function groupCreation(userId, conversationId, groupMembers, sendCommit) {
     const user = await makeUser(userId, impl);
     let userGroup = await createGroup(toBytes(conversationId), user.publicPackage, user.privatePackage, [], impl);
     await saveGroupState(userId, conversationId, userGroup);
-    const result = await inviteUsersToGroup(userId, conversationId, groupMembers, sendCommit);
     
-    
-    return result.welcome;
+    try {
+        const result = await inviteUsersToGroup(userId, conversationId, groupMembers, sendCommit);
+        return result.welcome;
+    } catch (err) {
+        await del(`${userId}:group:${conversationId}`)
+        throw err;
+    }
 }
 
 //lets the user into the group after they download the welcome after group creation(should be automatic)
