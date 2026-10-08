@@ -2,8 +2,8 @@
 
 const hub = new signalR.HubConnectionBuilder().withUrl("/voiceHub").build();
 
-// STUN server. Forteller nettleseren public IP
-const rtcConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+// Bare TURN, for å gjemme IP
+const rtcConfig = { iceServers: [], iceTransportPolicy: "relay" };
 
 let microphone = null;
 const peers = {}; // En RTCPeerConnection per person i samtalen, key er SignalR connection id
@@ -89,7 +89,8 @@ joinButton.addEventListener("click", async () => {
         microphone = await navigator.mediaDevices.getUserMedia({ audio: true });
         await hub.start();
         const ice = JSON.parse(await hub.invoke("GetIceServers"));
-        if (ice.iceServers) rtcConfig.iceServers = ice.iceServers;
+        if (!ice.iceServers) throw new Error("TURN server is not set up");
+        rtcConfig.iceServers = ice.iceServers;
         await hub.invoke("JoinRoom", room);
         joinButton.disabled = true;
         leaveButton.disabled = false;
@@ -98,6 +99,7 @@ joinButton.addEventListener("click", async () => {
         peopleBox.hidden = false;
         updateCount();
     } catch (error) {
+        await hub.stop();
         microphone?.getTracks().forEach(track => track.stop());
         statusText.textContent = "Could not join: " + error.message;
     }
