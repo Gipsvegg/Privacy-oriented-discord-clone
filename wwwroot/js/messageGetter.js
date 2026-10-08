@@ -27,6 +27,15 @@ async function getWelcomes(){
     }
 }
 
+async function sendCommit (encodedCommit, groupEpoch, conversationId){
+    const res = await fetch(`/Dashboard/SubmitCommit`,{
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({conversationId, epoch: groupEpoch, commit: encodedCommit}),
+    })
+    return res.ok;
+}
+
 async function deleteWelcome(id) {
     const res = await fetch(`/Dashboard/DeleteWelcome?id=${id}`, {
         method: 'DELETE',
@@ -67,7 +76,10 @@ async function fetchPendingMessages(){
             continue
         }
         
-        if (decryptedText === null) continue;   // group change, not a chat message
+        if (decryptedText === null) {   // group change, not a chat message
+            await deleteFetchedMessages(message.id); 
+            continue;
+        }
         // later: save to IndexedDB here
         message.text = decryptedText;
         await e2ee.saveToHistory(userId, conversationId, message);
@@ -158,8 +170,8 @@ async function createGroupWith(memberIds) {
     }
 
     // 2. Create the group in this browser (also saves our own group state in IndexedDB)
-    const conversationId = "test" //crypto.randomUUID();
-    const welcome = await e2ee.groupCreation(userId, conversationId, members);
+    const conversationId = "test" //crypto.randomUUID();                                            //MÅ BYTTES TIL CONVERSATION ID HER
+    const welcome = await e2ee.groupCreation(userId, conversationId, members, sendCommit);
 
     // 3. Put the same Welcome in every member's mailbox on the server
     for (const member of members) {
@@ -186,8 +198,8 @@ document.querySelectorAll('.sidebar a[id]').forEach(link => {
         const res = await fetch(link.href);
         document.getElementById('message-area').innerHTML = await res.text();
         
-        const conversationId = "test";      //NEEDS TO BE CHANGED WHEN DATABASE IS UPDATED TO CONTAIN THE CONVO-ID
-        const messages = await e2ee.loadFromHistory(conversationId);
+        const conversationId = "test";      //NEEDS TO BE CHANGED WHEN DATABASE IS UPDATED TO CONTAIN THE CONVOID
+        const messages = await e2ee.loadFromHistory(userId, conversationId);
 
         for (const message of messages) {
             appendMessage(message.senderId, message.text);

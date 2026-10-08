@@ -100,7 +100,6 @@ public class DashboardController : Controller
     }
 
     public record UploadKeyPackageRequest(byte[] KeyPackage);
-    
     [HttpPost]
     public IActionResult UploadKeyPackage([FromBody] UploadKeyPackageRequest request)
     {
@@ -138,7 +137,6 @@ public class DashboardController : Controller
         if (welcome.ReceiverId == CurrentUserId) return BadRequest();
 
         var exists = _db.GroupInvites.FirstOrDefault(m => (m.ReceiverId == welcome.ReceiverId && m.ConversationId == welcome.ConversationId)); 
-        
         if (exists == null)
         {
             _db.GroupInvites.Add(new GroupInvite { ReceiverId = welcome.ReceiverId, SenderId = CurrentUserId, ConversationId = welcome.ConversationId, Data = welcome.Welcome, Timestamp = DateTime.UtcNow });
