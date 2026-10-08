@@ -1,0 +1,35 @@
+/*sidebaren flex for å få voice seksjonen nederst*/
+.sidebar {
+    display: flex;
+    flex-direction: column;
+}
+
+.voice-section {
+    margin-top: auto;
+    margin-bottom: 0;
+}
+
+.voice-section p {
+    margin-bottom: 0.5rem;
+}
+
+.voice-section summary {
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+}
+
+.voice-section ul {
+    list-style: none;
+    padding-left: 1rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.voice-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.voice-buttons button {
+    flex: 1;
+}

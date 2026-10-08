@@ -7,6 +7,7 @@
 @section Styles
 {
     <link rel="stylesheet" href="~/css/homepage.css"/>
+    <link rel="stylesheet" href="~/css/voice-chat.css"/>
 }
 
 <div class="page-layout">
@@ -30,6 +31,7 @@
         <div class="sidebar-section">
             <h6 class="text-center">Town-squares</h6>
         </div>
+        <partial name="_VoiceChat" />
     </div>
     
     <div class="main-content">
@@ -37,3 +39,8 @@
         <div id="message-area" class="message-area"></div>
     </div>
 </div>
+
+@section Scripts
+{
+    <script src="~/js/voice-chat.js" asp-append-version="true"></script>
+}
