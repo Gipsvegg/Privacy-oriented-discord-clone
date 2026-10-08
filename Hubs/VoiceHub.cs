@@ -10,7 +10,7 @@ public class VoiceHub : Hub
     // Someone joined,  people already in the call will send offer
     public override async Task OnConnectedAsync()
     {
-        await Clients.Others.SendAsync("UserJoined", Context.ConnectionId);
+        await Clients.Others.SendAsync("UserJoined", Context.ConnectionId, Context.User?.Identity?.Name);
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
@@ -21,6 +21,6 @@ public class VoiceHub : Hub
     // Passes a WebRTC message (offer, answer or ICE candidate)
     public async Task SendSignal(string connectionId, string data)
     {
-        await Clients.Client(connectionId).SendAsync("Signal", Context.ConnectionId, data);
+        await Clients.Client(connectionId).SendAsync("Signal", Context.ConnectionId, Context.User?.Identity?.Name, data);
     }
 }

@@ -12,8 +12,14 @@ const joinButton = document.getElementById("voice-join");
 const leaveButton = document.getElementById("voice-leave");
 const statusText = document.getElementById("voice-status");
 const peopleList = document.getElementById("voice-people");
+const peopleBox = document.getElementById("voice-details");
+const countText = document.getElementById("voice-count");
 
-function createPeer(id) {
+function updateCount() {
+    countText.textContent = peopleList.children.length + " connected";
+}
+
+function createPeer(id, username) {
     const peer = new RTCPeerConnection(rtcConfig);
     peers[id] = peer;
 
@@ -35,11 +41,10 @@ function createPeer(id) {
     audio.autoplay = true;
     item.append(text, audio);
     peopleList.append(item);
+    updateCount();
 
-    // Use start of SignalR connection id as name
-    const name = "User " + id.substring(0, 5);
-    text.textContent = name + ": connecting";
-    peer.onconnectionstatechange = () => text.textContent = name + ": " + peer.connectionState;
+    text.textContent = username + ": connecting";
+    peer.onconnectionstatechange = () => text.textContent = username + ": " + peer.connectionState;
     peer.ontrack = event => audio.srcObject = event.streams[0];
 
     return peer;
@@ -49,21 +54,22 @@ function removePeer(id) {
     peers[id]?.close();
     delete peers[id];
     document.getElementById("peer-" + id)?.remove();
+    updateCount();
 }
 
 // Someone joined the call, we send them an offer
-hub.on("UserJoined", async id => {
-    const peer = createPeer(id);
+hub.on("UserJoined", async (id, username) => {
+    const peer = createPeer(id, username);
     await peer.setLocalDescription(await peer.createOffer());
     await hub.invoke("SendSignal", id, JSON.stringify({ description: peer.localDescription }));
 });
 
 // A message from someone else. an offer, an answer, or an ICE candidate
-hub.on("Signal", async (id, data) => {
+hub.on("Signal", async (id, username, data) => {
     const message = JSON.parse(data);
 
     if (message.description?.type === "offer") {
-        const peer = createPeer(id);
+        const peer = createPeer(id, username);
         await peer.setRemoteDescription(message.description);
         await peer.setLocalDescription(await peer.createAnswer());
         await hub.invoke("SendSignal", id, JSON.stringify({ description: peer.localDescription }));
@@ -83,6 +89,8 @@ joinButton.addEventListener("click", async () => {
         joinButton.disabled = true;
         leaveButton.disabled = false;
         statusText.textContent = "In the call";
+        peopleBox.hidden = false;
+        updateCount();
     } catch (error) {
         microphone?.getTracks().forEach(track => track.stop());
         statusText.textContent = "Could not join: " + error.message;
@@ -96,4 +104,5 @@ leaveButton.addEventListener("click", async () => {
     joinButton.disabled = false;
     leaveButton.disabled = true;
     statusText.textContent = "Not in a call";
+    peopleBox.hidden = true;
 });
