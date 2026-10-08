@@ -11,6 +11,7 @@ const peers = {}; // En RTCPeerConnection per person i samtalen, key er SignalR 
 const joinButton = document.getElementById("voice-join");
 const leaveButton = document.getElementById("voice-leave");
 const statusText = document.getElementById("voice-status");
+const roomInput = document.getElementById("voice-room");
 const peopleList = document.getElementById("voice-people");
 const peopleBox = document.getElementById("voice-details");
 const countText = document.getElementById("voice-count");
@@ -83,12 +84,15 @@ hub.on("Signal", async (id, username, data) => {
 hub.on("UserLeft", id => removePeer(id));
 
 joinButton.addEventListener("click", async () => {
+    const room = roomInput.value.trim() || "General";
     try {
         microphone = await navigator.mediaDevices.getUserMedia({ audio: true });
         await hub.start();
+        await hub.invoke("JoinRoom", room);
         joinButton.disabled = true;
         leaveButton.disabled = false;
-        statusText.textContent = "In the call";
+        roomInput.disabled = true;
+        statusText.textContent = "In room: " + room;
         peopleBox.hidden = false;
         updateCount();
     } catch (error) {
@@ -103,6 +107,7 @@ leaveButton.addEventListener("click", async () => {
     microphone.getTracks().forEach(track => track.stop());
     joinButton.disabled = false;
     leaveButton.disabled = true;
+    roomInput.disabled = false;
     statusText.textContent = "Not in a call";
     peopleBox.hidden = true;
 });

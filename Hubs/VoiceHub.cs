@@ -7,15 +7,20 @@ namespace ikt201_project.Hubs;
 [Authorize]
 public class VoiceHub : Hub
 {
-    // Someone joined,  people already in the call will send offer
-    public override async Task OnConnectedAsync()
+    // Someone joined a room, people already in the room will send offer
+    public async Task JoinRoom(string room)
     {
-        await Clients.Others.SendAsync("UserJoined", Context.ConnectionId, Context.User?.Identity?.Name);
+        Context.Items["room"] = room;
+        await Groups.AddToGroupAsync(Context.ConnectionId, room);
+        await Clients.OthersInGroup(room).SendAsync("UserJoined", Context.ConnectionId, Context.User?.Identity?.Name);
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        await Clients.Others.SendAsync("UserLeft", Context.ConnectionId);
+        if (Context.Items.TryGetValue("room", out var room))
+        {
+            await Clients.OthersInGroup((string)room!).SendAsync("UserLeft", Context.ConnectionId);
+        }
     }
 
     // Passes a WebRTC message (offer, answer or ICE candidate)
