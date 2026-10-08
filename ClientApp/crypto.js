@@ -1,7 +1,6 @@
 ﻿// NEVER FORGET TO BUILD THIS FILE AFTER EDITS: npm run build
-// (the git hook builds on commit, but to TEST in the browser you have to build yourself)
 
-// ─── STEP 1: bring in the functions we need from ts-mls ───────────────
+
 import {
     getCiphersuiteImpl,
     getCiphersuiteFromName,
@@ -23,20 +22,17 @@ import { defaultClientConfig } from "ts-mls/clientConfig.js";
 
 import { get, set, del, update } from "idb-keyval";
 
-// ─── STEP 2: helpers to turn text into bytes and back ─────────────────
+
 // Crypto only works on bytes (Uint8Array), never on strings.
 const toBytes = (text) => new TextEncoder().encode(text);
 const toText = (bytes) => new TextDecoder().decode(bytes);
 const toBase64 = (bytes) => bytes.toBase64();
 const fromBase64 = (text) => Uint8Array.fromBase64(text);
 
-
-// ─── STEP 3: which crypto algorithms to use ───────────────────────────
 // Ciphersuite 1 in the ts-mls README: X25519 + AES-128-GCM + Ed25519.
 // This one needs no extra npm packages.
 const SUITE = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519";
 
-// ─── STEP 4: a "user" = a name + a key package ────────────────────────
 async function makeUser(userId, impl) {
     let user;
     const credential = { credentialType: "basic", identity: toBytes(userId) };

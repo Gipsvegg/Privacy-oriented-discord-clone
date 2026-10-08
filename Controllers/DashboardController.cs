@@ -76,7 +76,7 @@ public class DashboardController : Controller
     }
     
     //sender meldingen til serveren og setter den inn i databasen
-    //[ValidateAntiForgeryToken] ADD THIS LATER
+    //[ValidateAntiForgeryToken] //ADD THIS LATER
     [HttpPost]
     public async Task<IActionResult> SendMessage(string friendId, string conversationId, string text)
     {
@@ -85,7 +85,6 @@ public class DashboardController : Controller
         //sjekker at en melding ikke blir sendt til seg selv
         if (friendId == CurrentUserId) return BadRequest();
         
-
         //database ting
         _db.Messages.Add(new Message
         {
@@ -95,11 +94,7 @@ public class DashboardController : Controller
             Timestamp = DateTime.UtcNow
         });
         await _db.SaveChangesAsync();
-
-        
-        
         await _hub.Clients.User(friendId).SendAsync("ReceiveMessage");
-        
         
         return Ok();
     }
@@ -122,11 +117,10 @@ public class DashboardController : Controller
         }
         _db.SaveChanges();
         
-        
         return Ok();
     }
 
-    [HttpGet]
+    [HttpGet]//downloads the public key package that a user has
     public IActionResult DownloadKeyPackage(string userId)
     {
         if(string.IsNullOrWhiteSpace(userId)) return BadRequest();
@@ -137,11 +131,10 @@ public class DashboardController : Controller
     }
 
     public record UploadWelcome(string ReceiverId, string ConversationId, byte[] Welcome);
-    [HttpPost]
+    [HttpPost]//Uploads the invitations to the group to the server
     public async Task<IActionResult> UploadGroupInvite([FromBody] UploadWelcome? welcome)
     {
         if (welcome == null || welcome?.Welcome == null || welcome.Welcome.Length == 0 || string.IsNullOrWhiteSpace(welcome.ReceiverId) || string.IsNullOrWhiteSpace(welcome.ConversationId)) return BadRequest(); 
-        
         if (welcome.ReceiverId == CurrentUserId) return BadRequest();
 
         var exists = _db.GroupInvites.FirstOrDefault(m => (m.ReceiverId == welcome.ReceiverId && m.ConversationId == welcome.ConversationId)); 
@@ -158,14 +151,13 @@ public class DashboardController : Controller
         }
         
         await _db.SaveChangesAsync();
-        
         await _hub.Clients.User(welcome.ReceiverId).SendAsync("ReceiveGroupInvite");
         
         return Ok();
     }
     
-    public record SmallWelcome(int Id, string SenderId, string ConversationId, byte[] Data);
-    [HttpGet]
+    private record SmallWelcome(int Id, string SenderId, string ConversationId, byte[] Data);
+    [HttpGet]//sends the group invitation to the user
     public IActionResult DownloadWelcome()
     {
         var welcomes = _db.GroupInvites
@@ -176,7 +168,7 @@ public class DashboardController : Controller
         return Ok(welcomes);
     }
 
-    [HttpDelete]
+    [HttpDelete]//deletes the welcome after it has been received
     public IActionResult DeleteWelcome(int id)
     {
         _db.GroupInvites.RemoveRange(_db.GroupInvites.Where(m => m.Id == id && m.ReceiverId == CurrentUserId));

@@ -1,17 +1,15 @@
 ﻿
-
+//gets the user id from the uuid on the homepage
 const userId = document.getElementById('uuid')?.dataset.uuid;
 console.log(userId);
 async function getWelcomes(){
-    
+    //downloads the group invite and waits for the data
     if(!userId) return;
-
     const res = await fetch(`/Dashboard/DownloadWelcome`)
-    
     if(!res.ok) return;
-    
     const data = await res.json();
     
+    //goes through all the welcomes and deletes them from the server AFTER accepting them
     for (const welcome of data) {
         try {
             await e2ee.inviteAccept(userId, welcome.conversationId, welcome.data); 
@@ -188,7 +186,7 @@ document.querySelectorAll('.sidebar a[id]').forEach(link => {
         const res = await fetch(link.href);
         document.getElementById('message-area').innerHTML = await res.text();
         
-        const conversationId = "test";      //NEEDS TO BE CHANGED WHEN DATABASE IS UPDATED TO CONTAIN THE CONVOID
+        const conversationId = "test";      //NEEDS TO BE CHANGED WHEN DATABASE IS UPDATED TO CONTAIN THE CONVO-ID
         const messages = await e2ee.loadFromHistory(conversationId);
 
         for (const message of messages) {
@@ -207,7 +205,7 @@ document.addEventListener('submit', async (e) => {
     if (!text) return;                    // 1. don't even send empty messages
 
     const friendId = e.target.dataset.friendId;
-    const conversationId = "test";
+    const conversationId = "test";          //THIS NEEDS TO BE CHANGED WHEN CONVO-ID IS IN THE DATABASE
     const encryptedText = await e2ee.encryptMessage(text, userId, "test");
     
     
