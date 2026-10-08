@@ -88,6 +88,8 @@ joinButton.addEventListener("click", async () => {
     try {
         microphone = await navigator.mediaDevices.getUserMedia({ audio: true });
         await hub.start();
+        const ice = JSON.parse(await hub.invoke("GetIceServers"));
+        if (ice.iceServers) rtcConfig.iceServers = ice.iceServers;
         await hub.invoke("JoinRoom", room);
         joinButton.disabled = true;
         leaveButton.disabled = false;
