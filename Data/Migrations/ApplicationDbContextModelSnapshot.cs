@@ -213,6 +213,53 @@ namespace ikt201_project.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("ikt201_project.Models.Conversation", b =>
+                {
+                    b.Property<string>("ConversationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ConversationName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatorId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Epoch")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("ConversationId");
+
+                    b.ToTable("Conversations");
+                });
+
+            modelBuilder.Entity("ikt201_project.Models.ConversationMember", b =>
+                {
+                    b.Property<string>("ConversationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MemberId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("ConversationId", "MemberId");
+
+                    b.HasIndex("MemberId");
+
+                    b.ToTable("ConversationMembers");
+                });
+
             modelBuilder.Entity("ikt201_project.Models.GroupInvite", b =>
                 {
                     b.Property<int>("Id")
@@ -266,6 +313,10 @@ namespace ikt201_project.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("ConversationId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ReceiverId")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -282,6 +333,8 @@ namespace ikt201_project.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ConversationId");
 
                     b.ToTable("Messages");
                 });
@@ -335,6 +388,43 @@ namespace ikt201_project.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("ikt201_project.Models.ConversationMember", b =>
+                {
+                    b.HasOne("ikt201_project.Models.Conversation", "Conversation")
+                        .WithMany("ConversationMembers")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ikt201_project.Data.ApplicationUser", "Member")
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
+
+                    b.Navigation("Member");
+                });
+
+            modelBuilder.Entity("ikt201_project.Models.Message", b =>
+                {
+                    b.HasOne("ikt201_project.Models.Conversation", "Conversation")
+                        .WithMany("Messages")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
+                });
+
+            modelBuilder.Entity("ikt201_project.Models.Conversation", b =>
+                {
+                    b.Navigation("ConversationMembers");
+
+                    b.Navigation("Messages");
                 });
 #pragma warning restore 612, 618
         }

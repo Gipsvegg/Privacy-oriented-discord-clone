@@ -9,6 +9,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) {}
     
     public DbSet<Message> Messages { get; set; }
+    public DbSet<Conversation> Conversations { get; set; }
+    public DbSet<ConversationMember> ConversationMembers { get; set; }
     public DbSet<KeyPackage>  KeyPackages { get; set; }
     public DbSet<GroupInvite> GroupInvites { get; set; }
 }

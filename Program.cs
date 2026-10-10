@@ -29,27 +29,34 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.Migrate();
-    Console.ForegroundColor = ConsoleColor.Red;
-    Console.Out.WriteLine("THE DATABASE TABLE FOR MESSAGES IS GETTING DELETED");
-    Console.ResetColor();
-    db.Messages.ExecuteDelete();
-    db.Users.ExecuteDelete();
-    
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-    var testUsers = new[]
-    {
-        (Id: "f3746277-afdb-4cef-9da0-149068536ebb", Email: "admin@test.com"),
-        (Id: "8b619ee5-5e13-4154-9843-582bfee5b97c", Email: "test@test.no"),
-    };
+    //Console.ForegroundColor = ConsoleColor.Red;
+    //Console.Out.WriteLine("THE DATABASE TABLE FOR MESSAGES IS GETTING DELETED");
+    //Console.ResetColor();
 
-    foreach (var t in testUsers)
+    ApplicationUser user;
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    if (db.Users.Find("f3746277-afdb-4cef-9da0-149068536ebb") == null)
     {
-        var user = new ApplicationUser
+        user = new ApplicationUser
         {
-            Id = t.Id,
-            UserName = t.Email,
-            Email = t.Email,
-            EmailConfirmed = true      // your setup requires confirmed accounts
+            Id = "f3746277-afdb-4cef-9da0-149068536ebb",
+            UserName = "admin@test.com",
+            Email = "admin@test.com",
+            EmailConfirmed = true
+        };
+        var result = await userManager.CreateAsync(user, "Test123!");
+        if (!result.Succeeded)
+            Console.WriteLine("Seeding failed: " + string.Join(", ", result.Errors.Select(e => e.Description)));
+    }
+
+    if (db.Users.Find("8b619ee5-5e13-4154-9843-582bfee5b97c") == null)
+    {
+        user = new ApplicationUser
+        {
+            Id = "8b619ee5-5e13-4154-9843-582bfee5b97c",
+            UserName = "test@test.no",
+            Email = "test@test.no",
+            EmailConfirmed = true
         };
         var result = await userManager.CreateAsync(user, "Test123!");
         if (!result.Succeeded)

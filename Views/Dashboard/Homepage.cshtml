@@ -1,4 +1,5 @@
 ﻿@using System.Security.Claims
+@model List<Group>
 @{
     ViewData["Title"] = "Home Page";
     Layout = "_AppLayout";
@@ -16,16 +17,20 @@
             <h6 class="text-center">Username and UUID</h6>
             <p>@User.FindFirstValue(ClaimTypes.Name)</p>
             <p data-uuid="@User.FindFirstValue(ClaimTypes.NameIdentifier)" id="uuid">@User.FindFirstValue(ClaimTypes.NameIdentifier)</p>
-        </div>
-        <div class="sidebar-section">
-            <h6 class="text-center">Friends & Groups</h6>
-            @if (User.FindFirstValue(ClaimTypes.NameIdentifier) == "8b619ee5-5e13-4154-9843-582bfee5b97c")
+            @if (User.FindFirstValue(ClaimTypes.NameIdentifier) == "8b619ee5-5e13-4154-9843-582bfee5b97c")//<---test@test.no||admin@test.com--->f3746277-afdb-4cef-9da0-149068536ebb
             {
-                <a id="friend" asp-controller="Dashboard" asp-action="Conversation" asp-route-id="f3746277-afdb-4cef-9da0-149068536ebb">admin@test.com</a>
+                <button id="create-conversation" data-conversation-id="f3746277-afdb-4cef-9da0-149068536ebb">make group with admin@test.com</button>
             }
             else
             {
-                <a id="friend" asp-controller="Dashboard" asp-action="Conversation" asp-route-id="8b619ee5-5e13-4154-9843-582bfee5b97c">test@test.no</a>
+                <button id="create-conversation" data-conversation-id="8b619ee5-5e13-4154-9843-582bfee5b97c">make group with test@test.no</button>
+            }
+        </div>
+        <div class="sidebar-section">
+            <h6 class="text-center">Friends & Groups</h6>
+            @foreach (var group in Model)
+            {
+                <a id="friend" asp-controller="Dashboard" asp-action="Conversation" asp-route-id="@group.ConversationId">@group.ConversationName</a>
             }
         </div>
         <div class="sidebar-section">

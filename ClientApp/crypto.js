@@ -378,9 +378,6 @@ async function inviteUsersToGroup(userId, conversationId, newMembers, sendCommit
     });
 }
 
-
-
-
 //removing another member of the group
 async function removeUsersFromGroup(userId, conversationId, members, sendCommit) {
     return withGroupLock(userId, conversationId, async () => {
@@ -457,7 +454,6 @@ async function loadFromHistory(userId, conversationId) {
     return (await get(`${userId}:history:${conversationId}`) ?? []);
 }
 
-// ─── STEP 6: make it reachable from outside this module ───────────────
 window.e2ee = {
     encryptMessage,
     decryptMessage,

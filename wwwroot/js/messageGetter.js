@@ -33,6 +33,9 @@ async function sendCommit (encodedCommit, groupEpoch, conversationId){
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({conversationId, epoch: groupEpoch, commit: encodedCommit}),
     })
+    if(!res.ok) {
+        throw new Error(`Couldn't commit group change: ${res.status}`);
+    }
     return res.ok;
 }
 
@@ -63,14 +66,11 @@ async function fetchPendingMessages(){
     const res = await fetch(`/Dashboard/Mailbox`);
     if(!res.ok) return;
     
-    const messages = await res.json();                  //REMEMBER THIS IS NOT THE ONLY ONE
-    const conversationId = "test"                 //THIS NEEDS TO NOT BE HARDCODED
-                                                        //CHANGE WHEN CONVERSATION ID IS ADDED TO MESSAGES
-    
+    const messages = await res.json();
     for (const message of messages) {
         let decryptedText;
         try {
-            decryptedText = await e2ee.decryptMessage(message.text, userId, conversationId);
+            decryptedText = await e2ee.decryptMessage(message.text, userId, message.conversationId);
         } catch (err) {
             console.error('Could not decrypt:', err);
             continue
@@ -82,11 +82,11 @@ async function fetchPendingMessages(){
         }
         // later: save to IndexedDB here
         message.text = decryptedText;
-        await e2ee.saveToHistory(userId, conversationId, message);
+        await e2ee.saveToHistory(userId, message.conversationId, message);
         await deleteFetchedMessages(message.id)
         
         const form = document.getElementById('send-form');
-        if (!form || form.dataset.friendId !== message.senderId) continue;   // not the open chat
+        if (!form || form.dataset.conversationId !== message.conversationId) continue;   // not the open chat
         appendMessage(message.senderId, decryptedText);
     }
 }
@@ -143,16 +143,17 @@ window.addEventListener('load', async () => {
 
 // Plus button in the conversation form -> create an encrypted group with the open chat's friend
 document.addEventListener('click', async (e) => {
-    const button = e.target.closest('#create-group-btn');
+    const button = e.target.closest('#create-conversation');
     if (!button) return;
 
-    const friendId = document.getElementById('send-form')?.dataset.friendId;
+    const friendId = document.getElementById('create-conversation')?.dataset.conversationId;
     if (!userId || !friendId) return;
 
     button.disabled = true;              // no double clicks = no double groups
     try {
         const conversationId = await createGroupWith([friendId]);
         console.log('Group created:', conversationId);
+        location.reload();
     } catch (err) {
         console.error('Could not create group:', err);
     } finally {
@@ -161,19 +162,24 @@ document.addEventListener('click', async (e) => {
 });
 
 async function createGroupWith(memberIds) {
-    // 1. Every member needs a key package on the server, otherwise stop
     const members = [];
     for (const memberId of memberIds) {
         const keyPackage = await getKeyPackage(memberId);
         if (!keyPackage) throw new Error(`${memberId} has no key package yet (never logged in?)`);
         members.push({ userId: memberId, keyPackage });
     }
-
-    // 2. Create the group in this browser (also saves our own group state in IndexedDB)
-    const conversationId = "test" //crypto.randomUUID();                                            //MÅ BYTTES TIL CONVERSATION ID HER
-    const welcome = await e2ee.groupCreation(userId, conversationId, members, sendCommit);
-
-    // 3. Put the same Welcome in every member's mailbox on the server
+    
+    const conversationId = crypto.randomUUID();     
+    const conversationName = "test"                                                 //HARDCODED FOR TESTING
+    const conversationCreation = await fetch('/Dashboard/ConversationCreation', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ conversationId, conversationName }),
+    });
+    if (!conversationCreation.ok) throw new Error(`Failed to create conversation: ${conversationCreation.status}`);
+    const welcome = await e2ee.groupCreation(userId, conversationId, members, async () => true);
+    
+    
     for (const member of members) {
         const res = await fetch('/Dashboard/UploadGroupInvite', {
             method: 'POST',
@@ -198,7 +204,7 @@ document.querySelectorAll('.sidebar a[id]').forEach(link => {
         const res = await fetch(link.href);
         document.getElementById('message-area').innerHTML = await res.text();
         
-        const conversationId = "test";      //NEEDS TO BE CHANGED WHEN DATABASE IS UPDATED TO CONTAIN THE CONVOID
+        const conversationId = document.getElementById('send-form')?.dataset.conversationId;
         const messages = await e2ee.loadFromHistory(userId, conversationId);
 
         for (const message of messages) {
@@ -215,13 +221,12 @@ document.addEventListener('submit', async (e) => {
 
     const text = document.getElementById('message-input').value.trim();
     if (!text) return;                    // 1. don't even send empty messages
-
-    const friendId = e.target.dataset.friendId;
-    const conversationId = "test";          //THIS NEEDS TO BE CHANGED WHEN CONVO-ID IS IN THE DATABASE
-    const encryptedText = await e2ee.encryptMessage(text, userId, "test");
+    
+    const conversationId = e.target.dataset.conversationId;
+    const encryptedText = await e2ee.encryptMessage(text, userId, conversationId);
     
     
-    const res = await fetch(`/Dashboard/SendMessage?friendId=${friendId}&conversationId=${conversationId}`, {
+    const res = await fetch(`/Dashboard/SendMessage?conversationId=${conversationId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: `text=${encodeURIComponent(encryptedText)}`
@@ -265,6 +270,7 @@ connection.on('ReceiveMessage', async () => {
 connection.on('ReceiveGroupInvite', async () => {
     await getWelcomes();
     console.log("Welcome received");
+    location.reload();
 });
 
 connection.start().catch(console.error)
