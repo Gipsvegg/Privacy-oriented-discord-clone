@@ -1,6 +1,7 @@
 ﻿
 //gets the user id from the uuid on the homepage
 const userId = document.getElementById('uuid')?.dataset.uuid;
+const userName = document.getElementById('uuid')?.dataset.username;
 console.log(userId);
 async function getWelcomes(){
     //downloads the group invite and waits for the data
@@ -80,14 +81,16 @@ async function fetchPendingMessages(){
             await deleteFetchedMessages(message.id); 
             continue;
         }
-        // later: save to IndexedDB here
         message.text = decryptedText;
         await e2ee.saveToHistory(userId, message.conversationId, message);
         await deleteFetchedMessages(message.id)
         
         const form = document.getElementById('send-form');
-        if (!form || form.dataset.conversationId !== message.conversationId) continue;   // not the open chat
-        appendMessage(message.senderId, decryptedText);
+        if (!form || form.dataset.conversationId !== message.conversationId) {
+            addUnread(message.conversationId)
+            continue
+        }  // not the open chat
+        appendMessage(message.senderId, message.senderName ?? message.senderId, decryptedText);
     }
 }
 
@@ -103,7 +106,7 @@ async function getKeyPackage(id){
     return await res.json();
 }
 
-function appendMessage(senderId, text){
+function appendMessage(senderId, senderName, text){
     const box = document.querySelector('.messages')
     if (!box) return;
 
@@ -113,7 +116,8 @@ function appendMessage(senderId, text){
 
     if ((!last || last.dataset.senderId !== senderId)) {
         const name = document.createElement('h6');
-        name.textContent = `${senderId}:`;
+        name.textContent = `${senderName}:`;
+        name.dataset.senderId = senderId;
         box.appendChild(name);
     }
 
@@ -125,9 +129,11 @@ function appendMessage(senderId, text){
     if (nearBottom) scrollToBottom();
 }
 
+//loadhandler runs when the homepage is loaded
 window.addEventListener('load', async () => {
     if(!userId) return;
     console.log(userId);
+    document.querySelectorAll('.unread').forEach(b => showUnread(b.dataset.conversationId));
     await getWelcomes();
     await checkMailbox();
     
@@ -139,9 +145,12 @@ window.addEventListener('load', async () => {
     if (!res.ok) {
         console.error('Key Package failed to upload: ', res.status);
     }
+    const openId = sessionStorage.getItem('openConversation');
+    if(openId !== null){
+        document.querySelector(`.sidebar a.friend[data-conversation-id="${openId}"]`)?.click();
+    }
 })
 
-// Plus button in the conversation form -> create an encrypted group with the open chat's friend
 document.addEventListener('click', async (e) => {
     const button = e.target.closest('#create-conversation');
     if (!button) return;
@@ -149,7 +158,7 @@ document.addEventListener('click', async (e) => {
     const friendId = document.getElementById('create-conversation')?.dataset.conversationId;
     if (!userId || !friendId) return;
 
-    button.disabled = true;              // no double clicks = no double groups
+    button.disabled = true;
     try {
         const conversationId = await createGroupWith([friendId]);
         console.log('Group created:', conversationId);
@@ -161,7 +170,7 @@ document.addEventListener('click', async (e) => {
     }
 });
 
-async function createGroupWith(memberIds) {
+async function createGroupWith(memberIds, conversationName) {
     const members = [];
     for (const memberId of memberIds) {
         const keyPackage = await getKeyPackage(memberId);
@@ -169,8 +178,7 @@ async function createGroupWith(memberIds) {
         members.push({ userId: memberId, keyPackage });
     }
     
-    const conversationId = crypto.randomUUID();     
-    const conversationName = "test"                                                 //HARDCODED FOR TESTING
+    const conversationId = crypto.randomUUID();
     const conversationCreation = await fetch('/Dashboard/ConversationCreation', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -197,10 +205,13 @@ function scrollToBottom() {
     if (box) box.scrollTop = box.scrollHeight;
 }
 
-document.querySelectorAll('.sidebar a[id]').forEach(link => {
+document.querySelectorAll('.sidebar a.friend').forEach(link => {
     link.addEventListener('click', async (e) => {
-        if(link.id !== 'friend') return;
         e.preventDefault();
+        document.querySelectorAll('.sidebar a.active').forEach(a => a.classList.remove('active'));
+        link.classList.add('active');
+        clearUnread(link.dataset.conversationId);
+        sessionStorage.setItem('openConversation', link.dataset.conversationId)
         const res = await fetch(link.href);
         document.getElementById('message-area').innerHTML = await res.text();
         
@@ -208,11 +219,35 @@ document.querySelectorAll('.sidebar a[id]').forEach(link => {
         const messages = await e2ee.loadFromHistory(userId, conversationId);
 
         for (const message of messages) {
-            appendMessage(message.senderId, message.text);
+            appendMessage(message.senderId, message.senderName ?? message.senderId, message.text);
         }
         
         scrollToBottom();
     });
+});
+
+const groupDialog = document.getElementById('group-dialog');
+document.getElementById('open-group-creator')?.addEventListener('click', () => groupDialog.showModal());
+document.getElementById('group-cancel')?.addEventListener('click', () => groupDialog.close());
+
+document.getElementById('group-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const name = form.groupName.value.trim();
+    const memberIds = [...form.querySelectorAll('input[name="member"]:checked')].map(c => c.value);
+    if (!name || memberIds.length === 0) return;
+
+    const submit = form.querySelector('button[type="submit"]');
+    submit.disabled = true;
+    try {
+        const conversationId = await createGroupWith(memberIds, name);
+        sessionStorage.setItem('openConversation', conversationId);   // opens the new group after reload
+        location.reload();
+    } catch (err) {
+        console.error('Could not create group:', err);
+    } finally {
+        submit.disabled = false;
+    }
 });
 
 document.addEventListener('submit', async (e) => {
@@ -232,8 +267,8 @@ document.addEventListener('submit', async (e) => {
         body: `text=${encodeURIComponent(encryptedText)}`
     });
     if (!res.ok) return;                         // 2. never paste an error response into the page
-    appendMessage(userId, text);
-    await e2ee.saveToHistory(userId, conversationId, {senderId: userId, text: text, time: Date.now()});
+    appendMessage(userId, userName, text);
+    await e2ee.saveToHistory(userId, conversationId, {senderId: userId, senderName: userName, text: text, time: Date.now()});
     //document.getElementById('message-area').innerHTML = await res.text();
     scrollToBottom();
     const input = document.getElementById('message-input');
@@ -255,6 +290,27 @@ document.addEventListener('keydown', (e) => {
         document.getElementById('send-form').requestSubmit();
     }
 });
+
+function unreadKey(conversationId) { return `unread:${userId}:${conversationId}`; }
+
+function showUnread(conversationId) {
+    const badge = document.querySelector(`.unread[data-conversation-id="${conversationId}"]`);
+    if (!badge) return;
+    const count = Number(localStorage.getItem(unreadKey(conversationId)) ?? 0);
+    badge.textContent = count;
+    badge.hidden = count === 0;
+}
+
+function addUnread(conversationId) {
+    const count = Number(localStorage.getItem(unreadKey(conversationId)) ?? 0) + 1;
+    localStorage.setItem(unreadKey(conversationId), count);
+    showUnread(conversationId);
+}
+
+function clearUnread(conversationId) {
+    localStorage.removeItem(unreadKey(conversationId));
+    showUnread(conversationId);
+}
 
 const connection = new signalR.HubConnectionBuilder()
     .withUrl('/chathub')

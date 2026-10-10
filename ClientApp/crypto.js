@@ -445,7 +445,7 @@ async function saveToHistory(userId, conversationId, entry) {
         } else{
             history = oldValue
         }
-        history.push({id: entry.id, senderId: entry.senderId, text: entry.text, time: Date.now()});
+        history.push({id: entry.id, senderId: entry.senderId, senderName: entry.senderName, text: entry.text, time: Date.now()});
         return history;
     });
 }

@@ -7,6 +7,7 @@ using ikt201_project.Data;
 using ikt201_project.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Packaging.Signing;
 
 namespace ikt201_project.Controllers;
 
@@ -42,6 +43,7 @@ public class DashboardController : Controller
     {
         var groups = _db.Conversations
             .Where(m => m.ConversationMembers.Any(e => e.MemberId == CurrentUserId))
+            .OrderByDescending(m => m.CreatedAt)
             .Select(m => new Group ( 
                 m.ConversationId,
                 m.ConversationName, 
@@ -56,13 +58,13 @@ public class DashboardController : Controller
     
     public IActionResult Conversation(string id)
     {
-        //Henter iden til vennen som er valgt i homepage
+        //Henter id-en til samtalen som er valgt i homepage
         ViewBag.conversationId = id;
         
-        //sender tilbake alle meldingene mellom to personer
         return PartialView();
     }
 
+    public record SmallMessage(int Id, string ConversationId, string SenderId, string? SenderName, string ReceiverId, string Text, DateTime Timestamp);
     [HttpGet]
     public IActionResult Mailbox()
     {
@@ -71,6 +73,17 @@ public class DashboardController : Controller
         var messages = _db.Messages
             .Where(m => m.ReceiverId == userId)
             .OrderBy(m => m.Id)
+            .Select(m => new SmallMessage(
+                m.Id, 
+                m.ConversationId,
+                m.SenderId,
+                m.Conversation.ConversationMembers
+                    .Where(e => e.MemberId  == m.SenderId)
+                    .Select(e => e.Member.UserName)
+                    .FirstOrDefault(), 
+                m.ReceiverId, 
+                m.Text, 
+                m.Timestamp))
             .ToList();
         
         return Ok(messages);
