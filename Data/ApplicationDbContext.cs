@@ -13,5 +13,14 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ConversationMember> ConversationMembers { get; set; }
     public DbSet<KeyPackage>  KeyPackages { get; set; }
     public DbSet<GroupInvite> GroupInvites { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        base.OnModelCreating(builder);
+        builder.Entity<KeyPackage>()
+            .HasOne(k => k.User)
+            .WithOne()
+            .HasForeignKey<KeyPackage>(k => k.UserId);
+    }
 }
 

@@ -27,17 +27,6 @@ public class DashboardController : Controller
         _db = db;
         _hub = hub;
     }
-
-    //Lager en liste med meldingene of sorterer dem etter tidspunkt
-    //private List<Message> GetConversation(string friendId)
-    //{
-    //    var me = CurrentUserId;
-    //    
-    //    return _db.Messages
-    //        .Where(m => (m.SenderId == me && m.ReceiverId == friendId) || (m.SenderId == friendId && m.ReceiverId == me))
-    //        .OrderBy(m => m.Timestamp)
-    //        .ToList();
-    //}
     
     public IActionResult Homepage()
     {

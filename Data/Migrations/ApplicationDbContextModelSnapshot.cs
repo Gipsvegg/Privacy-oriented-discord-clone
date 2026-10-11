@@ -287,6 +287,10 @@ namespace ikt201_project.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ConversationId");
+
+                    b.HasIndex("SenderId");
+
                     b.HasIndex("ReceiverId", "ConversationId")
                         .IsUnique();
 
@@ -335,6 +339,10 @@ namespace ikt201_project.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ConversationId");
+
+                    b.HasIndex("ReceiverId");
+
+                    b.HasIndex("SenderId");
 
                     b.ToTable("Messages");
                 });
@@ -409,6 +417,44 @@ namespace ikt201_project.Data.Migrations
                     b.Navigation("Member");
                 });
 
+            modelBuilder.Entity("ikt201_project.Models.GroupInvite", b =>
+                {
+                    b.HasOne("ikt201_project.Models.Conversation", "Conversation")
+                        .WithMany("Invites")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ikt201_project.Data.ApplicationUser", "Receiver")
+                        .WithMany()
+                        .HasForeignKey("ReceiverId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ikt201_project.Data.ApplicationUser", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
+
+                    b.Navigation("Receiver");
+
+                    b.Navigation("Sender");
+                });
+
+            modelBuilder.Entity("ikt201_project.Models.KeyPackage", b =>
+                {
+                    b.HasOne("ikt201_project.Data.ApplicationUser", "User")
+                        .WithOne()
+                        .HasForeignKey("ikt201_project.Models.KeyPackage", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("ikt201_project.Models.Message", b =>
                 {
                     b.HasOne("ikt201_project.Models.Conversation", "Conversation")
@@ -417,12 +463,30 @@ namespace ikt201_project.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ikt201_project.Data.ApplicationUser", "Receiver")
+                        .WithMany()
+                        .HasForeignKey("ReceiverId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ikt201_project.Data.ApplicationUser", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Conversation");
+
+                    b.Navigation("Receiver");
+
+                    b.Navigation("Sender");
                 });
 
             modelBuilder.Entity("ikt201_project.Models.Conversation", b =>
                 {
                     b.Navigation("ConversationMembers");
+
+                    b.Navigation("Invites");
 
                     b.Navigation("Messages");
                 });

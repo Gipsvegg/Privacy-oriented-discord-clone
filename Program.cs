@@ -2,7 +2,10 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ikt201_project.Data;
+using ikt201_project.Data.BackgroundTasks;
 using ikt201_project.Hubs;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +21,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
+builder.Services.AddHostedService<DeleteOldMessagesFromDatabase>();
 
 var app = builder.Build();
 
