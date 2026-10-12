@@ -7,7 +7,6 @@ public class DeleteOldMessagesFromDatabase(IServiceScopeFactory scopeFactory, IL
 {
     private static readonly TimeSpan Lifetime = TimeSpan.FromDays(30);
     private static readonly TimeSpan CheckInterval = TimeSpan.FromHours(1);
-    //private int _executionStep = 0;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -17,7 +16,6 @@ public class DeleteOldMessagesFromDatabase(IServiceScopeFactory scopeFactory, IL
         {
             try
             {
-                //_executionStep++;
                 using var scope = scopeFactory.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 var tooOld = DateTime.UtcNow - Lifetime;//as long as the timestamp is less than this, the message is less than 30 days old
@@ -27,12 +25,6 @@ public class DeleteOldMessagesFromDatabase(IServiceScopeFactory scopeFactory, IL
                 var groups = await db.Conversations.Where(m => m.ConversationMembers.Count == 0).ExecuteDeleteAsync(stoppingToken);
                 
                 logger.LogInformation("Cleanup stats:\n      Messages deleted: {messages}, Invites deleted: {invites}, Groups deleted: {groups}", messages, invites, groups);
-
-                /*var members = db.Users.Select(m => m.UserName).ToList();
-                foreach (var member in members)
-                {
-                    logger.LogInformation("{_executionStep}: Member {Member} FOUND", _executionStep, member);
-                }*/
             }
             catch (Exception ex)
             {

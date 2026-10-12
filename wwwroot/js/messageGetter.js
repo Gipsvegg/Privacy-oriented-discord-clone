@@ -82,6 +82,7 @@ async function fetchPendingMessages(){
             continue;
         }
         message.text = decryptedText;
+        message.timestamp = new Date(message.timestamp).getTime();
         await e2ee.saveToHistory(userId, message.conversationId, message);
         await deleteFetchedMessages(message.id)
         
@@ -90,7 +91,7 @@ async function fetchPendingMessages(){
             addUnread(message.conversationId)
             continue
         }  // not the open chat
-        appendMessage(message.senderId, message.senderName ?? message.senderId, decryptedText);
+        appendMessage(message.senderId, message.senderName ?? message.senderId, decryptedText, message.timestamp);
     }
 }
 
@@ -106,23 +107,35 @@ async function getKeyPackage(id){
     return await res.json();
 }
 
-function appendMessage(senderId, senderName, text){
+function appendMessage(senderId, senderName, text, dateTime){
     const box = document.querySelector('.messages')
     if (!box) return;
 
     const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
     const all = box.querySelectorAll('p[data-sender-id]');
     const last = all[all.length - 1];
+    
+    const allTimestamps = box.querySelectorAll('p[data-date-time]');
+    const lastTimestamp = allTimestamps[allTimestamps.length - 1];
 
-    if ((!last || last.dataset.senderId !== senderId)) {
+    //also needs to check for the time of last message if more than a day print the sender again
+    if ((!last || last.dataset.senderId !== senderId) || (dateTime > (Number(lastTimestamp.dataset.dateTime) + 300000))) {
+        //const senderBox = document.createElement('div');
         const name = document.createElement('h6');
-        name.textContent = `${senderName}:`;
+        const time = new Date(dateTime)
+        name.textContent = `${senderName} \u2022 ${time.toLocaleString([], { hour: '2-digit', minute: '2-digit' })}`;
         name.dataset.senderId = senderId;
+        
+        //const timestamp = document.createElement('p')
+        //timestamp.textContent = `${dateTime}`;     
+        //timestamp.dataset.dateTime = dateTime;
+        
         box.appendChild(name);
     }
 
     const p = document.createElement('p');
     p.dataset.senderId = senderId;
+    p.dataset.dateTime = dateTime;
     p.textContent = text;
     box.appendChild(p);
 
@@ -219,7 +232,7 @@ document.querySelectorAll('.sidebar a.friend').forEach(link => {
         const messages = await e2ee.loadFromHistory(userId, conversationId);
 
         for (const message of messages) {
-            appendMessage(message.senderId, message.senderName ?? message.senderId, message.text);
+            appendMessage(message.senderId, message.senderName ?? message.senderId, message.text, message.timestamp);
         }
         
         scrollToBottom();
@@ -267,8 +280,10 @@ document.addEventListener('submit', async (e) => {
         body: `text=${encodeURIComponent(encryptedText)}`
     });
     if (!res.ok) return;                         // 2. never paste an error response into the page
-    appendMessage(userId, userName, text);
-    await e2ee.saveToHistory(userId, conversationId, {senderId: userId, senderName: userName, text: text, time: Date.now()});
+    
+    const timestamp = Date.now();
+    appendMessage(userId, userName, text, timestamp);
+    await e2ee.saveToHistory(userId, conversationId, {senderId: userId, senderName: userName, text: text, timestamp: timestamp});
     //document.getElementById('message-area').innerHTML = await res.text();
     scrollToBottom();
     const input = document.getElementById('message-input');

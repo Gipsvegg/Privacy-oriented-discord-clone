@@ -27,8 +27,8 @@ public class DashboardController : Controller
         _db = db;
         _hub = hub;
     }
-    
-    public IActionResult Homepage()
+
+    private List<Group> GetGroups()
     {
         var groups = _db.Conversations
             .Where(m => m.ConversationMembers.Any(e => e.MemberId == CurrentUserId))
@@ -41,6 +41,13 @@ public class DashboardController : Controller
                     .ToArray()))
             .ToList();
         
+        return groups;
+    }
+    
+    public IActionResult Homepage()
+    {
+        var groups = GetGroups();
+        
         return View(groups);
     }
     
@@ -50,7 +57,10 @@ public class DashboardController : Controller
         //Henter id-en til samtalen som er valgt i homepage
         ViewBag.conversationId = id;
         
-        return PartialView();
+        var groups = GetGroups();
+        var group = groups.First(m => m.ConversationId == id);
+        
+        return PartialView(group);
     }
 
     public record SmallMessage(int Id, string ConversationId, string SenderId, string? SenderName, string ReceiverId, string Text, DateTime Timestamp);
@@ -72,7 +82,7 @@ public class DashboardController : Controller
                     .FirstOrDefault(), 
                 m.ReceiverId, 
                 m.Text, 
-                m.Timestamp))
+                DateTime.SpecifyKind(m.Timestamp, DateTimeKind.Utc)))
             .ToList();
         
         return Ok(messages);

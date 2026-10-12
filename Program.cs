@@ -44,7 +44,7 @@ if (app.Environment.IsDevelopment())
         user = new ApplicationUser
         {
             Id = "f3746277-afdb-4cef-9da0-149068536ebb",
-            UserName = "admin@test.com",
+            UserName = "admin",
             Email = "admin@test.com",
             EmailConfirmed = true
         };
@@ -58,7 +58,7 @@ if (app.Environment.IsDevelopment())
         user = new ApplicationUser
         {
             Id = "8b619ee5-5e13-4154-9843-582bfee5b97c",
-            UserName = "test@test.no",
+            UserName = "test",
             Email = "test@test.no",
             EmailConfirmed = true
         };

@@ -41,12 +41,12 @@
     </div>
     
     <div class="main-content">
-        <h2 class="text-center">Homepage</h2>
+        
         <div id="message-area" class="message-area"></div>
     </div>
 </div>
 
-@{
+@{//Dialog boksen for å lage en gruppe
     var me = User.FindFirstValue(ClaimTypes.NameIdentifier);
     var testFriends = new[]
     {
