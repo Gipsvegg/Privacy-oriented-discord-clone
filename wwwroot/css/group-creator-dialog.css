@@ -3,12 +3,12 @@
 }
 
 #group-dialog {
-    background: #2c2f33;
-    color: antiquewhite;
-    border: none;
+    background: var(--background-colour);
+    color: var(--text-colour);
+    border: var(--border-colour) 2px solid;
     border-radius: 8px;
     max-height: 80%;
-    max-width: 20%;
+    min-width: 300px;
 }
 
 .dialog-buttons {
@@ -19,10 +19,13 @@
     margin: 0.75rem;
 }
 
-#group-dialog input{
-    background: antiquewhite;
-    border: 2px solid gray;
+.dialog-input {
+    width: 100%;
+    color: var(--input-text-colour);
+    background: var(--input-colour);
+    border: 2px solid var(--border-colour);
     border-radius: 5px;
+    margin-bottom: 0.2rem;
 }
 
 #group-dialog input:focus{
@@ -30,22 +33,22 @@
 }
 
 #group-dialog button {
-    background-color: #2c2f33;
+    background-color: var(--background-colour);
     padding: 0.3rem 0.9rem;
-    color: antiquewhite;
+    color: var(--text-colour);
     font-size: 0.9rem;
     border: none;
     outline: none;
 }
 
 #group-dialog button:hover {
-    background-color: gray;
+    background-color: var(--hover-colour);
     border-radius: 5px;
 }
 
 #group-dialog button:focus-visible {
     border-radius: 5px;
-    outline: 2px solid antiquewhite;
+    outline: 2px solid var(--text-colour);
 }
 
 #group-dialog::backdrop {
@@ -64,11 +67,11 @@
     cursor: pointer;
 }
 .member-option:hover {
-    background-color: gray;
+    background-color: var(--hover-colour);
 }
 .member-option:has(input:checked) {
-    color: black;
-    background-color: navajowhite;
+    color: var(--active-text-colour);
+    background-color: var(--active-background-colour);
 }
 
 .member-option input {
@@ -78,5 +81,5 @@
 }
 
 .member-option:has(input:focus-visible) {
-    outline: 2px solid antiquewhite;
+    outline: 2px solid var(--text-colour);
 }

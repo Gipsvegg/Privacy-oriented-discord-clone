@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "esbuild ClientApp/crypto.js --bundle --format=esm --outfile=wwwroot/js/crypto.bundle.js"
+    "build": "esbuild ClientApp/crypto.js --bundle --minify --format=esm --outfile=wwwroot/js/crypto.bundle.js"
   },
   "repository": {
     "type": "git",

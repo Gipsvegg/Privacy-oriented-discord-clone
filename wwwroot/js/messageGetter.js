@@ -118,17 +118,18 @@ function appendMessage(senderId, senderName, text, dateTime){
     const allTimestamps = box.querySelectorAll('p[data-date-time]');
     const lastTimestamp = allTimestamps[allTimestamps.length - 1];
 
-    //also needs to check for the time of last message if more than a day print the sender again
+    
     if ((!last || last.dataset.senderId !== senderId) || (dateTime > (Number(lastTimestamp.dataset.dateTime) + 300000))) {
-        //const senderBox = document.createElement('div');
         const name = document.createElement('h6');
         const time = new Date(dateTime)
-        name.textContent = `${senderName} \u2022 ${time.toLocaleString([], { hour: '2-digit', minute: '2-digit' })}`;
-        name.dataset.senderId = senderId;
+        const currentTime = new Date(Date.now());
         
-        //const timestamp = document.createElement('p')
-        //timestamp.textContent = `${dateTime}`;     
-        //timestamp.dataset.dateTime = dateTime;
+        if((time.getDate() === currentTime.getDate() - 1) && (time.getMonth() === currentTime.getMonth()) && (time.getFullYear() === currentTime.getFullYear())){
+            name.textContent = `${senderName} \u2022 ${time.toLocaleString([], { day: '2-digit', month: 'long', year: 'numeric' })}`;
+        } else {
+            name.textContent = `${senderName} \u2022 ${time.toLocaleString([], { hour: '2-digit', minute: '2-digit' })}`;
+        }
+        name.dataset.senderId = senderId;
         
         box.appendChild(name);
     }
@@ -143,7 +144,7 @@ function appendMessage(senderId, senderName, text, dateTime){
 }
 
 //loadhandler runs when the homepage is loaded
-window.addEventListener('load', async () => {
+window.addEventListener('DOMContentLoaded', async () => {
     if(!userId) return;
     console.log(userId);
     document.querySelectorAll('.unread').forEach(b => showUnread(b.dataset.conversationId));

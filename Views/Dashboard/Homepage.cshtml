@@ -7,7 +7,6 @@
 
 @section Styles
 {
-    <link rel="stylesheet" href="~/css/homepage.css"/>
     <link rel="stylesheet" href="~/css/voice-chat.css"/>
     <link rel="stylesheet" href="~/css/group-creator-dialog.css"/>
 }
@@ -57,7 +56,7 @@
     <dialog id="group-dialog">
         <form id="group-form">
             <h6 class="text-center">New group</h6>
-            <input name="groupName" placeholder="Group name" maxlength="50" autocomplete="off" required/>
+            <input name="groupName" class="dialog-input" placeholder="Group name" maxlength="50" autocomplete="off" required/>
             @foreach (var friend in testFriends.Where(f => f.Id != me))
             {
                 <label class="member-option">
