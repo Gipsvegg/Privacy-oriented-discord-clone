@@ -1,13 +1,12 @@
 @model ikt201_project.Models.ViewModels.FriendsViewModel
+
+
 @{
     ViewData["Title"] = "Friends";
     Layout = "_AppLayout";
 }
 
-@section Styles
-{
-    <link rel="stylesheet" href="~/css/friends.css" asp-append-version="true"/>
-}
+
 
 <div class="page-layout">
     <partial name="_Sidebar" />
@@ -22,7 +21,7 @@
 
         <form asp-controller="Dashboard" asp-action="SendFriendRequest" method="post" class="mb-4">
             <div class="input-group">
-                <input type="text" name="username" class="form-control" placeholder="Add friend by username" required />
+                <input type="text" name="username"  placeholder="Add friend by username" required />
                 <button type="submit" class="btn btn-primary">Send request</button>
             </div>
         </form>

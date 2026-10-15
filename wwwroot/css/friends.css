@@ -2,35 +2,31 @@
     flex-shrink: 0; /* stop the flex column from squashing the lists */
 }
 
-.friends-page .form-control {
-    background-color: #23272a;
-    color: antiquewhite;
-    border: 1px solid gray;
+.friends-page input {
+    background-color: var(--input-colour);
+    color: var(--text-colour);
+    border: 1px solid var(--border-colour);
 }
 
-.friends-page .form-control::placeholder {
-    color: #a89f94;
-}
-
-.friends-page .form-control:focus {
-    background-color: #23272a;
-    color: antiquewhite;
-    border-color: #e3a9a9;
+.friends-page input:focus {
+    background-color: var(--input-colour);
+    color: var(--input-text-colour);
+    border-color: var(--border-colour);
     box-shadow: 0 0 0 0.2rem rgba(227, 169, 169, 0.25);
 }
 
 .friends-page .text-muted {
-    color: #b5aca0 !important;
+    color: var(--muted-text-colour) !important;
 }
 
 .friends-page .list-group-item {
-    background-color: #23272a;
+    background-color: var(--island-background-colour);
     color: antiquewhite;
     border-color: gray;
 }
 
 .friends-page .alert-info {
-    background-color: #23272a;
-    color: antiquewhite;
-    border-color: gray;
+    background-color: var(--island-background-colour);
+    color: var(--text-colour);
+    border-color: var(--border-colour);
 }

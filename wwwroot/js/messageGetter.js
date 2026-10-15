@@ -167,25 +167,24 @@ window.addEventListener('DOMContentLoaded', async () => {
 })
 
 document.addEventListener('click', async (e) => {
-    const button = e.target.closest('#create-conversation');
+    const button = e.target.closest('.start-dm');
     if (!button) return;
 
-    const friendId = document.getElementById('create-conversation')?.dataset.conversationId;
+    const friendId = button.dataset.friendId;
     if (!userId || !friendId) return;
 
     button.disabled = true;
     try {
-        const conversationId = await createGroupWith([friendId]);
-        console.log('Group created:', conversationId);
+        const conversationId = await createGroupWith([friendId], 'DM', true);
+        sessionStorage.setItem('openConversation', conversationId); // opens the new DM after reload
         location.reload();
     } catch (err) {
-        console.error('Could not create group:', err);
-    } finally {
+        console.error('Could not start DM:', err);
         button.disabled = false;
     }
 });
 
-async function createGroupWith(memberIds, conversationName) {
+async function createGroupWith(memberIds, conversationName, isDirect = false) {
     const members = [];
     for (const memberId of memberIds) {
         const keyPackage = await getKeyPackage(memberId);
@@ -197,7 +196,7 @@ async function createGroupWith(memberIds, conversationName) {
     const conversationCreation = await fetch('/Dashboard/ConversationCreation', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ conversationId, conversationName }),
+        body: JSON.stringify({ conversationId, conversationName, isDirect }),
     });
     if (!conversationCreation.ok) throw new Error(`Failed to create conversation: ${conversationCreation.status}`);
     const welcome = await e2ee.groupCreation(userId, conversationId, members, async () => true);

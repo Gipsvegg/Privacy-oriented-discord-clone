@@ -8,7 +8,16 @@ else
 {
     @foreach (var friend in Model)
     {
-        <a data-friend-id="@friend.Id"
-           asp-controller="Dashboard" asp-action="Conversation" asp-route-id="@friend.Id">@friend.Name</a>
+        if (friend.ConversationId != null)
+        {
+            <a class="friend" data-conversation-id="@friend.ConversationId" asp-controller="Dashboard" asp-action="Conversation" asp-route-id="@friend.ConversationId">
+                @friend.Name<b class="unread" data-conversation-id="@friend.ConversationId" hidden></b>
+            </a>
+        }
+        else
+        {
+            <button type="button" class="start-dm" data-friend-id="@friend.Id">@friend.Name</button>
+        }
+        
     }
 }

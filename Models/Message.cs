@@ -23,6 +23,7 @@ public class Conversation
     public string ConversationName { get; set; } = "";
     [ConcurrencyCheck]public int Epoch { get; set; } = 0;
     public string CreatorId { get; set; } = "";
+    public bool IsDirect { get; set; } = false;
     public DateTime CreatedAt { get; set; }
     public IList<ConversationMember> ConversationMembers { get; } =  new List<ConversationMember>();
     public IList<Message> Messages { get; } =  new List<Message>();

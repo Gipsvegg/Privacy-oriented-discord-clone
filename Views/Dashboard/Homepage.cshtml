@@ -1,45 +1,13 @@
 @using System.Security.Claims
-@model List<Group>
+
 @{
     ViewData["Title"] = "Home Page";
     Layout = "_AppLayout";
 }
 
-@section Styles
-{
-    <link rel="stylesheet" href="~/css/voice-chat.css"/>
-    <link rel="stylesheet" href="~/css/group-creator-dialog.css"/>
-}
 
 <div class="page-layout">
-    <div class="sidebar">
-        <div class="sidebar-section">
-            <h6 class="text-center">Username and UUID</h6>
-            <p>@User.FindFirstValue(ClaimTypes.Name)</p>
-            <p data-uuid="@User.FindFirstValue(ClaimTypes.NameIdentifier)" data-username="@User.FindFirstValue(ClaimTypes.Name)" id="uuid">@User.FindFirstValue(ClaimTypes.NameIdentifier)</p>
-        </div>
-        <div class="sidebar-section">
-            <h6 class="text-center" type="button">
-                <button id="open-group-creator" type="button" class="group-button">
-                    <h6>Friends & Groups</h6>
-                    <i class="bi bi-plus"></i>
-                </button>
-            </h6>
-            @foreach (var group in Model)
-            {
-                
-                <a class="friend" data-conversation-id="@group.ConversationId" asp-controller="Dashboard" asp-action="Conversation" asp-route-id="@group.ConversationId">
-                    @group.ConversationName<b class="unread" data-conversation-id="@group.ConversationId" hidden></b>
-                </a>
-            }
-        </div>
-        <div class="sidebar-section">
-            <h6 class="text-center">Town-squares</h6>
-        </div>
-        <partial name="_VoiceChat" />
-    </div>
     <partial name="_Sidebar" />
-    <partial name="_VoiceChat" />
     
     <div class="main-content">
         
@@ -47,31 +15,7 @@
     </div>
 </div>
 
-@{//Dialog boksen for å lage en gruppe
-    var me = User.FindFirstValue(ClaimTypes.NameIdentifier);
-    var testFriends = new[]
-    {
-        (Id: "f3746277-afdb-4cef-9da0-149068536ebb", Name: "admin@test.com"),
-        (Id: "8b619ee5-5e13-4154-9843-582bfee5b97c", Name: "test@test.no"),
-    };
-    
-    <dialog id="group-dialog">
-        <form id="group-form">
-            <h6 class="text-center">New group</h6>
-            <input name="groupName" class="dialog-input" placeholder="Group name" maxlength="50" autocomplete="off" required/>
-            @foreach (var friend in testFriends.Where(f => f.Id != me))
-            {
-                <label class="member-option">
-                    <input type="checkbox" name="member" value="@friend.Id"/>@friend.Name
-                </label>
-            }
-            <div class="dialog-buttons">
-                <button type="submit">Create</button>
-                <button type="button" id="group-cancel">Cancel</button>
-            </div>
-        </form>
-    </dialog>
-}
+
 
 @section Scripts
 {

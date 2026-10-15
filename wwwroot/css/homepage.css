@@ -3,12 +3,22 @@
 }
 
 :root {
-    --background-colour: #2c2f33;            /*#2c2f33 <--- old background colour*/
+    /*Background colours*/
+    --background-colour: #2c2f33;           /*#2c2f33 <--- old background colour*/
+    --island-background-colour: #23272a;     /*#23272a <--- old island background colour*/ 
+    
+    /*Text colours*/
     --text-colour: antiquewhite;            /*antiquewhite <--- old text colour*/
+    --muted-text-colour: #b5aca0;            /*#b5aca0 <--- old muted text colour*/
+    
+    /*Button/Selectables colour*/
     --hover-colour: gray;                    /*gray <--- old hover colour*/
     --active-text-colour: #2c2f33;          /*same as background colour <--- old active text colour*/
     --active-background-colour: navajowhite; /*navajowhite <--- old active background colour*/
+    
     --border-colour: gray;                  /*gray <--- old border colour*/
+    
+    /*Input stuff colour*/
     --input-colour: antiquewhite;            /*antiquewhite <--- old input background colour*/
     --input-text-colour: black;             /*black <--- old input text colour*/
 }
@@ -292,5 +302,5 @@ button:focus-visible, .sidebar-section a:focus-visible {
 
 
 .sidebar .text-muted {
-    color: #b5aca0 !important;
+    color: var(--muted-text-colour) !important;
 }

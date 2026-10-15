@@ -63,7 +63,12 @@ public class DashboardController : Controller
         ViewBag.conversationId = id;
         
         var groups = GetGroups();
-        var group = groups.First(m => m.ConversationId == id);
+        var group = groups.FirstOrDefault(m => m.ConversationId == id);
+
+        if (group == null)
+        {
+            return NotFound();
+        }
         
         return PartialView(group);
     }
@@ -268,7 +273,7 @@ public class DashboardController : Controller
         return Ok(keyPackage.Data);
     }
 
-    public record CreateConversation(string ConversationId, string ConversationName);
+    public record CreateConversation(string ConversationId, string ConversationName, bool IsDirect);
     [HttpPost]
     public IActionResult ConversationCreation([FromBody] CreateConversation? request)
     {
@@ -276,10 +281,9 @@ public class DashboardController : Controller
         if(_db.Conversations.Find(conversationId.ToString()) != null) return Conflict();
         try
         {
-            
-            _db.Conversations.Add(new Conversation { ConversationId = conversationId.ToString(), ConversationName = request.ConversationName, CreatedAt = DateTime.UtcNow, CreatorId = CurrentUserId, Epoch = 1});
-            _db.ConversationMembers.Add(new ConversationMember {ConversationId = conversationId.ToString(), MemberId = CurrentUserId, JoinedAt = DateTime.UtcNow, Role = "admin"} );
-            _db.SaveChanges();
+                _db.Conversations.Add(new Conversation { ConversationId = conversationId.ToString(), ConversationName = request.ConversationName, CreatedAt = DateTime.UtcNow, CreatorId = CurrentUserId, IsDirect = request.IsDirect, Epoch = 1});
+                _db.ConversationMembers.Add(new ConversationMember {ConversationId = conversationId.ToString(), MemberId = CurrentUserId, JoinedAt = DateTime.UtcNow, Role = "admin"} );
+                _db.SaveChanges();    
         }
         catch (Exception e)
         {

@@ -6,11 +6,11 @@ public enum FriendshipStatus { Pending, Accepted, Blocked }
 public class Friendship
 {
     public int Id { get; set; }
-    public string RequesterId { get; set; } = default!;
-    public string AddresseeId { get; set; } = default!;
+    public string RequesterId { get; set; } = null!;
+    public string AddresseeId { get; set; } = null!;
     public FriendshipStatus Status { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public ApplicationUser Requester { get; set; } = default!;
-    public ApplicationUser Addressee { get; set; } = default!;
+    public ApplicationUser Requester { get; set; } = null!;
+    public ApplicationUser Addressee { get; set; } = null!;
 }
