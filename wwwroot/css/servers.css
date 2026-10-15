@@ -19,6 +19,7 @@ a { color: inherit; text-decoration: none; }
     display: flex; align-items: center; justify-content: center; font-weight: 600;
     transition: border-radius .15s, background .15s; }
 .server-icon:hover, .server-icon.active { border-radius: 16px; background: var(--accent); }
+.server-icon.add { color: #3ba55d; }
 
 /* Channel list */
 .channel-list { background: var(--bg-channels); display: flex; flex-direction: column; min-height: 0; }

@@ -1,0 +1,31 @@
+@using ikt201_project.Models
+@model CreateServerViewModel
+@{
+    ViewData["Title"] = "Create server";
+}
+
+<h1>Create a server</h1>
+
+<form asp-action="Create" method="post" style="max-width: 480px;">
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label">Server name</label>
+        <input asp-for="Name" class="form-control" maxlength="32" autofocus />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Start from a layout</label>
+        @foreach (var (name, description) in ServerTemplates.Options)
+        {
+            <div class="form-check">
+                <input class="form-check-input" type="radio" asp-for="Template" value="@name" id="template-@name" />
+                <label class="form-check-label" for="template-@name">
+                    <strong>@name</strong>: @description
+                </label>
+            </div>
+        }
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create</button>
+    <a asp-action="Index" class="btn btn-link">Cancel</a>
+</form>

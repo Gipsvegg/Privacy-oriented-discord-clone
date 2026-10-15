@@ -2,29 +2,32 @@
 @model ServersViewModel
 @{
     Layout = "_ServerLayout";
-    ViewData["Title"] = Model.Current.Name;
+    ViewData["Title"] = Model.CurrentServer.Name;
 }
 
 <div class="app">
+
     <nav class="server-rail">
         <a asp-controller="Home" asp-action="Index" class="server-icon home" title="Home">⌂</a>
         @foreach (var s in Model.Servers)
         {
+            @* The "active" class highlights the server the user is in. *@
             <a asp-action="Index" asp-route-id="@s.Id"
-               class="server-icon @(s.Id == Model.Current.Id ? "active" : "")"
+               class="server-icon @(s.Id == Model.CurrentServer.Id ? "active" : "")"
                title="@s.Name">@s.Icon</a>
         }
+        <a asp-action="Create" class="server-icon add" title="Create server">+</a>
     </nav>
 
     <aside class="channel-list">
-        <header>@Model.Current.Name</header>
+        <header>@Model.CurrentServer.Name</header>
         <div class="channels-scroll">
-            @foreach (var cat in Model.Current.Categories)
+            @foreach (var cat in Model.CurrentServer.Categories)
             {
                 <div class="category">@cat.Name</div>
                 @foreach (var ch in cat.Channels)
                 {
-                    <a asp-action="Index" asp-route-id="@Model.Current.Id" asp-route-channelId="@ch.Id"
+                    <a asp-action="Index" asp-route-id="@Model.CurrentServer.Id" asp-route-channelId="@ch.Id"
                        class="channel @(ch.Id == Model.CurrentChannel?.Id ? "active" : "")">
                         <span class="icon">@(ch.Type == ChannelType.Voice ? "🔊" : "#")</span>
                         @ch.Name
@@ -32,6 +35,7 @@
                 }
             }
         </div>
+
         <footer class="user-bar">
             <span>@User.Identity?.Name</span>
             <a asp-area="Identity" asp-page="/Account/Manage/Index" title="Settings">⚙</a>
@@ -42,9 +46,11 @@
         <header>
             <span class="icon">@(Model.CurrentChannel?.Type == ChannelType.Voice ? "🔊" : "#")</span>
             @Model.CurrentChannel?.Name
+            @* Placeholder: always shown, not connected to real encryption yet. *@
             <span class="lock" title="End-to-end encrypted">🔒</span>
         </header>
 
+        @* Placeholder UI: no messages are sent or received, and "Join voice" does nothing yet. *@
         <div class="messages">
             @if (Model.CurrentChannel?.Type == ChannelType.Voice)
             {
@@ -56,6 +62,8 @@
             }
         </div>
 
+        @* Message box only in writable text channels. Read-only channels show a
+           notice instead, and voice channels show neither. *@
         @if (Model.CurrentChannel?.Type == ChannelType.Text && !Model.CurrentChannel.ReadOnly)
         {
             <div class="composer">
@@ -68,6 +76,7 @@
         }
     </main>
 
+    @* Shows only the current user for now. *@
     <aside class="member-list">
         <header>Members</header>
         <div class="member">@User.Identity?.Name</div>

@@ -1,71 +1,93 @@
+using System.Security.Claims;
+using ikt201_project.Data; // TODO: change this if your DbContext lives in another namespace
+using ikt201_project.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ikt201_project.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace ikt201_project.Controllers;
 
-[Authorize]  // Only logged-in users can reach this controller. Everyone else is sent to the login page.
+// Only logged-in users can reach this controller, everyone else is sent to the login page.
+[Authorize]
 public class ServersController : Controller
 {
-    // Hardcoded sample data
-    // TODO: load servers from the database instead.
-    private static readonly List<ChatServer> Servers = new()
-    {
-        new(1, "Town Square", "TS", new()
-        {
-            new("Info", new() {
-                new(1, "welcome", ChannelType.Text, true),
-                new(2, "rules", ChannelType.Text, true),
-                new(3, "privacy-info", ChannelType.Text, true) }),
-            new("General", new() {
-                new(4, "general", ChannelType.Text),
-                new(5, "introductions", ChannelType.Text),
-                new(6, "off-topic", ChannelType.Text) }),
-            new("Gaming", new() {
-                new(7, "looking-for-group", ChannelType.Text),
-                new(8, "game-chat", ChannelType.Text) }),
-            new("Voice", new() {
-                new(9, "Lounge", ChannelType.Voice),
-                new(10, "Gaming 1", ChannelType.Voice) })
-        }),
-        new(2, "My Community", "MC", new()
-        {
-            new("Info", new() {
-                new(11, "welcome", ChannelType.Text, true),
-                new(12, "rules", ChannelType.Text, true) }),
-            new("Text", new() {
-                new(13, "general", ChannelType.Text),
-                new(14, "off-topic", ChannelType.Text) }),
-            new("Voice", new() {
-                new(15, "General", ChannelType.Voice),
-                new(16, "Gaming", ChannelType.Voice) })
-        }),
-        new(3, "Friends", "F", new()
-        {
-            new("Text", new() { new(17, "chat", ChannelType.Text), new(18, "media", ChannelType.Text) }),
-            new("Voice", new() { new(19, "Hangout", ChannelType.Voice) })
-        })
-    };
-    
-    // Shows the servers page for one server and one channel.
-    // Both values come from the URL, e.g. /Servers/Index/2?channelId=14.
-    // Without them, it shows server 1 and its first text channel.
-    public IActionResult Index(int id = 1, int? channelId = null)
-    {
-        // Look up the server
-        var server = Servers.FirstOrDefault(s => s.Id == id);
-        if (server == null) return NotFound();
+    private readonly ApplicationDbContext _db;
 
-        // Look up the channel
-        var channels = server.Categories.SelectMany(c => c.Channels).ToList();  // List of all channels
+    // ASP.NET passes in the database context automatically (dependency injection). ???
+    public ServersController(ApplicationDbContext db) => _db = db;
+
+    // Shows the servers page for one server and one channel
+    public async Task<IActionResult> Index(int? id = null, int? channelId = null)
+    {
+        var userId = GetUserId();
+
+        // Only the servers this user owns
+        var servers = await _db.Servers
+            .Where(s => s.OwnerId == userId)
+            .OrderBy(s => s.Id)
+            .ToListAsync();
+
+        if (servers.Count == 0) return RedirectToAction(nameof(Create));  // Redirect user to create page
+
+
+        var serverId = id ?? servers[0].Id;
+
+        // Load the chosen server with its categories and channels, in saved order.
+        // Filtering by OwnerId stops users from opening other people's servers via the URL.
+        var currentServer = await _db.Servers
+            .Include(s => s.Categories.OrderBy(c => c.Position))
+                .ThenInclude(c => c.Channels.OrderBy(ch => ch.Position))
+            .FirstOrDefaultAsync(s => s.Id == serverId && s.OwnerId == userId);
+
+        if (currentServer == null) return NotFound();
+
+        var channels = currentServer.Categories.SelectMany(c => c.Channels).ToList();
+
+        // If no channel was requested (or the id doesn't match), fall back to the
+        // first text channel so the user never lands on an empty page.
         var channel = channels.FirstOrDefault(c => c.Id == channelId)
-                      ?? channels.FirstOrDefault(c => c.Type == ChannelType.Text); // If channel is null, chose the first channel
+                      ?? channels.FirstOrDefault(c => c.Type == ChannelType.Text);
 
         return View(new ServersViewModel
         {
-            Servers = Servers,
-            Current = server,
+            Servers = servers,
+            CurrentServer = currentServer,
             CurrentChannel = channel
         });
     }
+
+    //Shows the empty "Create server" form.
+    [HttpGet]
+    public IActionResult Create() => View(new CreateServerViewModel());
+
+    //Saves the submitted form as a new server and opens it.
+    [HttpPost, ValidateAntiForgeryToken] // the token blocks forms submitted from other websites
+    public async Task<IActionResult> Create(CreateServerViewModel model)
+    {
+        // Redisplay the form with error messages if validation failed.
+        if (!ModelState.IsValid) return View(model);
+
+        var name = model.Name.Trim();
+        var server = new Server
+        {
+            Name = name,
+            Icon = MakeIcon(name),
+            OwnerId = GetUserId(),
+            Categories = ServerTemplates.Build(model.Template)
+        };
+
+        _db.Servers.Add(server);
+        await _db.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Index), new { id = server.Id });
+    }
+
+    // Id of the logged-in user
+    private string GetUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+    // Initials of the first two words, e.g. "My Community" -> "MC".
+    private static string MakeIcon(string name) =>
+        string.Concat(name.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                          .Take(2)
+                          .Select(word => char.ToUpper(word[0])));
 }
