@@ -124,10 +124,11 @@ function appendMessage(senderId, senderName, text, dateTime){
         const time = new Date(dateTime)
         const currentTime = new Date(Date.now());
         
-        if((time.getDate() === currentTime.getDate() - 1) && (time.getMonth() === currentTime.getMonth()) && (time.getFullYear() === currentTime.getFullYear())){
-            name.textContent = `${senderName} \u2022 ${time.toLocaleString([], { day: '2-digit', month: 'long', year: 'numeric' })}`;
+        if((time.getDate() !== currentTime.getDate()) && (time.getMonth() === currentTime.getMonth()) && (time.getFullYear() === currentTime.getFullYear())){
+            //\u2022 dot
+            name.textContent = `${senderName} \u269C ${time.toLocaleString([], { day: '2-digit', month: 'short', year: 'numeric' })}`;
         } else {
-            name.textContent = `${senderName} \u2022 ${time.toLocaleString([], { hour: '2-digit', minute: '2-digit' })}`;
+            name.textContent = `${senderName} \u269C ${time.toLocaleString([], { hour: '2-digit', minute: '2-digit' })}`;
         }
         name.dataset.senderId = senderId;
         
