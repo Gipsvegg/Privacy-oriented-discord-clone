@@ -175,3 +175,6 @@
     border-radius: 9px;
 }
 
+.sidebar .text-muted {
+    color: #b5aca0 !important;
+}

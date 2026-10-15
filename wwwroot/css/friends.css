@@ -1,0 +1,36 @@
+﻿.friends-page > * {
+    flex-shrink: 0; /* stop the flex column from squashing the lists */
+}
+
+.friends-page .form-control {
+    background-color: #23272a;
+    color: antiquewhite;
+    border: 1px solid gray;
+}
+
+.friends-page .form-control::placeholder {
+    color: #a89f94;
+}
+
+.friends-page .form-control:focus {
+    background-color: #23272a;
+    color: antiquewhite;
+    border-color: #e3a9a9;
+    box-shadow: 0 0 0 0.2rem rgba(227, 169, 169, 0.25);
+}
+
+.friends-page .text-muted {
+    color: #b5aca0 !important;
+}
+
+.friends-page .list-group-item {
+    background-color: #23272a;
+    color: antiquewhite;
+    border-color: gray;
+}
+
+.friends-page .alert-info {
+    background-color: #23272a;
+    color: antiquewhite;
+    border-color: gray;
+}

@@ -1,0 +1,17 @@
+﻿@using System.Security.Claims
+
+<div class="sidebar">
+    <div class="sidebar-section">
+        <h6 class="text-center">Username and UUID</h6>
+        <p>@User.FindFirstValue(ClaimTypes.Name)</p>
+        <p>@User.FindFirstValue(ClaimTypes.NameIdentifier)</p>
+    </div>
+    <div class="sidebar-section">
+        <h6 class="text-center">Friends & Groups</h6>
+        <a asp-controller="Dashboard" asp-action="Friends">Manage friends</a>
+        @await Component.InvokeAsync("FriendsList")
+    </div>
+    <div class="sidebar-section">
+        <h6 class="text-center">Servers</h6>
+    </div>
+</div>

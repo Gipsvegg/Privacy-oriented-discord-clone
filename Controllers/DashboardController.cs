@@ -6,6 +6,8 @@ using System.Security.Claims;
 using ikt201_project.Data;
 using ikt201_project.Hubs;
 using Microsoft.AspNetCore.SignalR;
+using ikt201_project.Models.ViewModels;
+using ikt201_project.Services;
 
 namespace ikt201_project.Controllers;
 
@@ -21,10 +23,13 @@ public class DashboardController : Controller
     //lar meldinger bli sett med engang isteden for å måtte reloade siden
     private IHubContext<ChatHub> _hub;
     
-    public DashboardController(ApplicationDbContext db,  IHubContext<ChatHub> hub) //setter opp database og hub
+    private readonly IFriendService _friendService;
+    
+    public DashboardController(ApplicationDbContext db,  IHubContext<ChatHub> hub, IFriendService friendService) //setter opp database, hub og friendservice
     {
         _db = db;
         _hub = hub;
+        _friendService = friendService;
     }
 
     //Lager en liste med meldingene of sorterer dem etter tidspunkt
@@ -50,6 +55,55 @@ public class DashboardController : Controller
         
         //sender tilbake alle meldingene mellom to personer
         return PartialView(GetConversation(id));
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> Friends()
+    {
+        var model = new FriendsViewModel
+        {
+            Friends = await _friendService.GetFriendsAsync(CurrentUserId),
+            Incoming = await _friendService.GetIncomingAsync(CurrentUserId),
+            Outgoing = await _friendService.GetOutgoingAsync(CurrentUserId)
+        };
+        return View(model);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> SendFriendRequest(string username)
+    {
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            TempData["Message"] = "Please enter a username.";
+            return RedirectToAction(nameof(Friends));
+        }
+
+        await _friendService.SendRequestAsync(CurrentUserId, username.Trim());
+
+        // Same message whether or not the user exists, so the form can't be used to look up usernames
+        TempData["Message"] = "If that user exists, a friend request was sent.";
+        return RedirectToAction(nameof(Friends));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> AcceptFriend(int id)
+    {
+        await _friendService.AcceptRequestAsync(CurrentUserId, id);
+        return RedirectToAction(nameof(Friends));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeclineFriend(int id)
+    {
+        await _friendService.DeclineRequestAsync(CurrentUserId, id);
+        return RedirectToAction(nameof(Friends));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveFriend(string friendId)
+    {
+        await _friendService.RemoveFriendAsync(CurrentUserId, friendId);
+        return RedirectToAction(nameof(Friends));
     }
     
     //sender meldingen til serveren og setter den inn i databasen
