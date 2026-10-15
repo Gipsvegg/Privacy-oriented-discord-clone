@@ -89,6 +89,5 @@ app.MapRazorPages()
     .WithStaticAssets();
 
 app.MapHub<VoiceHub>("/voiceHub");
-app.MapHub<FriendsHub>("/hubs/friends");
 
 app.Run();

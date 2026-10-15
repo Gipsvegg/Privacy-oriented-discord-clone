@@ -1,0 +1,14 @@
+﻿@model List<ikt201_project.ViewComponents.FriendLink>
+
+@if (!Model.Any())
+{
+    <p class="text-muted ps-3 mb-0">No friends yet</p>
+}
+else
+{
+    @foreach (var friend in Model)
+    {
+        <a data-friend-id="@friend.Id"
+           asp-controller="Dashboard" asp-action="Conversation" asp-route-id="@friend.Id">@friend.Name</a>
+    }
+}

@@ -3,15 +3,31 @@
     if (box) box.scrollTop = box.scrollHeight;
 }
 
-document.querySelectorAll('.sidebar a[id]').forEach(link => {
-    link.addEventListener('click', async (e) => {
-        if(link.id !== 'friend') return;
+async function loadConversation(friendId) {
+    const area = document.getElementById('message-area');
+
+    // Not on the Homepage: go there and open the chat after it loads
+    if (!area) {
+        location.href = `/Dashboard/Homepage?friend=${encodeURIComponent(friendId)}`;
+        return;
+    }
+
+    const res = await fetch(`/Dashboard/Conversation/${encodeURIComponent(friendId)}`);
+    if (!res.ok) return;
+    area.innerHTML = await res.text();
+    scrollToBottom();
+}
+
+document.querySelectorAll('.sidebar a[data-friend-id]').forEach(link => {
+    link.addEventListener('click', (e) => {
         e.preventDefault();
-        const res = await fetch(link.href);
-        document.getElementById('message-area').innerHTML = await res.text();
-        scrollToBottom();
+        loadConversation(link.dataset.friendId);
     });
 });
+
+// Open a chat directly if the URL has ?friend=...
+const openFriend = new URLSearchParams(location.search).get('friend');
+if (openFriend) loadConversation(openFriend);
 
 document.addEventListener('submit', async (e) => {
     if (e.target.id !== 'send-form') return;

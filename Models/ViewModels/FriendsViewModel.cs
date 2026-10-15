@@ -2,7 +2,7 @@
 
 namespace ikt201_project.Models.ViewModels;
 
-public class FriendsIndexViewModel
+public class FriendsViewModel
 {
     public List<ApplicationUser> Friends { get; set; } = new();
     public List<Friendship> Incoming { get; set; } = new();
