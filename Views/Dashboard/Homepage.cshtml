@@ -1,4 +1,6 @@
 ﻿@using System.Security.Claims
+@using ikt201_project.Models
+@model HomepageViewModel
 @{
     ViewData["Title"] = "Home Page";
     Layout = "_AppLayout";
@@ -27,17 +29,51 @@
             {
                 <a id="friend" asp-controller="Dashboard" asp-action="Conversation" asp-route-id="8b619ee5-5e13-4154-9843-582bfee5b97c">test@test.no</a>
             }
-            
-            
         </div>
         <div class="sidebar-section">
             <h6 class="text-center">Servers</h6>
 
+            @foreach (var s in Model.Servers)
+            {
+                var isOpen = s.Id == Model.CurrentServer?.Id;
+
+                <a asp-action="Homepage" asp-route-serverId="@s.Id"
+                   class="srv-link @(isOpen ? "active" : "")">@s.Name</a>
+
+                @* Channels come from CurrentServer, the only server loaded with its channels. *@
+                @if (isOpen)
+                {
+                    <div class="srv-channels">
+                        @foreach (var cat in Model.CurrentServer!.Categories)
+                        {
+                            <div class="srv-category">@cat.Name</div>
+                            @foreach (var ch in cat.Channels)
+                            {
+                                <a asp-action="Homepage" asp-route-serverId="@s.Id" asp-route-channelId="@ch.Id"
+                                   class="srv-channel @(ch.Id == Model.CurrentChannel?.Id ? "active" : "")">
+                                    @(ch.Type == ChannelType.Voice ? "🔊" : "#") @ch.Name
+                                </a>
+                            }
+                        }
+                    </div>
+                }
+            }
+
+            <a asp-controller="Servers" asp-action="Create" class="srv-add">+ Create server</a>
         </div>
     </div>
-    
+
     <div class="main-content">
         <h2 class="text-center">Homepage</h2>
-        <div id="message-area" class="message-area"></div>
+        <div id="message-area" class="message-area">
+            @* Placeholder: server messaging isn't built yet. Opening a friend replaces this. *@
+            @if (Model.CurrentServer != null && Model.CurrentChannel != null)
+            {
+                <p class="text-muted">
+                    @(Model.CurrentChannel.Type == ChannelType.Voice ? "🔊" : "#")@Model.CurrentChannel.Name
+                    in @Model.CurrentServer.Name. Messages in server channels are not implemented yet.
+                </p>
+            }
+        </div>
     </div>
 </div>

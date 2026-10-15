@@ -6,6 +6,7 @@ using System.Security.Claims;
 using ikt201_project.Data;
 using ikt201_project.Hubs;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 namespace ikt201_project.Controllers;
 
@@ -38,9 +39,38 @@ public class DashboardController : Controller
             .ToList();
     }
     
-    public IActionResult Homepage()
+    /// <summary>
+    /// Shows the homepage with the user's servers in the sidebar. If serverId is given, that
+    /// server's channels are loaded too, with channelId (or the first text channel) selected.
+    /// </summary>
+    public async Task<IActionResult> Homepage(int? serverId = null, int? channelId = null)
     {
-        return View();
+        var userId = CurrentUserId;
+
+        var servers = await _db.Servers
+            .Where(s => s.OwnerId == userId)
+            .OrderBy(s => s.Id)
+            .ToListAsync();
+
+        var model = new HomepageViewModel { Servers = servers };
+
+        if (serverId != null)
+        {
+            // Filtering by OwnerId stops users from opening other people's servers via the URL.
+            var current = await _db.Servers
+                .Include(s => s.Categories.OrderBy(c => c.Position))
+                .ThenInclude(c => c.Channels.OrderBy(ch => ch.Position))
+                .FirstOrDefaultAsync(s => s.Id == serverId && s.OwnerId == userId);
+
+            if (current == null) return NotFound();
+
+            var channels = current.Categories.SelectMany(c => c.Channels).ToList();
+            model.CurrentServer = current;
+            model.CurrentChannel = channels.FirstOrDefault(c => c.Id == channelId)
+                                   ?? channels.FirstOrDefault(c => c.Type == ChannelType.Text);
+        }
+
+        return View(model);
     }
     
     public IActionResult Conversation(string id)

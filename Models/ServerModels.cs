@@ -31,10 +31,11 @@ public class Server
     public string OwnerId { get; set; } = "";
     public List<Category> Categories { get; set; } = new();
 }
-public class ServersViewModel
+public class HomepageViewModel
 {
     public List<Server> Servers { get; set; } = new();
-    public Server CurrentServer { get; set; } = null!;
+
+    public Server? CurrentServer { get; set; }
     public Channel? CurrentChannel { get; set; }
 }
 
