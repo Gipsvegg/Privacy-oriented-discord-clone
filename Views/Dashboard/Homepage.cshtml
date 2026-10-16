@@ -37,8 +37,19 @@
             {
                 var isOpen = s.Id == Model.CurrentServer?.Id;
 
-                <a asp-action="Homepage" asp-route-serverId="@s.Id"
-                   class="srv-link @(isOpen ? "active" : "")">@s.Name</a>
+                <div class="srv-row @(isOpen ? "active" : "")">
+                    @* Clicking an open server links back to the Homepage with no server selected, which closes it. *@
+                    @if (isOpen)
+                    {
+                        <a asp-action="Homepage" class="srv-link">@s.Name</a>
+                    }
+                    else
+                    {
+                        <a asp-action="Homepage" asp-route-serverId="@s.Id" class="srv-link">@s.Name</a>
+                    }
+                    <button type="button" class="srv-edit" title="Edit server"
+                            data-id="@s.Id" data-name="@s.Name">✎</button>
+                </div>
 
                 @* Channels come from CurrentServer, the only server loaded with its channels. *@
                 @if (isOpen)
@@ -59,11 +70,17 @@
                 }
             }
 
-            <a asp-controller="Servers" asp-action="Create" class="srv-add">+ Create server</a>
+            <button type="button" id="open-create" class="srv-add">+ Create server</button>
         </div>
     </div>
 
     <div class="main-content">
+        @* Set by ServersController when a submitted name was invalid. *@
+        @if (TempData["ServerError"] is string serverError)
+        {
+            <div class="srv-error">@serverError</div>
+        }
+
         <h2 class="text-center">Homepage</h2>
         <div id="message-area" class="message-area">
             @* Placeholder: server messaging isn't built yet. Opening a friend replaces this. *@
@@ -77,3 +94,72 @@
         </div>
     </div>
 </div>
+
+@* Native <dialog> elements: showModal() shows one on top of the page and dims the background.
+   Esc closes it. The pattern on the name inputs blocks names made only of spaces. *@
+<dialog id="create-dialog" class="srv-dialog">
+    <form asp-controller="Servers" asp-action="Create" method="post">
+        <h5>Create a server</h5>
+
+        <label for="create-name">Server name</label>
+        <input id="create-name" name="Name" class="srv-input" required minlength="2" maxlength="32" pattern=".*\S.*" />
+
+        <div>Start from a layout</div>
+        @foreach (var (name, description) in ServerTemplates.Options)
+        {
+            <label class="srv-option">
+                <input type="radio" name="Template" value="@name" checked="@(name == "Community")" />
+                <strong>@name</strong>: @description
+            </label>
+        }
+
+        <div class="srv-dialog-buttons">
+            <span class="srv-spacer"></span>
+            <button type="button" class="srv-btn" data-close>Cancel</button>
+            <button type="submit" class="srv-btn srv-btn-primary">Create</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog id="edit-dialog" class="srv-dialog">
+    <form asp-controller="Servers" asp-action="Edit" method="post">
+        <h5>Edit server</h5>
+
+        <input type="hidden" name="Id" id="edit-id" />
+        <label for="edit-name">Server name</label>
+        <input id="edit-name" name="Name" class="srv-input" required minlength="2" maxlength="32" pattern=".*\S.*" />
+
+        <div class="srv-dialog-buttons">
+            @* The form="delete-form" attribute makes this button submit the separate delete form below.
+               Forms can't be nested, so the delete form has to sit outside this one. *@
+            <button type="submit" form="delete-form" class="srv-btn srv-btn-danger"
+                    onclick="return confirm('Delete this server and all its channels?')">Delete server</button>
+            <span class="srv-spacer"></span>
+            <button type="button" class="srv-btn" data-close>Cancel</button>
+            <button type="submit" class="srv-btn srv-btn-primary">Save</button>
+        </div>
+    </form>
+
+    <form id="delete-form" asp-controller="Servers" asp-action="Delete" method="post">
+        <input type="hidden" name="id" id="delete-id" />
+    </form>
+</dialog>
+
+@* Inline instead of in a Scripts section, because I don't know whether _AppLayout renders one. *@
+<script>
+    document.getElementById('open-create').addEventListener('click', () =>
+        document.getElementById('create-dialog').showModal());
+
+    // Fills the edit dialog with the clicked server's id and name before opening it.
+    document.querySelectorAll('.srv-edit').forEach(button => {
+        button.addEventListener('click', () => {
+            document.getElementById('edit-id').value = button.dataset.id;
+            document.getElementById('delete-id').value = button.dataset.id;
+            document.getElementById('edit-name').value = button.dataset.name;
+            document.getElementById('edit-dialog').showModal();
+        });
+    });
+
+    document.querySelectorAll('[data-close]').forEach(button =>
+        button.addEventListener('click', () => button.closest('dialog').close()));
+</script>
