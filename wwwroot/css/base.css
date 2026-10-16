@@ -1,0 +1,32 @@
+﻿body {
+    font-family: 'Outfit', sans-serif;
+}
+
+button {
+    background-color: var(--background-colour);
+    color: var(--text-colour);
+    font-size: 0.9rem;
+    border: none;
+    outline: none;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: var(--hover-colour);
+
+}
+
+button:active {
+    background-color: var(--active-background-colour);
+    color: var(--active-text-colour);
+}
+
+button:focus-visible, .sidebar-section a:focus-visible {
+    outline: 2px solid var(--text-colour);
+    border-radius: 5px;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb-colour) var(--scrollbar-track-colour);
+}

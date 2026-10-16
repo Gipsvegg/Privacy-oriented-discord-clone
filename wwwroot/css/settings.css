@@ -1,13 +1,17 @@
-.main-content {
-    padding-right: 20px;
-}
-
 .sidebar .nav-link {
-    color: antiquewhite;
+    color: var(--text-colour);
 }
 
-.sidebar .nav-link:hover,
+.sidebar .nav-link:hover {
+    background: var(--hover-colour);
+}
+
 .sidebar .nav-link.active {
-    background-color: #40444b;
-    color: white;
+    background-color: var(--active-background-colour);
+    color: var(--active-text-colour);
+}
+
+.settings-page-content{
+    padding-left: 20px;
+    padding-right: 20px;
 }

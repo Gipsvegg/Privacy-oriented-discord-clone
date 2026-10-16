@@ -39,15 +39,20 @@
     font-size: 0.9rem;
     border: none;
     outline: none;
+    border-radius: 5px;
 }
 
 #group-dialog button:hover {
     background-color: var(--hover-colour);
-    border-radius: 5px;
+    
+}
+
+#group-dialog button:active {
+    background-color: var(--active-background-colour);
+    color: var(--active-text-colour);
 }
 
 #group-dialog button:focus-visible {
-    border-radius: 5px;
     outline: 2px solid var(--text-colour);
 }
 

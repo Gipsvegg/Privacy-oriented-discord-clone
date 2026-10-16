@@ -1,65 +1,4 @@
-﻿body {
-    font-family: 'Outfit', sans-serif;
-}
-
-:root {
-    /*Background colours*/
-    --background-colour: #2c2f33;           /*#2c2f33 <--- old background colour*/
-    --island-background-colour: #23272a;     /*#23272a <--- old island background colour*/ 
-    
-    /*Text colours*/
-    --text-colour: antiquewhite;            /*antiquewhite <--- old text colour*/
-    --muted-text-colour: #b5aca0;            /*#b5aca0 <--- old muted text colour*/
-    
-    /*Button/Selectables colour*/
-    --hover-colour: gray;                    /*gray <--- old hover colour*/
-    --active-text-colour: #2c2f33;          /*same as background colour <--- old active text colour*/
-    --active-background-colour: navajowhite; /*navajowhite <--- old active background colour*/
-    
-    --border-colour: gray;                  /*gray <--- old border colour*/
-    
-    /*Input stuff colour*/
-    --input-colour: antiquewhite;            /*antiquewhite <--- old input background colour*/
-    --input-text-colour: black;             /*black <--- old input text colour*/
-}
-
-.sidebar {
-    position: sticky;
-    width: 250px;
-    overflow-y: auto;
-    padding: 1rem;
-    border-right: 3px solid var(--border-colour);
-}
-
-.sidebar-section {
-    margin-bottom: 1.5rem;
-    display: flex;
-    flex-direction: column;
-}
-
-.sidebar-section h6 {
-    border-bottom: 2px solid var(--text-colour);
-    padding-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.group-button {
-    font-size: 1.2rem;                       /*Dette bytter størrelse på knappen*/
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: none;
-    border: none;
-}
-
-.sidebar-section .group-button {
-    padding: 0;
-    flex-grow: 1;
-}
-
-.conversation-information-window .group-button {
+﻿.conversation-information-window .group-button {
     margin-top: auto;
     margin-bottom: 0.3rem;
     gap: 1.3rem;
@@ -74,56 +13,12 @@
     width: 35%;
 }
 
-button {
-    background-color: var(--background-colour);
-    color: var(--text-colour);
-    font-size: 0.9rem;
-    border: none;
-    outline: none;
-}
-
-button:hover {
-    background-color: var(--hover-colour);
-    border-radius: 5px;
-}
-
-button:focus-visible, .sidebar-section a:focus-visible {
-    outline: 2px solid var(--text-colour);
-    border-radius: 5px;
-}
-
-.sidebar-section .group-button h6 {
-    border-bottom: 0 transparent!important;
-    padding-bottom: 0!important;
-    margin: 0 !important;
-    
-}
-
-.sidebar-section a {
-    color: var(--text-colour);
-    text-decoration: none;
-    padding-left: 1rem;
-}
-
-.sidebar-section a:hover {
-    background-color: var(--hover-colour);
-    border-radius: 5px;
-}
-
-.sidebar-section a.active {
-    color: var(--active-text-colour);
-    background-color: var(--active-background-colour);
-    border-radius: 5px;
-}
-
 /*hvor alt app ting går så hele siden ikke kan bli skrollet(kun individuelle elementer skal skrolle)*/
 .app-shell {
     height: 100vh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    scrollbar-width: thin;
-    scrollbar-color: #1a1b1e transparent;
     background-color: var(--background-colour);
     color: var(--text-colour);
 }
@@ -185,8 +80,6 @@ button:focus-visible, .sidebar-section a:focus-visible {
     overflow-wrap: anywhere;
     overflow-y: auto;
     padding: 0 1rem 1rem 1rem;
-    scrollbar-width: thin;
-    scrollbar-color: #1a1b1e transparent;
 }
 
 .messages p {
@@ -281,7 +174,7 @@ button:focus-visible, .sidebar-section a:focus-visible {
 }
 
 .input-field .icon-btn:hover {
-    background-color: navajowhite;
+    background-color: var(--active-background-colour);
     border-radius: 9px;
 }
 
@@ -301,6 +194,3 @@ button:focus-visible, .sidebar-section a:focus-visible {
 }
 
 
-.sidebar .text-muted {
-    color: var(--muted-text-colour) !important;
-}

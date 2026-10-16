@@ -1,0 +1,79 @@
+﻿:root {
+    /*Background colours*/
+    --background-colour: #2c2f33;           /*#2c2f33 <--- old background colour*/
+    --island-background-colour: #23272a;     /*#23272a <--- old island background colour*/
+
+    /*Text colours*/
+    --text-colour: antiquewhite;            /*antiquewhite <--- old text colour*/
+    --muted-text-colour: #b5aca0;            /*#b5aca0 <--- old muted text colour*/
+
+    /*Button/Selectables colour*/
+    --hover-colour: gray;                    /*gray <--- old hover colour*/
+    --active-text-colour: #2c2f33;          /*same as background colour <--- old active text colour*/
+    --active-background-colour: navajowhite; /*navajowhite <--- old active background colour*/
+    --success-colour: #198754;
+    --danger-colour: #dc3545;
+
+    /*Borders*/
+    --border-colour: gray;                  /*gray <--- old border colour*/
+    --scrollbar-thumb-colour: #1a1b1e;
+    --scrollbar-track-colour: transparent;
+
+    /*Input stuff colour*/
+    --input-colour: antiquewhite;            /*antiquewhite <--- old input background colour*/
+    --input-text-colour: black;             /*black <--- old input text colour*/
+}
+
+/*First test theme example copy paste, change values and rename to make your own*/
+[data-theme="midnight"] {
+    /*Background colours*/
+    --background-colour: black;           
+    --island-background-colour: #121212;    
+
+    /*Text colours*/
+    --text-colour: #4c4c57;            
+    --muted-text-colour: rgb(76 76 87 / 0.56);           
+
+    /*Button/Selectables colour*/
+    --hover-colour: #343434;                   
+    --active-text-colour: #625757;          
+    --active-background-colour: #000000;
+    --success-colour: rgb(25 135 84 / 0.35);
+    --danger-colour: rgb(220 53 69 / 0.45);
+
+    /*Borders*/
+    --border-colour: #2b2b2b;
+    --scrollbar-thumb-colour: #0045ff;
+    --scrollbar-track-colour: transparent;
+
+    /*Input stuff colour*/
+    --input-colour: #494146;            
+    --input-text-colour: black;
+}
+
+/*Claudes very own theme*/
+[data-theme="paper"] {
+    /*Background colours*/
+    --background-colour: #f3efe6;
+    --island-background-colour: #e8e2d5;
+
+    /*Text colours*/
+    --text-colour: #2c2f33;
+    --muted-text-colour: #6b655c;
+
+    /*Button/Selectables colour*/
+    --hover-colour: #d9d1c1;
+    --active-text-colour: #f3efe6;
+    --active-background-colour: #3d5a80;
+    --success-colour: #2e7d4f;
+    --danger-colour: #b3261e;
+
+    /*Borders*/
+    --border-colour: #c9c0ae;
+    --scrollbar-thumb-colour: #c9c0ae;
+    --scrollbar-track-colour: transparent;
+
+    /*Input stuff colour*/
+    --input-colour: #fffdf8;
+    --input-text-colour: #2c2f33;
+}

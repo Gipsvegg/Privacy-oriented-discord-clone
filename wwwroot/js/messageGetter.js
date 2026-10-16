@@ -53,15 +53,15 @@ let fetching = false;
 let fetchAgain = false;
 
 async function checkMailbox() {
-    if (fetching) { fetchAgain = true; return; }   // busy -> leave a note and leave
+    if (fetching) { fetchAgain = true; return; }   
     fetching = true;
     try {
         do {
             fetchAgain = false;
             await fetchPendingMessages();
-        } while (fetchAgain);                      // a ping came in while working -> go again
+        } while (fetchAgain);
     } finally {
-        fetching = false;                          // finally = runs even if something threw
+        fetching = false;
     }
 }
 

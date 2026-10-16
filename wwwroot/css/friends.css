@@ -4,23 +4,43 @@
     padding-right: 20px;
 }
 
-.friends-page input {
+.input-group input {
     background-color: var(--input-colour);
-    color: var(--text-colour);
-    border: 1px solid var(--border-colour);
+    color: var(--input-text-colour);
     flex-grow: 1;
-    border-radius: 5px;
+    border: none;
+    outline: none;
+    border-radius: 0;
+}
+
+.input-group button {
+    background-color: var(--background-colour);
+    color: var(--text-colour);
+    outline: none;
+    border: none;
+    border-radius: 0 !important;
+}
+
+.input-group button:hover {
+    background-color: var(--hover-colour);
+}
+
+.input-group button:active {
+    background-color: var(--active-background-colour);
+    color: var(--active-text-colour);
 }
 
 .input-group {
+    height: 2.5rem;
+    border: 1px solid var(--border-colour);
+    background-color: var(--border-colour);
     border-radius: 5px;
+    overflow: hidden;
+    outline: transparent !important;
 }
 
 .friends-page input:focus {
-    background-color: var(--input-colour);
-    color: var(--input-text-colour);
-    border-color: var(--border-colour);
-    box-shadow: 0 0 0 0.2rem rgba(227, 169, 169, 0.25);
+    outline: transparent !important;
 }
 
 .friends-page .text-muted {
