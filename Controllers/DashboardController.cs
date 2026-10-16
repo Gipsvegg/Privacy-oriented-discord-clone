@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ikt201_project.Controllers;
 
 [Authorize]
+[AutoValidateAntiforgeryToken]
 public class DashboardController : Controller
 {
     //Henter uuid til den som er logget inn
@@ -138,7 +139,7 @@ public class DashboardController : Controller
         return View(model);
     }
 
-    [HttpPost, ValidateAntiForgeryToken]
+    [HttpPost]
     public async Task<IActionResult> SendFriendRequest(string username)
     {
         if (string.IsNullOrWhiteSpace(username))
@@ -154,21 +155,21 @@ public class DashboardController : Controller
         return RedirectToAction(nameof(Friends));
     }
 
-    [HttpPost, ValidateAntiForgeryToken]
+    [HttpPost]
     public async Task<IActionResult> AcceptFriend(int id)
     {
         await _friendService.AcceptRequestAsync(CurrentUserId, id);
         return RedirectToAction(nameof(Friends));
     }
 
-    [HttpPost, ValidateAntiForgeryToken]
+    [HttpPost]
     public async Task<IActionResult> DeclineFriend(int id)
     {
         await _friendService.DeclineRequestAsync(CurrentUserId, id);
         return RedirectToAction(nameof(Friends));
     }
 
-    [HttpPost, ValidateAntiForgeryToken]
+    [HttpPost]
     public async Task<IActionResult> RemoveFriend(string friendId)
     {
         await _friendService.RemoveFriendAsync(CurrentUserId, friendId);
@@ -176,7 +177,6 @@ public class DashboardController : Controller
     }
     
     //sender meldingen til serveren og setter den inn i databasen
-    //[ValidateAntiForgeryToken] //ADD THIS LATER
     [HttpPost]
     public async Task<IActionResult> SendMessage(string conversationId, string text)
     {

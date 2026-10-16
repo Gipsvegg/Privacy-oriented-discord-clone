@@ -11,88 +11,93 @@
 <div class="page-layout">
     <partial name="_Sidebar" />
 
-    <div class="main-content friends-page">
+    <div class="main-content">
         <h2 class="text-center">Friends</h2>
+        
+        <div class="friends-page">
+            
+        
 
-        @if (TempData["Message"] is string message)
-        {
-            <div class="alert alert-info">@message</div>
-        }
+            @if (TempData["Message"] is string message)
+            {
+                <div class="alert alert-info">@message</div>
+            }
 
-        <form asp-controller="Dashboard" asp-action="SendFriendRequest" method="post" class="mb-4">
-            <div class="input-group">
-                <input type="text" name="username"  placeholder="Add friend by username" required />
-                <button type="submit" class="btn btn-primary">Send request</button>
-            </div>
-        </form>
+            <form asp-controller="Dashboard" asp-action="SendFriendRequest" method="post" class="mb-4">
+                <div class="input-group">
+                    <input type="text" name="username"  placeholder="Add friend by username" required />
+                    <button type="submit" class="btn btn-primary">Send request</button>
+                </div>
+            </form>
 
-        <h5>Incoming requests</h5>
-        @if (!Model.Incoming.Any())
-        {
-            <p class="text-muted">No incoming requests.</p>
-        }
-        else
-        {
-            <ul class="list-group mb-4">
-                @foreach (var req in Model.Incoming)
-                {
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>@req.Requester.UserName</span>
-                        <span class="d-flex gap-2">
-                            <form asp-controller="Dashboard" asp-action="AcceptFriend" method="post">
-                                <input type="hidden" name="id" value="@req.Id" />
-                                <button type="submit" class="btn btn-sm btn-success">Accept</button>
-                            </form>
+            <h5>Incoming requests</h5>
+            @if (!Model.Incoming.Any())
+            {
+                <p class="text-muted">No incoming requests.</p>
+            }
+            else
+            {
+                <ul class="list-group mb-4">
+                    @foreach (var req in Model.Incoming)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>@req.Requester.UserName</span>
+                            <span class="d-flex gap-2">
+                                <form asp-controller="Dashboard" asp-action="AcceptFriend" method="post">
+                                    <input type="hidden" name="id" value="@req.Id" />
+                                    <button type="submit" class="btn btn-sm btn-success">Accept</button>
+                                </form>
+                                <form asp-controller="Dashboard" asp-action="DeclineFriend" method="post">
+                                    <input type="hidden" name="id" value="@req.Id" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Decline</button>
+                                </form>
+                            </span>
+                        </li>
+                    }
+                </ul>
+            }
+
+            <h5>Sent requests</h5>
+            @if (!Model.Outgoing.Any())
+            {
+                <p class="text-muted">No pending sent requests.</p>
+            }
+            else
+            {
+                <ul class="list-group mb-4">
+                    @foreach (var req in Model.Outgoing)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>@req.Addressee.UserName</span>
                             <form asp-controller="Dashboard" asp-action="DeclineFriend" method="post">
                                 <input type="hidden" name="id" value="@req.Id" />
-                                <button type="submit" class="btn btn-sm btn-outline-danger">Decline</button>
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">Cancel</button>
                             </form>
-                        </span>
-                    </li>
-                }
-            </ul>
-        }
+                        </li>
+                    }
+                </ul>
+            }
 
-        <h5>Sent requests</h5>
-        @if (!Model.Outgoing.Any())
-        {
-            <p class="text-muted">No pending sent requests.</p>
-        }
-        else
-        {
-            <ul class="list-group mb-4">
-                @foreach (var req in Model.Outgoing)
-                {
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>@req.Addressee.UserName</span>
-                        <form asp-controller="Dashboard" asp-action="DeclineFriend" method="post">
-                            <input type="hidden" name="id" value="@req.Id" />
-                            <button type="submit" class="btn btn-sm btn-outline-secondary">Cancel</button>
-                        </form>
-                    </li>
-                }
-            </ul>
-        }
-
-        <h5>Your friends</h5>
-        @if (!Model.Friends.Any())
-        {
-            <p class="text-muted">No friends yet.</p>
-        }
-        else
-        {
-            <ul class="list-group">
-                @foreach (var friend in Model.Friends)
-                {
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>@friend.UserName</span>
-                        <form asp-controller="Dashboard" asp-action="RemoveFriend" method="post">
-                            <input type="hidden" name="friendId" value="@friend.Id" />
-                            <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
-                        </form>
-                    </li>
-                }
-            </ul>
-        }
+            <h5>Your friends</h5>
+            @if (!Model.Friends.Any())
+            {
+                <p class="text-muted">No friends yet.</p>
+            }
+            else
+            {
+                <ul class="list-group">
+                    @foreach (var friend in Model.Friends)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>@friend.UserName</span>
+                            <form asp-controller="Dashboard" asp-action="RemoveFriend" method="post">
+                                <input type="hidden" name="friendId" value="@friend.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                            </form>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
     </div>
 </div>

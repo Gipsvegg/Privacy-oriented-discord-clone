@@ -2,7 +2,8 @@
 //gets the user id from the uuid on the homepage
 const userId = document.getElementById('uuid')?.dataset.uuid;
 const userName = document.getElementById('uuid')?.dataset.username;
-console.log(userId);
+const csrfToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
 async function getWelcomes(){
     //downloads the group invite and waits for the data
     if(!userId) return;
@@ -31,7 +32,7 @@ async function getWelcomes(){
 async function sendCommit (encodedCommit, groupEpoch, conversationId){
     const res = await fetch(`/Dashboard/SubmitCommit`,{
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json', 'RequestVerificationToken': csrfToken},
         body: JSON.stringify({conversationId, epoch: groupEpoch, commit: encodedCommit}),
     })
     if(!res.ok) {
@@ -43,6 +44,7 @@ async function sendCommit (encodedCommit, groupEpoch, conversationId){
 async function deleteWelcome(id) {
     const res = await fetch(`/Dashboard/DeleteWelcome?id=${id}`, {
         method: 'DELETE',
+        headers: { 'RequestVerificationToken': csrfToken},
     });
     if(!res.ok) throw new Error("Could not delete Welcome");
 }
@@ -96,7 +98,10 @@ async function fetchPendingMessages(){
 }
 
 async function deleteFetchedMessages(messageId){
-    const res = await fetch(`/Dashboard/DeleteMessageFromDb?id=${messageId}`, {method: 'DELETE'});
+    const res = await fetch(`/Dashboard/DeleteMessageFromDb?id=${messageId}`, {
+        method: 'DELETE', 
+        headers: { 'RequestVerificationToken': csrfToken },
+    });
     if(!res.ok) throw new Error("Could not delete Message from database");
 }
 
@@ -126,9 +131,9 @@ function appendMessage(senderId, senderName, text, dateTime){
         
         if((time.getDate() !== currentTime.getDate()) && (time.getMonth() === currentTime.getMonth()) && (time.getFullYear() === currentTime.getFullYear())){
             //\u2022 dot
-            name.textContent = `${senderName} \u269C ${time.toLocaleString([], { day: '2-digit', month: 'short', year: 'numeric' })}`;
+            name.textContent = `${senderName} \u2022 ${time.toLocaleString([], { day: '2-digit', month: 'short', year: 'numeric' })}`;
         } else {
-            name.textContent = `${senderName} \u269C ${time.toLocaleString([], { hour: '2-digit', minute: '2-digit' })}`;
+            name.textContent = `${senderName} \u2022 ${time.toLocaleString([], { hour: '2-digit', minute: '2-digit' })}`;
         }
         name.dataset.senderId = senderId;
         
@@ -154,14 +159,14 @@ window.addEventListener('DOMContentLoaded', async () => {
     
     const res = await fetch('/Dashboard/UploadKeyPackage', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': csrfToken },
         body: JSON.stringify({ keyPackage: await e2ee.getMyKeyPackage(userId) })
     })
     if (!res.ok) {
         console.error('Key Package failed to upload: ', res.status);
     }
     const openId = sessionStorage.getItem('openConversation');
-    if(openId !== null){
+    if(openId !== null && document.getElementById('message-area')){
         document.querySelector(`.sidebar a.friend[data-conversation-id="${openId}"]`)?.click();
     }
 })
@@ -177,7 +182,7 @@ document.addEventListener('click', async (e) => {
     try {
         const conversationId = await createGroupWith([friendId], 'DM', true);
         sessionStorage.setItem('openConversation', conversationId); // opens the new DM after reload
-        location.reload();
+        location.href = '/Dashboard/Homepage'
     } catch (err) {
         console.error('Could not start DM:', err);
         button.disabled = false;
@@ -195,7 +200,7 @@ async function createGroupWith(memberIds, conversationName, isDirect = false) {
     const conversationId = crypto.randomUUID();
     const conversationCreation = await fetch('/Dashboard/ConversationCreation', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json', 'RequestVerificationToken': csrfToken},
         body: JSON.stringify({ conversationId, conversationName, isDirect }),
     });
     if (!conversationCreation.ok) throw new Error(`Failed to create conversation: ${conversationCreation.status}`);
@@ -205,7 +210,7 @@ async function createGroupWith(memberIds, conversationName, isDirect = false) {
     for (const member of members) {
         const res = await fetch('/Dashboard/UploadGroupInvite', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': csrfToken },
             body: JSON.stringify({ receiverId: member.userId, conversationId, welcome }),
         });
         if (!res.ok) throw new Error(`Invite upload failed for ${member.userId}: ${res.status}`);
@@ -222,6 +227,11 @@ function scrollToBottom() {
 document.querySelectorAll('.sidebar a.friend').forEach(link => {
     link.addEventListener('click', async (e) => {
         e.preventDefault();
+        if (!document.getElementById('message-area')) {
+            sessionStorage.setItem('openConversation', link.dataset.conversationId);
+            location.href = '/Dashboard/Homepage';
+            return;
+        }
         document.querySelectorAll('.sidebar a.active').forEach(a => a.classList.remove('active'));
         link.classList.add('active');
         clearUnread(link.dataset.conversationId);
@@ -241,8 +251,8 @@ document.querySelectorAll('.sidebar a.friend').forEach(link => {
 });
 
 // Open a chat directly if the URL has ?friend=...
-const openFriend = new URLSearchParams(location.search).get('friend');
-if (openFriend) loadConversation(openFriend);
+//const openFriend = new URLSearchParams(location.search).get('friend');
+//if (openFriend) loadConversation(openFriend);
 
 const groupDialog = document.getElementById('group-dialog');
 document.getElementById('open-group-creator')?.addEventListener('click', () => groupDialog.showModal());
@@ -281,7 +291,7 @@ document.addEventListener('submit', async (e) => {
     
     const res = await fetch(`/Dashboard/SendMessage?conversationId=${conversationId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'RequestVerificationToken': csrfToken },
         body: `text=${encodeURIComponent(encryptedText)}`
     });
     if (!res.ok) return;                         // 2. never paste an error response into the page

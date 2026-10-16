@@ -1,11 +1,19 @@
 ﻿.friends-page > * {
     flex-shrink: 0; /* stop the flex column from squashing the lists */
+    padding-left: 20px;
+    padding-right: 20px;
 }
 
 .friends-page input {
     background-color: var(--input-colour);
     color: var(--text-colour);
     border: 1px solid var(--border-colour);
+    flex-grow: 1;
+    border-radius: 5px;
+}
+
+.input-group {
+    border-radius: 5px;
 }
 
 .friends-page input:focus {
@@ -21,8 +29,9 @@
 
 .friends-page .list-group-item {
     background-color: var(--island-background-colour);
-    color: antiquewhite;
-    border-color: gray;
+    color: var(--text-colour);
+    border-color: var(--border-colour);
+    
 }
 
 .friends-page .alert-info {
