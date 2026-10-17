@@ -2,6 +2,52 @@
     font-family: 'Outfit', sans-serif;
 }
 
+.btn-outline-success,
+.btn-outline-danger,
+.btn-outline-secondary{
+    --bs-btn-color: var(--btn-accent);
+    --bs-btn-border-color: var(--btn-accent);
+    --bs-btn-hover-bg: var(--btn-accent);
+    --bs-btn-hover-border-color: var(--btn-accent);
+    --bs-btn-hover-color: var(--background-colour);
+    --bs-btn-active-bg: var(--btn-accent);
+    --bs-btn-active-border-color: var(--btn-accent);
+    --bs-btn-active-color: var(--background-colour);
+    --bs-btn-disabled-color: var(--btn-accent);
+    --bs-btn-disabled-border-color: var(--btn-accent);
+}
+.btn-outline-success { --btn-accent: var(--success-colour); }
+.btn-outline-danger  { --btn-accent: var(--danger-colour); }
+.btn-outline-secondary { --btn-accent: var(--muted-text-colour); }
+
+.btn-primary {
+    --bs-btn-bg: var(--background-colour);
+    --bs-btn-color: var(--text-colour);
+    
+    --bs-btn-border-color: var(--border-colour);
+    
+    --bs-btn-hover-bg: var(--hover-colour);
+    --bs-btn-hover-color: var(--text-colour);
+    --bs-btn-hover-border-color: var(--hover-colour);
+    
+    --bs-btn-active-bg: var(--active-background-colour);
+    --bs-btn-active-color: var(--active-text-colour);
+    --bs-btn-active-border-color: var(--border-colour);
+    
+    --bs-btn-disabled-color: var(--muted-text-colour);
+    --bs-btn-disabled-bg: var(--island-background-colour);
+    --bs-btn-disabled-border-color: var(--border-colour);
+}
+
+.btn-link {
+    --bs-btn-color: var(--text-colour);
+    --bs-btn-hover-color: var(--hover-colour);
+}
+
+.btn, .nav-link, .form-control, .form-select {
+    transition: none;
+}
+
 button {
     background-color: var(--background-colour);
     color: var(--text-colour);
@@ -29,4 +75,14 @@ button:focus-visible, .sidebar-section a:focus-visible {
 * {
     scrollbar-width: thin;
     scrollbar-color: var(--scrollbar-thumb-colour) var(--scrollbar-track-colour);
+}
+
+.form-control, .form-select {
+    color: var(--input-text-colour);
+    background-color: var(--input-colour);
+}
+
+.form-control:disabled, .input-group-text {
+    background-color: var(--island-background-colour);
+    color: var(--muted-text-colour);
 }

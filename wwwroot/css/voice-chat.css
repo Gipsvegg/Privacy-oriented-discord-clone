@@ -46,18 +46,4 @@
     outline: none;
 }
 
-.btn-outline-success,
-.btn-outline-danger {
-    --bs-btn-color: var(--btn-accent);
-    --bs-btn-border-color: var(--btn-accent);
-    --bs-btn-hover-bg: var(--btn-accent);
-    --bs-btn-hover-border-color: var(--btn-accent);
-    --bs-btn-hover-color: var(--background-colour);
-    --bs-btn-active-bg: var(--btn-accent);
-    --bs-btn-active-border-color: var(--btn-accent);
-    --bs-btn-active-color: var(--background-colour);
-    --bs-btn-disabled-color: var(--btn-accent);
-    --bs-btn-disabled-border-color: var(--btn-accent);
-}
-.btn-outline-success { --btn-accent: var(--success-colour); }
-.btn-outline-danger  { --btn-accent: var(--danger-colour); }
+

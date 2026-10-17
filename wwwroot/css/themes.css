@@ -16,6 +16,7 @@
 
     /*Borders*/
     --border-colour: gray;                  /*gray <--- old border colour*/
+    --divider-colour: rgb(128 128 128 / 0.13);
     --scrollbar-thumb-colour: #1a1b1e;
     --scrollbar-track-colour: transparent;
 
@@ -43,6 +44,7 @@
 
     /*Borders*/
     --border-colour: #2b2b2b;
+    --divider-colour: rgb(128 128 128 / 0.13);
     --scrollbar-thumb-colour: #0045ff;
     --scrollbar-track-colour: transparent;
 
@@ -70,6 +72,7 @@
 
     /*Borders*/
     --border-colour: #c9c0ae;
+    --divider-colour: rgb(128 128 128 / 0.13);
     --scrollbar-thumb-colour: #c9c0ae;
     --scrollbar-track-colour: transparent;
 

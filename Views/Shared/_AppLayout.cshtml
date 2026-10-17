@@ -1,5 +1,12 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@{
+    Context.Request.Cookies.TryGetValue("theme", out var theme);
+    if (theme == null || !Themes.ValidThemes.ContainsKey(theme))
+    {
+        theme = "default";
+    }
+}
+<!DOCTYPE html>
+<html lang="en" data-theme="@theme" data-bs-theme="@Themes.ValidThemes[theme]">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>

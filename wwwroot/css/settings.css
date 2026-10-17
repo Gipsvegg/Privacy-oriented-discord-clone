@@ -15,3 +15,22 @@
     padding-left: 20px;
     padding-right: 20px;
 }
+
+.form-floating {
+    --bs-body-bg: var(--input-colour);
+}
+.form-floating > label {
+    color: var(--input-text-colour) !important;
+    opacity: 0.65;
+}
+
+.form-floating > label::after {
+    background-color: transparent !important;
+}
+
+.form-control:focus {
+    color: var(--input-text-colour);
+    background-color: var(--input-colour);
+    border-color: transparent;
+    box-shadow: none;
+}

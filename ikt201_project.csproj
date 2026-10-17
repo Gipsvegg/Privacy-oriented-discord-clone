@@ -26,4 +26,10 @@
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Update="Views\Shared\_AppLayout.cs">
+        <DependentUpon>_AppLayout.cshtml</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
 </Project>

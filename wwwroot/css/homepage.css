@@ -90,7 +90,7 @@
 }
 
 .messages h6 {
-    border-top: rgb(128 128 128 / 0.13) solid 1px;
+    border-top: var(--divider-colour) solid 1px;
 }
 
 .conversation-message-window {
@@ -108,6 +108,7 @@
     min-width: 200px;
     max-width: 30%;
     border-left: var(--border-colour) solid 2px;
+    padding-top: 10px;
 }
 
 .conversation-name {
@@ -153,11 +154,6 @@
     padding: 0;
     margin: 0;
     line-height: 2rem;
-}
-
-.input-field textarea:focus {
-    outline: none;
-    border-color: #e3a9a9;
 }
 
 .input-field .icon-btn {

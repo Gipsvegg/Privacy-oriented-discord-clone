@@ -1,0 +1,28 @@
+﻿@page
+@using ikt201_project.Models
+@model AppearanceModel
+@{
+    ViewData["Title"] = "Appearance";
+    ViewData["ActivePage"] = ManageNavPages.Appearance;
+}
+
+<h3>@ViewData["Title"]</h3>
+<div class="mb-3">
+    <form method="post">
+    <label for="theme-picker" class="form-label">Theme</label>
+        <select id="theme-picker" name="chosenTheme" class="form-select" onchange="this.form.requestSubmit()">
+            @foreach (var validName in Themes.ValidThemes)
+            {
+                if (Model.CurrentTheme == validName.Key)
+                {
+                    <option value="@validName.Key" selected="selected">@validName.Key</option>
+                }
+                else
+                {
+                    <option value="@validName.Key">@validName.Key</option>
+                }
+            }
+        </select>    
+    </form>
+    
+</div>
