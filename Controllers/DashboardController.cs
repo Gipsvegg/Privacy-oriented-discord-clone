@@ -41,10 +41,12 @@ public class DashboardController : Controller
             .OrderByDescending(m => m.CreatedAt)
             .Select(m => new Group ( 
                 m.ConversationId,
-                m.ConversationName, 
+                m.ConversationName,
                 m.ConversationMembers
                     .Select(e => new Member(e.Member.UserName, e.Role))
-                    .ToArray()))
+                    .ToArray(),
+                m.IsDirect
+                ))
             .ToList();
         
         return groups;
@@ -185,7 +187,7 @@ public class DashboardController : Controller
         if (string.IsNullOrWhiteSpace(conversationId)) return BadRequest();
         var members = _db.ConversationMembers.Where(m => m.ConversationId == conversationId).ToList();
         if (members.Count == 0) return NotFound();
-        if (members.All(member => member.MemberId != CurrentUserId)) return Forbid();
+        if (members.All(member => member.MemberId != CurrentUserId)) return StatusCode(403);
         try
         {
             MessageHandler(conversationId, text, members);
@@ -218,7 +220,7 @@ public class DashboardController : Controller
         var members = _db.ConversationMembers.Where(m => m.ConversationId == conversation.ConversationId).ToList();
         if (members.All(member => member.MemberId != CurrentUserId))
         {
-            return Forbid();
+            return StatusCode(403);
         }
         if (commitPackage.Epoch != conversation.Epoch) return Conflict();
 
@@ -300,7 +302,8 @@ public class DashboardController : Controller
     {
         if (welcome == null || welcome?.Welcome == null || welcome.Welcome.Length == 0 || string.IsNullOrWhiteSpace(welcome.ReceiverId) || string.IsNullOrWhiteSpace(welcome.ConversationId) || welcome.ReceiverId == CurrentUserId) return BadRequest();
         if (await _db.Conversations.FindAsync(welcome.ConversationId) == null) return NotFound();
-        if (await _db.ConversationMembers.FindAsync([welcome.ConversationId, CurrentUserId]) == null) return Forbid();
+        if (await _db.ConversationMembers.FindAsync([welcome.ConversationId, CurrentUserId]) == null) return StatusCode(403);
+        if (await _db.Conversations.Where(m => m.ConversationId == welcome.ConversationId && m.ConversationMembers.Count >= 2 && m.IsDirect).AnyAsync()) return Conflict();
         try
         {
             var exists = _db.GroupInvites.FirstOrDefault(m => (m.ReceiverId == welcome.ReceiverId && m.ConversationId == welcome.ConversationId)); 

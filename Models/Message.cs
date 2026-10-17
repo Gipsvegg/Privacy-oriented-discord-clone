@@ -64,4 +64,4 @@ public class GroupInvite
 }
 
 public record Member(string MemberName, string Role);
-public record Group(string ConversationId, string ConversationName, Member[] Members);
+public record Group(string ConversationId, string ConversationName, Member[] Members, bool IsDirect);

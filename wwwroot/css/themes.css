@@ -28,29 +28,30 @@
 /*First test theme example copy paste, change values and rename to make your own*/
 [data-theme="midnight"] {
     /*Background colours*/
-    --background-colour: black;           
-    --island-background-colour: #121212;    
+    --background-colour: #0b0d14;
+    --island-background-colour: #11141d;
 
     /*Text colours*/
-    --text-colour: #4c4c57;            
-    --muted-text-colour: rgb(76 76 87 / 0.56);           
+    --text-colour: #c9cfdd;
+    --muted-text-colour: #7a8299;
 
     /*Button/Selectables colour*/
-    --hover-colour: #343434;                   
-    --active-text-colour: #625757;          
-    --active-background-colour: #000000;
-    --success-colour: rgb(25 135 84 / 0.35);
-    --danger-colour: rgb(220 53 69 / 0.45);
+    --hover-colour: #1c2130;
+    --active-text-colour: #0b0d14;
+    --active-background-colour: #8fa8d6;
+    --success-colour: #3fa877;
+    --danger-colour: #d9606b;
 
     /*Borders*/
-    --border-colour: #2b2b2b;
-    --divider-colour: rgb(128 128 128 / 0.13);
-    --scrollbar-thumb-colour: #0045ff;
+    --border-colour: #262b3a;
+    --divider-colour: rgb(143 168 214 / 0.10);
+    --scrollbar-thumb-colour: #262b3a;
     --scrollbar-track-colour: transparent;
 
     /*Input stuff colour*/
-    --input-colour: #494146;            
-    --input-text-colour: black;
+    --input-colour: #161a25;
+    --input-text-colour: #c9cfdd;
+    --focus-colour: #8fa8d6;
 }
 
 /*Claudes very own theme*/

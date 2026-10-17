@@ -32,7 +32,8 @@ public class GroupsListViewComponent : ViewComponent
                 m.ConversationName, 
                 m.ConversationMembers
                     .Select(e => new Member(e.Member.UserName, e.Role))
-                    .ToArray()))
+                    .ToArray(),
+                m.IsDirect))
             .ToListAsync();
 
         return View(groups);

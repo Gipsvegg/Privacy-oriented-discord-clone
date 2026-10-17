@@ -13,17 +13,25 @@
 </div>
 
 <div class="conversation-information-window">
-    <h6>Members</h6>
-    @foreach (var member in Model.Members)
+    @if (!Model.IsDirect)
     {
-        <p class="members">@member.MemberName : @member.Role</p>
+        <h6>Members</h6>
+        foreach (var member in Model.Members)
+        {
+            <p class="members">@member.MemberName : @member.Role</p>
+        }
+        <div class="group-button">
+            <button id="open-group-invitor" type="button">add</button>
+            <button id="open-group-leaver" type="button" class="btn-outline-danger">leave</button>
+        </div>
     }
-    <div class="group-button">
-        <button id="open-group-invitor" type="button">add</button>
-        <button id="open-group-leaver" type="button">leave</button>
-    </div>
+    else
+    {
+        <h6>YOUR FRIEND:</h6>
+        <p>@Model.Members.First().MemberName</p>
+    }
 </div>
-
+@await Component.InvokeAsync("FriendsList", new {invoker = "addToGroup", conversationId = Model.ConversationId});
 
 
 

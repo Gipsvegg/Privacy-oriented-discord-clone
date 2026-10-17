@@ -19,7 +19,7 @@ public class FriendsListViewComponent : ViewComponent
         _db = db;
     }
 
-    public async Task<IViewComponentResult> InvokeAsync()
+    public async Task<IViewComponentResult> InvokeAsync(string invoker = "default", string? conversationId = null)
     {
         var userId = UserClaimsPrincipal.FindFirst(
             System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -34,7 +34,22 @@ public class FriendsListViewComponent : ViewComponent
             .OrderBy(f => f.Name)
             .ToList();
 
+        if (invoker == "groupCreator")
+        {
+            return View("GroupDialog", links);
+        }
 
+        if (invoker == "addToGroup")
+        {
+            var members = await _db.ConversationMembers
+                .Where(m => m.ConversationId == conversationId)
+                .Select(m => m.MemberId)
+                .ToListAsync();
+            
+            var friendsNotInGroup = links.Where(m => !members.Contains(m.Id)).ToList();
+            return View("AddToGroupDialog", friendsNotInGroup);
+        }
+        
         var conversations = await _db.Conversations
             .Where(m => m.IsDirect == true && m.ConversationMembers.Any(i => i.MemberId == userId))
             .Select(m => new DmConversation(m.ConversationId, m.ConversationMembers
@@ -51,17 +66,9 @@ public class FriendsListViewComponent : ViewComponent
         var dmConvoList = new List<FriendLink>();
         foreach (var link in links)
         {
-            var dm = lookup.GetValueOrDefault(link.Id);
-            if (dm == null)
-            {
-                dmConvoList.Add(new FriendLink(link.Id, null, link.Name));
-            }
-            else
-            {
-                dmConvoList.Add(new FriendLink(link.Id,dm,  link.Name ));
-            }
+            dmConvoList.Add(new FriendLink(link.Id,lookup.GetValueOrDefault(link.Id),  link.Name ));
         }
-
-        return View(dmConvoList);
+        
+        return View("Default", dmConvoList);
     }
 }

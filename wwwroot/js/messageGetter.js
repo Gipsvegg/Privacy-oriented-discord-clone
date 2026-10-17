@@ -206,7 +206,6 @@ async function createGroupWith(memberIds, conversationName, isDirect = false) {
     if (!conversationCreation.ok) throw new Error(`Failed to create conversation: ${conversationCreation.status}`);
     const welcome = await e2ee.groupCreation(userId, conversationId, members, async () => true);
     
-    
     for (const member of members) {
         const res = await fetch('/Dashboard/UploadGroupInvite', {
             method: 'POST',
@@ -217,6 +216,27 @@ async function createGroupWith(memberIds, conversationName, isDirect = false) {
     }
 
     return conversationId;
+}
+
+async function inviteToGroup(memberIds, conversationId) {
+    const members = [];
+    for (const memberId of memberIds) {
+        const keyPackage = await getKeyPackage(memberId);
+        if (!keyPackage) throw new Error(`${memberId} has no key package yet (never logged in?)`);
+        members.push({ userId: memberId, keyPackage });
+    }
+    
+    const invitePackage = await e2ee.inviteUsersToGroup(userId, conversationId, members, sendCommit);
+    if (invitePackage == null) return;
+    
+    for (const member of members) {
+        const res = await fetch('/Dashboard/UploadGroupInvite', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'RequestVerificationToken': csrfToken},
+            body: JSON.stringify({ receiverId: member.userId, conversationId, welcome: invitePackage.welcome }),
+        })
+        if (!res.ok) throw new Error(`Invite upload failed for ${member.userId}: ${res.status}`);
+    }
 }
 
 function scrollToBottom() {
@@ -255,8 +275,17 @@ document.querySelectorAll('.sidebar a.friend').forEach(link => {
 //if (openFriend) loadConversation(openFriend);
 
 const groupDialog = document.getElementById('group-dialog');
-document.getElementById('open-group-creator')?.addEventListener('click', () => groupDialog.showModal());
-document.getElementById('group-cancel')?.addEventListener('click', () => groupDialog.close());
+document.addEventListener('click', e => {
+    if(e.target.closest('#open-group-creator')) {
+        groupDialog.showModal();
+    }
+    else if(e.target.closest('#open-group-invitor')) {
+        document.getElementById('add-to-group-dialog')?.showModal();
+    }
+    else if(e.target.closest('#group-cancel')) {
+        e.target.closest('dialog')?.close();
+    }
+})
 
 document.getElementById('group-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -277,6 +306,41 @@ document.getElementById('group-form')?.addEventListener('submit', async (e) => {
         submit.disabled = false;
     }
 });
+
+document.addEventListener('input', e => {
+    if(e.target.id !== 'friend-search') return;
+    
+    const query = e.target.value.trim().toLowerCase();
+    document.querySelectorAll('#add-to-group-form [data-name]').forEach(possibleMembers => {
+        possibleMembers.hidden = !possibleMembers.dataset.name.includes(query);
+    })
+})
+
+document.addEventListener('submit', async (e) => {
+    if (e.target.id !== 'add-to-group-form') return;
+    e.preventDefault();
+    const form = e.target;
+    const newMemberIds = [...form.querySelectorAll('input[name="member"]:checked')].map(c => c.value);
+    if (newMemberIds.length === 0) return;
+
+    const submit = form.querySelector('button[type="submit"]');
+    const conversationId = document.getElementById('send-form')?.dataset.conversationId;
+    if (!conversationId) return;
+    
+    submit.disabled = true;
+    try {
+        await inviteToGroup(newMemberIds, conversationId);
+        location.reload();
+    } catch (err) {
+        console.error('Could not invite group:', err);
+    } finally {
+        submit.disabled = false;
+    }
+    
+})
+
+
+
 
 document.addEventListener('submit', async (e) => {
     if (e.target.id !== 'send-form') return;

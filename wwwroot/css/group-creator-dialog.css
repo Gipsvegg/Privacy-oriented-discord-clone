@@ -11,6 +11,8 @@
     min-width: 300px;
 }
 
+
+
 .dialog-buttons {
     display: flex;
     justify-content: center;
@@ -33,27 +35,16 @@
 }
 
 #group-dialog button {
-    background-color: var(--background-colour);
     padding: 0.3rem 0.9rem;
-    color: var(--text-colour);
     font-size: 0.9rem;
-    border: none;
-    outline: none;
-    border-radius: 5px;
 }
 
-#group-dialog button:hover {
-    background-color: var(--hover-colour);
-    
-}
 
-#group-dialog button:active {
-    background-color: var(--active-background-colour);
-    color: var(--active-text-colour);
-}
-
-#group-dialog button:focus-visible {
-    outline: 2px solid var(--text-colour);
+.no-friends{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 #group-dialog::backdrop {
@@ -87,4 +78,30 @@
 
 .member-option:has(input:focus-visible) {
     outline: 2px solid var(--text-colour);
+}
+
+#add-to-group-dialog{
+    background: var(--background-colour);
+    color: var(--text-colour);
+    border: var(--border-colour) 2px solid;
+    border-radius: 8px;
+    max-height: 80%;
+    min-width: 300px;
+}
+
+#add-to-group-dialog button {
+    padding: 0.3rem 0.9rem;
+    font-size: 0.9rem;
+}
+
+#add-to-group-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+#add-to-group-dialog label {
+    display: block;
+}
+
+#add-to-group-dialog input:focus{
+    outline: none;
 }
