@@ -111,6 +111,27 @@
     padding-top: 10px;
 }
 
+.conversation-information-window .member-control {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding-bottom: 1rem;
+}
+
+.conversation-information-window .member-control button {
+    border: 1px solid var(--border-colour);
+}
+
+.conversation-information-window .members {
+    margin: 0;
+}
+
+.cant-read{
+    color: var(--danger-colour);
+    background-color: color-mix(in srgb, var(--danger-colour) 15%, transparent);
+}
+
 .conversation-name {
     display: flex;
     justify-content: center;

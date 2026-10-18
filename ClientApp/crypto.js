@@ -278,14 +278,28 @@ async function decryptMessage(message, userId, conversationId) {
         if (decoded.wireformat !== "mls_private_message") {
             throw new Error("Not a private message");
         }
+        
+        if(await get(`${userId}:group:${conversationId}`) === undefined) {
+            throw new Error("No group state");
+        }
         let groupState = await loadGroupState(userId, conversationId);
+        
+        if(decoded.privateMessage.epoch > groupState.groupContext.epoch){
+            throw new Error("Future epoch");
+        }
+        
         const decryptedMessage = await processPrivateMessage(groupState, decoded.privateMessage, emptyPskIndex, impl);
 
         groupState = decryptedMessage.newState;
         decryptedMessage.consumed.forEach(zeroOutUint8Array);
-
-        await saveGroupState(userId, conversationId, groupState);
-
+        
+        if(groupState.groupActiveState.kind === "removedFromGroup") {
+            await del(`${userId}:group:${conversationId}`);
+            return null;
+        }else{
+            await saveGroupState(userId, conversationId, groupState);
+        }
+        
         if (decryptedMessage.kind === "applicationMessage") {
             return toText(decryptedMessage.message);
         } else {
@@ -315,10 +329,16 @@ async function groupCreation(userId, conversationId, groupMembers, sendCommit) {
 async function inviteAccept(userId, conversationId, welcome) {
     return withGroupLock(userId, conversationId, async () => {
         const checkGroupStatus = await get(`${userId}:group:${conversationId}`);
+
         if(checkGroupStatus !== undefined) {
-            throw new Error("Invite already accepted");
+            const groupState = await loadGroupState(userId, conversationId);
+            if (groupState.groupActiveState.kind !== "active") {
+                await del(`${userId}:group:${conversationId}`);
+            } else{
+                throw new Error("Invite already accepted");
+            }
         }
-    
+        
         const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
         const decodedWelcome = decodeMlsMessage(fromBase64(welcome), 0)[0]
         if (decodedWelcome.wireformat !== "mls_welcome") {
@@ -428,6 +448,22 @@ async function removeUsersFromGroup(userId, conversationId, members, sendCommit)
     });
 }
 
+//Gets the user id of members that is stored locally in the group state
+async function getGroupMembersFromGroupState(userId, conversationId) {
+    let groupState = await loadGroupState(userId, conversationId);
+    let members = [];
+    
+    const tree = groupState.ratchetTree;
+    for (let i = 0; i < tree.length; i++) {
+        const node = tree[i];
+        if(node?.nodeType === "leaf"){
+            members.push(toText(node.leaf.credential.identity));
+        }
+    }
+    
+    return members;
+}
+
 async function getMyKeyPackage(userId){
     let keyPackage = await get(`user:${userId}`);
     if(keyPackage === undefined) {
@@ -454,6 +490,10 @@ async function loadFromHistory(userId, conversationId) {
     return (await get(`${userId}:history:${conversationId}`) ?? []);
 }
 
+async function deleteGroupState(userId, conversationId) {
+    await del(`${userId}:group:${conversationId}`);
+}
+
 window.e2ee = {
     encryptMessage,
     decryptMessage,
@@ -463,7 +503,9 @@ window.e2ee = {
     getMyKeyPackage,
     saveToHistory,
     loadFromHistory,
+    deleteGroupState,
     removeUsersFromGroup,
+    getGroupMembersFromGroupState,
     // tests, remove later
     testGroupFlow,
     testInviteFlow,

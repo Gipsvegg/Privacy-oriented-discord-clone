@@ -2,7 +2,7 @@
 
 namespace ikt201_project.Data.BackgroundTasks;
 
-public class DeleteOldMessagesFromDatabase(IServiceScopeFactory scopeFactory, ILogger<DeleteOldMessagesFromDatabase> logger)
+public class CleanUpDatabase(IServiceScopeFactory scopeFactory, ILogger<CleanUpDatabase> logger)
     : BackgroundService
 {
     private static readonly TimeSpan Lifetime = TimeSpan.FromDays(30);
@@ -10,7 +10,7 @@ public class DeleteOldMessagesFromDatabase(IServiceScopeFactory scopeFactory, IL
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        logger.LogInformation("Message deletion service started");
+        logger.LogInformation("clean up service started");
         using var timer = new PeriodicTimer(CheckInterval);
         do
         {
@@ -22,13 +22,13 @@ public class DeleteOldMessagesFromDatabase(IServiceScopeFactory scopeFactory, IL
 
                 var messages = await db.Messages.Where(m => m.Timestamp < tooOld).ExecuteDeleteAsync(stoppingToken);
                 var invites = await db.GroupInvites.Where(m => m.Timestamp < tooOld).ExecuteDeleteAsync(stoppingToken);
-                var groups = await db.Conversations.Where(m => m.ConversationMembers.Count == 0).ExecuteDeleteAsync(stoppingToken);
+                var groups = await db.Conversations.Where(m => m.ConversationMembers.Count == 0 || (m.IsDirect && m.ConversationMembers.Count < 2)).ExecuteDeleteAsync(stoppingToken);
                 
                 logger.LogInformation("Cleanup stats:\n      Messages deleted: {messages}, Invites deleted: {invites}, Groups deleted: {groups}", messages, invites, groups);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error occurred during message deletion");
+                logger.LogError(ex, "Error occurred during clean up");
             }
             
         } while (await timer.WaitForNextTickAsync(stoppingToken));

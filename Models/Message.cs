@@ -63,5 +63,5 @@ public class GroupInvite
     public DateTime Timestamp { get; set; }
 }
 
-public record Member(string MemberName, string Role);
+public record Member(string MemberId, string MemberName, string Role);
 public record Group(string ConversationId, string ConversationName, Member[] Members, bool IsDirect);

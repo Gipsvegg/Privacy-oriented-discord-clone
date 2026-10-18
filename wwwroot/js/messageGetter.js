@@ -29,6 +29,7 @@ async function getWelcomes(){
     }
 }
 
+//sends commits to the server(remove and invite to group(groupstate/epoch changes)) 
 async function sendCommit (encodedCommit, groupEpoch, conversationId){
     const res = await fetch(`/Dashboard/SubmitCommit`,{
         method: 'POST',
@@ -41,6 +42,7 @@ async function sendCommit (encodedCommit, groupEpoch, conversationId){
     return res.ok;
 }
 
+//deletes the group invite after it has been fetched
 async function deleteWelcome(id) {
     const res = await fetch(`/Dashboard/DeleteWelcome?id=${id}`, {
         method: 'DELETE',
@@ -65,28 +67,60 @@ async function checkMailbox() {
     }
 }
 
+//gets messages to the user from the server and adds them to the open chat or adds a notification on the conversation button if not open
 async function fetchPendingMessages(){
     const res = await fetch(`/Dashboard/Mailbox`);
     if(!res.ok) return;
     
     const messages = await res.json();
+    const historyIds = new Map();
+    
     for (const message of messages) {
+        if(!historyIds.has(message.conversationId)){
+            const history = await e2ee.loadFromHistory(userId, message.conversationId);
+            historyIds.set(message.conversationId, new Set(history.map(entry => entry.id)));
+        }
+        
+        if(historyIds.get(message.conversationId).has(message.id)){
+            try{
+                await deleteFetchedMessages(message.id);
+            } catch(err){
+                console.error(`failed to delete:${message.id}, Reason: ${err}`);
+            }
+            continue;
+        }
+        
         let decryptedText;
         try {
             decryptedText = await e2ee.decryptMessage(message.text, userId, message.conversationId);
         } catch (err) {
+            if(err.message === 'Future epoch') continue;
             console.error('Could not decrypt:', err);
+            try{
+                await deleteFetchedMessages(message.id);
+            } catch(err){
+                console.error(`failed to delete:${message.id}, Reason: ${err}`);
+            }
+            
             continue
         }
         
         if (decryptedText === null) {   // group change, not a chat message
-            await deleteFetchedMessages(message.id); 
+            try{
+                await deleteFetchedMessages(message.id);
+            } catch(err){
+                console.error(`failed to delete:${message.id}, Reason: ${err}`);
+            }
             continue;
         }
         message.text = decryptedText;
         message.timestamp = new Date(message.timestamp).getTime();
         await e2ee.saveToHistory(userId, message.conversationId, message);
-        await deleteFetchedMessages(message.id)
+        try{
+            await deleteFetchedMessages(message.id);
+        } catch(err){
+            console.error(`failed to delete fetched message:${message.id}, Reason: ${err}`);
+        }
         
         const form = document.getElementById('send-form');
         if (!form || form.dataset.conversationId !== message.conversationId) {
@@ -97,6 +131,7 @@ async function fetchPendingMessages(){
     }
 }
 
+//deletes the message after it has been downloaded
 async function deleteFetchedMessages(messageId){
     const res = await fetch(`/Dashboard/DeleteMessageFromDb?id=${messageId}`, {
         method: 'DELETE', 
@@ -105,6 +140,7 @@ async function deleteFetchedMessages(messageId){
     if(!res.ok) throw new Error("Could not delete Message from database");
 }
 
+//get the public key package of a user, for group invitations
 async function getKeyPackage(id){
     const res = await fetch(`/Dashboard/DownloadKeyPackage?userId=${id}`);
     if(!res.ok) return null;
@@ -112,6 +148,7 @@ async function getKeyPackage(id){
     return await res.json();
 }
 
+//puts messages in the open conversation, builds it from scratch or just adds the newest message to the bottom
 function appendMessage(senderId, senderName, text, dateTime){
     const box = document.querySelector('.messages')
     if (!box) return;
@@ -149,7 +186,7 @@ function appendMessage(senderId, senderName, text, dateTime){
     if (nearBottom) scrollToBottom();
 }
 
-//loadhandler runs when the homepage is loaded
+//loadhandler runs when the homepage is loaded/ runs necessary checks against database
 window.addEventListener('DOMContentLoaded', async () => {
     if(!userId) return;
     console.log(userId);
@@ -239,6 +276,40 @@ async function inviteToGroup(memberIds, conversationId) {
     }
 }
 
+async function removeFromGroup(memberId, conversationId) {
+    
+    try {
+        await e2ee.removeUsersFromGroup(userId, conversationId, [memberId], sendCommit);
+    } catch (err){
+        if(err.message !== "User not in group") throw err;
+        console.warn(err.message);
+    }
+    
+    const res = await fetch('/Dashboard/RemoveFromGroup', {
+        method: 'DELETE',
+        headers: {'Content-Type': 'application/json', 'RequestVerificationToken': csrfToken},
+        body: JSON.stringify({memberId: memberId, conversationId: conversationId}),
+    })
+    if (!res.ok) throw new Error(`Failed to remove ${memberId} from server`);
+    
+    return true
+}
+
+//checks the locally stored members against what the server has
+async function checkGroupHealth(conversationId, serverMembers) {
+    let localMembers;
+    try {
+        localMembers = await e2ee.getGroupMembersFromGroupState(userId, conversationId);    
+    } catch {
+        return { trolledMembers: [], leavingMembers: [] };
+    }
+
+    const trolledMembers = serverMembers.filter(id => id !== userId && !localMembers.includes(id));
+    const leavingMembers = localMembers.filter(id => id !== userId && !serverMembers.includes(id));
+    
+    return {trolledMembers, leavingMembers};
+}
+
 function scrollToBottom() {
     const box = document.querySelector('.messages');
     if (box) box.scrollTop = box.scrollHeight;
@@ -257,23 +328,53 @@ document.querySelectorAll('.sidebar a.friend').forEach(link => {
         clearUnread(link.dataset.conversationId);
         sessionStorage.setItem('openConversation', link.dataset.conversationId)
         const res = await fetch(link.href);
+        if(!res.ok) return;
         document.getElementById('message-area').innerHTML = await res.text();
         
         const conversationId = document.getElementById('send-form')?.dataset.conversationId;
-        const messages = await e2ee.loadFromHistory(userId, conversationId);
 
+        const messages = await e2ee.loadFromHistory(userId, conversationId);
         for (const message of messages) {
             appendMessage(message.senderId, message.senderName ?? message.senderId, message.text, message.timestamp);
         }
-        
         scrollToBottom();
+        
+        const serverMembers = [...document.querySelectorAll('#message-area [data-member-id]')].map(m => m.dataset.memberId)
+        if(serverMembers.length > 0){
+            const health = await checkGroupHealth(conversationId, serverMembers);
+            try {
+                if (health.leavingMembers.length > 0) {
+                    await e2ee.removeUsersFromGroup(userId, conversationId, health.leavingMembers, sendCommit);
+                }
+            } catch (err) {
+                console.warn(err);
+            }
+
+            for (const memberId of health.trolledMembers) {
+                const memberElement = document.querySelector(`#message-area [data-member-id="${memberId}"]`);
+                memberElement?.classList.add('cant-read');
+                if(memberElement) memberElement.title = "CAN'T READ MESSAGES IN THE GROUP CHAT";
+            }
+        }
     });
 });
 
-// Open a chat directly if the URL has ?friend=...
-//const openFriend = new URLSearchParams(location.search).get('friend');
-//if (openFriend) loadConversation(openFriend);
+document.addEventListener('click', async (e) => {
+    const button = e.target.closest('.kill-button');
+    if (button == null) return;
+    e.preventDefault();
+    
+    const conversationId = button.dataset.conversationId;
+    const memberId = button.closest('[data-member-id]').dataset.memberId;
+    try {
+        await removeFromGroup(memberId, conversationId);
+        document.querySelector('.sidebar a.active')?.click()
+    }catch(err) {
+        console.error(err);
+    }
+})
 
+//conversation information window js
 const groupDialog = document.getElementById('group-dialog');
 document.addEventListener('click', e => {
     if(e.target.closest('#open-group-creator')) {
@@ -285,6 +386,27 @@ document.addEventListener('click', e => {
     else if(e.target.closest('#group-cancel')) {
         e.target.closest('dialog')?.close();
     }
+})
+
+document.addEventListener('click', async e => {
+    if (!e.target.closest('#open-group-leaver')) return;
+    e.preventDefault();
+
+    const button = e.target.closest('#open-group-leaver')
+    const conversationId = button.dataset.conversationId;
+    
+    const res = await fetch(`/Dashboard/LeaveGroup?conversationId=${conversationId}`, {
+        method: 'DELETE',
+        headers: {'RequestVerificationToken': csrfToken},
+    })
+    if (!res.ok) return;
+    try {
+        await e2ee.deleteGroupState(userId, conversationId);
+        sessionStorage.removeItem('openConversation');
+    } catch (err) {
+        console.error(err);
+    }
+    location.reload();
 })
 
 document.getElementById('group-form')?.addEventListener('submit', async (e) => {
@@ -338,7 +460,7 @@ document.addEventListener('submit', async (e) => {
     }
     
 })
-
+//end of dialog js
 
 
 
@@ -347,7 +469,7 @@ document.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const text = document.getElementById('message-input').value.trim();
-    if (!text) return;                    // 1. don't even send empty messages
+    if (!text) return;
     
     const conversationId = e.target.dataset.conversationId;
     const encryptedText = await e2ee.encryptMessage(text, userId, conversationId);
@@ -358,16 +480,16 @@ document.addEventListener('submit', async (e) => {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'RequestVerificationToken': csrfToken },
         body: `text=${encodeURIComponent(encryptedText)}`
     });
-    if (!res.ok) return;                         // 2. never paste an error response into the page
+    if (!res.ok) return;
     
     const timestamp = Date.now();
     appendMessage(userId, userName, text, timestamp);
     await e2ee.saveToHistory(userId, conversationId, {senderId: userId, senderName: userName, text: text, timestamp: timestamp});
-    //document.getElementById('message-area').innerHTML = await res.text();
+    
     scrollToBottom();
     const input = document.getElementById('message-input');
     input.value = '';
-    input.style.height = '';      // setting .value doesn't fire 'input', so reset the auto-grow height by hand
+    input.style.height = '';
     input.focus();
 });
 
@@ -422,5 +544,17 @@ connection.on('ReceiveGroupInvite', async () => {
     console.log("Welcome received");
     location.reload();
 });
+
+connection.on('RemoveFromGroup', async () => {
+    location.reload();
+})
+
+connection.on('MemberLeftGroup', async (memberId, conversationId) => {
+    try {
+        await e2ee.removeUsersFromGroup(userId, conversationId, [memberId], sendCommit)
+    } catch (err) {
+        console.warn('Someone else removed them:', err.message);
+    }
+})
 
 connection.start().catch(console.error)

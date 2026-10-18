@@ -43,7 +43,7 @@ public class DashboardController : Controller
                 m.ConversationId,
                 m.ConversationName,
                 m.ConversationMembers
-                    .Select(e => new Member(e.Member.UserName, e.Role))
+                    .Select(e => new Member(e.Member.Id, e.Member.UserName ?? "PISSCORD USER MISSING", e.Role))
                     .ToArray(),
                 m.IsDirect
                 ))
@@ -241,6 +241,74 @@ public class DashboardController : Controller
             if (member.MemberId == CurrentUserId) continue;
             await _hub.Clients.User(member.MemberId).SendAsync("ReceiveMessage");
         }
+        
+        return Ok();
+    }
+
+    [HttpDelete]
+    public async Task<IActionResult> LeaveGroup(string conversationId)
+    {
+        if (string.IsNullOrWhiteSpace(conversationId)) return BadRequest();
+        var isMember = await _db.ConversationMembers.AnyAsync(m => m.ConversationId == conversationId && m.MemberId == CurrentUserId);
+        if(!isMember) return NotFound();
+        var isDm = await _db.Conversations.AnyAsync(m => m.ConversationId == conversationId && m.IsDirect);
+        if(isDm) return StatusCode(403);
+
+        await using var transaction = await _db.Database.BeginTransactionAsync();
+        var isAdmin = await _db.ConversationMembers.AnyAsync(m => m.ConversationId == conversationId && m.MemberId == CurrentUserId  && m.Role == "admin");
+        if (isAdmin)
+        {
+            var lastAdmin = await _db.ConversationMembers.CountAsync(m => m.ConversationId == conversationId  && m.Role == "admin");
+            if (lastAdmin < 2)
+            {
+                var newAdmin = await _db.ConversationMembers
+                    .Where(m => m.ConversationId == conversationId && m.MemberId != CurrentUserId)
+                    .OrderBy(m => m.JoinedAt).FirstOrDefaultAsync();
+                if (newAdmin != null)
+                {
+                    newAdmin.Role = "admin";
+                    await _db.SaveChangesAsync();
+                }
+            }
+        }
+
+        var isDeleted = await _db.ConversationMembers.Where(m => m.ConversationId == conversationId && m.MemberId == CurrentUserId).ExecuteDeleteAsync();
+        if(isDeleted != 1) return NotFound();
+        await transaction.CommitAsync();
+        
+        var members = await _db.ConversationMembers.Where(m => m.ConversationId == conversationId).Select(m => m.MemberId).ToListAsync();
+        await _hub.Clients.Users(members).SendAsync("MemberLeftGroup", CurrentUserId,  conversationId);
+        
+        return Ok();
+    }
+
+    public record RemovalPackage(string MemberId, string ConversationId);
+    [HttpDelete]
+    public async Task<IActionResult> RemoveFromGroup([FromBody]RemovalPackage removalPackage)
+    {
+        if(string.IsNullOrWhiteSpace(removalPackage.ConversationId) || string.IsNullOrWhiteSpace(removalPackage.MemberId)) return BadRequest();
+        if(removalPackage.MemberId == CurrentUserId) return StatusCode(403);
+        
+        var isDm = await _db.Conversations.AnyAsync(m => m.ConversationId == removalPackage.ConversationId && m.IsDirect);
+        if(isDm) return StatusCode(403);
+        
+        var isAdmin = await _db.ConversationMembers.AnyAsync(m => m.ConversationId == removalPackage.ConversationId && m.MemberId == CurrentUserId && m.Role == "admin");
+        if (!isAdmin) return StatusCode(403);
+        
+        var memberIsAdmin = await _db.ConversationMembers.AnyAsync(m => m.ConversationId == removalPackage.ConversationId && m.MemberId == removalPackage.MemberId && m.Role == "admin");
+        if(memberIsAdmin) return Conflict();
+
+        var count = await _db.ConversationMembers
+            .Where(m => m.ConversationId == removalPackage.ConversationId && m.MemberId == removalPackage.MemberId && m.Role != "admin")
+            .ExecuteDeleteAsync();
+        
+        if(count == 0) return NotFound();
+
+        await _db.GroupInvites
+            .Where(m => m.ConversationId == removalPackage.ConversationId && m.ReceiverId == removalPackage.MemberId)
+            .ExecuteDeleteAsync();
+        
+        await _hub.Clients.User(removalPackage.MemberId).SendAsync("RemoveFromGroup");
         
         return Ok();
     }

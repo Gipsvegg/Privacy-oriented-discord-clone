@@ -20,7 +20,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
-builder.Services.AddHostedService<DeleteOldMessagesFromDatabase>();
+builder.Services.AddHostedService<CleanUpDatabase>();
 builder.Services.AddScoped<IFriendService, FriendService>();
 
 var app = builder.Build();
