@@ -5,6 +5,7 @@ using ikt201_project.Data;
 using ikt201_project.Data.BackgroundTasks;
 using ikt201_project.Hubs;
 using ikt201_project.Services;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,37 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
 builder.Services.AddHostedService<CleanUpDatabase>();
 builder.Services.AddScoped<IFriendService, FriendService>();
+builder.Services.ConfigureApplicationCookie(options =>
+    {
+        options.Events.OnRedirectToAccessDenied = context =>
+        {
+            var header = context.Request.Headers["Sec-Fetch-Mode"];
+            if (header != "navigate" && !string.IsNullOrEmpty(header))
+            {
+                context.Response.StatusCode = 403;
+            }
+            else
+            {
+                context.Response.Redirect(context.RedirectUri);
+            }
+            
+            return Task.CompletedTask;
+        };
+        options.Events.OnRedirectToLogin = context =>
+        {
+            var header = context.Request.Headers["Sec-Fetch-Mode"];
+            if (header != "navigate" && !string.IsNullOrEmpty(header))
+            {
+                context.Response.StatusCode = 401;
+            }
+            else
+            {
+                context.Response.Redirect(context.RedirectUri);
+            }
+            return Task.CompletedTask;
+        };
+    }
+);
 
 var app = builder.Build();
 

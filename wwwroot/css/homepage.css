@@ -147,6 +147,10 @@
     height: 100%;
 }
 
+#member-panel, #friends-list, #groups-list { 
+    display: contents;
+}
+
 .input-field {
     display: flex;
     align-items: flex-end;

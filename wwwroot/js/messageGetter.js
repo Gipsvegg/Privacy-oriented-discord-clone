@@ -219,7 +219,12 @@ document.addEventListener('click', async (e) => {
     try {
         const conversationId = await createGroupWith([friendId], 'DM', true);
         sessionStorage.setItem('openConversation', conversationId); // opens the new DM after reload
-        location.href = '/Dashboard/Homepage'
+        if (!document.getElementById('message-area')) {
+            location.href = '/Dashboard/Homepage';
+        } else{
+            await refreshFriendsList();
+        }
+        
     } catch (err) {
         console.error('Could not start DM:', err);
         button.disabled = false;
@@ -315,48 +320,86 @@ function scrollToBottom() {
     if (box) box.scrollTop = box.scrollHeight;
 }
 
-document.querySelectorAll('.sidebar a.friend').forEach(link => {
-    link.addEventListener('click', async (e) => {
-        e.preventDefault();
-        if (!document.getElementById('message-area')) {
-            sessionStorage.setItem('openConversation', link.dataset.conversationId);
-            location.href = '/Dashboard/Homepage';
-            return;
-        }
-        document.querySelectorAll('.sidebar a.active').forEach(a => a.classList.remove('active'));
-        link.classList.add('active');
-        clearUnread(link.dataset.conversationId);
-        sessionStorage.setItem('openConversation', link.dataset.conversationId)
-        const res = await fetch(link.href);
-        if(!res.ok) return;
-        document.getElementById('message-area').innerHTML = await res.text();
-        
-        const conversationId = document.getElementById('send-form')?.dataset.conversationId;
-
-        const messages = await e2ee.loadFromHistory(userId, conversationId);
-        for (const message of messages) {
-            appendMessage(message.senderId, message.senderName ?? message.senderId, message.text, message.timestamp);
-        }
-        scrollToBottom();
-        
-        const serverMembers = [...document.querySelectorAll('#message-area [data-member-id]')].map(m => m.dataset.memberId)
-        if(serverMembers.length > 0){
-            const health = await checkGroupHealth(conversationId, serverMembers);
-            try {
-                if (health.leavingMembers.length > 0) {
-                    await e2ee.removeUsersFromGroup(userId, conversationId, health.leavingMembers, sendCommit);
-                }
-            } catch (err) {
-                console.warn(err);
+//uses the check to add warnings or remove the user(s)
+async function rosterCheck(conversationId) {
+    const serverMembers = [...document.querySelectorAll('#message-area [data-member-id]')].map(m => m.dataset.memberId)
+    if(serverMembers.length > 0){
+        const health = await checkGroupHealth(conversationId, serverMembers);
+        try {
+            if (health.leavingMembers.length > 0) {
+                await e2ee.removeUsersFromGroup(userId, conversationId, health.leavingMembers, sendCommit);
             }
-
-            for (const memberId of health.trolledMembers) {
-                const memberElement = document.querySelector(`#message-area [data-member-id="${memberId}"]`);
-                memberElement?.classList.add('cant-read');
-                if(memberElement) memberElement.title = "CAN'T READ MESSAGES IN THE GROUP CHAT";
-            }
+        } catch (err) {
+            console.warn(err);
         }
-    });
+        for (const memberId of health.trolledMembers) {
+            const memberElement = document.querySelector(`#message-area [data-member-id="${memberId}"]`);
+            memberElement?.classList.add('cant-read');
+            if(memberElement) memberElement.title = "CAN'T READ MESSAGES IN THE GROUP CHAT";
+        }
+    }
+}
+
+async function refreshMemberList(conversationId){
+    const res = await fetch(`/Dashboard/ConversationMemberList?id=${encodeURIComponent(conversationId)}`)
+    if (!res.ok) return;
+    const currentConversationId = document.getElementById('send-form')?.dataset.conversationId;
+    if(currentConversationId !== conversationId) return;
+    document.getElementById('member-panel').innerHTML = await res.text();
+    await rosterCheck(conversationId);
+}
+
+async function refreshGroupsList(){
+    const groupsList = document.getElementById('groups-list')
+    if(!groupsList) return;
+    
+    const res = await fetch(`/Dashboard/GroupsList`)
+    if (!res.ok || res.redirected) return;
+    groupsList.innerHTML = await res.text();
+    const openId = sessionStorage.getItem('openConversation');
+    if(openId !== null && document.getElementById('message-area')){
+        document.querySelector(`.sidebar a.friend[data-conversation-id="${openId}"]`)?.click();
+    }
+}
+
+async function refreshFriendsList(){
+    const friendsList = document.getElementById('friends-list')
+    if(!friendsList) return;
+    
+    const res = await fetch(`/Dashboard/FriendsList`)
+    if (!res.ok || res.redirected) return;
+    friendsList.innerHTML = await res.text();
+    const openId = sessionStorage.getItem('openConversation');
+    if(openId !== null && document.getElementById('message-area')){
+        document.querySelector(`.sidebar a.friend[data-conversation-id="${openId}"]`)?.click();
+    }
+}
+
+document.addEventListener('click', async (e) => {
+    const link = e.target.closest('.sidebar a.friend');
+    if(link === null) return;
+    e.preventDefault();
+    if (!document.getElementById('message-area')) {
+        sessionStorage.setItem('openConversation', link.dataset.conversationId);
+        location.href = '/Dashboard/Homepage';
+        return;
+    }
+    document.querySelectorAll('.sidebar a.active').forEach(a => a.classList.remove('active'));
+    link.classList.add('active');
+    clearUnread(link.dataset.conversationId);
+    sessionStorage.setItem('openConversation', link.dataset.conversationId)
+    const res = await fetch(link.href);
+    if(!res.ok) return;
+    document.getElementById('message-area').innerHTML = await res.text();
+    
+    const conversationId = document.getElementById('send-form')?.dataset.conversationId;
+    const messages = await e2ee.loadFromHistory(userId, conversationId);
+    for (const message of messages) {
+        appendMessage(message.senderId, message.senderName ?? message.senderId, message.text, message.timestamp);
+    }
+    scrollToBottom();
+    
+    await rosterCheck(conversationId);
 });
 
 document.addEventListener('click', async (e) => {
@@ -406,7 +449,8 @@ document.addEventListener('click', async e => {
     } catch (err) {
         console.error(err);
     }
-    location.reload();
+    await refreshGroupsList();
+    sessionStorage.removeItem('openConversation');
 })
 
 document.getElementById('group-form')?.addEventListener('submit', async (e) => {
@@ -421,7 +465,8 @@ document.getElementById('group-form')?.addEventListener('submit', async (e) => {
     try {
         const conversationId = await createGroupWith(memberIds, name);
         sessionStorage.setItem('openConversation', conversationId);   // opens the new group after reload
-        location.reload();
+        await refreshGroupsList();
+        document.querySelector(`.sidebar a.friend[data-conversation-id="${conversationId}"]`)?.click();
     } catch (err) {
         console.error('Could not create group:', err);
     } finally {
@@ -452,7 +497,6 @@ document.addEventListener('submit', async (e) => {
     submit.disabled = true;
     try {
         await inviteToGroup(newMemberIds, conversationId);
-        location.reload();
     } catch (err) {
         console.error('Could not invite group:', err);
     } finally {
@@ -460,7 +504,7 @@ document.addEventListener('submit', async (e) => {
     }
     
 })
-//end of dialog js
+//end
 
 
 
@@ -539,14 +583,19 @@ connection.on('ReceiveMessage', async () => {
     console.log("mailbox checked");
 });
 
-connection.on('ReceiveGroupInvite', async () => {
+connection.on('ReceiveGroupInvite', async (conversationId) => {
     await getWelcomes();
     console.log("Welcome received");
-    location.reload();
-});
+    await refreshGroupsList();
+    await refreshFriendsList();
+})
 
-connection.on('RemoveFromGroup', async () => {
-    location.reload();
+connection.on('RemoveFromGroup', async (conversationId) => {
+    await refreshGroupsList();
+})
+
+connection.on('MembersChanged', async (conversationId) => {
+    await refreshMemberList(conversationId);
 })
 
 connection.on('MemberLeftGroup', async (memberId, conversationId) => {
@@ -555,6 +604,7 @@ connection.on('MemberLeftGroup', async (memberId, conversationId) => {
     } catch (err) {
         console.warn('Someone else removed them:', err.message);
     }
+    await refreshMemberList(conversationId);
 })
 
 connection.start().catch(console.error)

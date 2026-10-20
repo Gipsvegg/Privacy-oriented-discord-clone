@@ -22,8 +22,15 @@
         {
             <a asp-controller="Dashboard" asp-action="Friends">Manage friends</a>
         }
-        @await Component.InvokeAsync("FriendsList")
-        @await Component.InvokeAsync("GroupsList")
+        
+        <div id="friends-list">
+            @await Component.InvokeAsync("FriendsList")
+        </div>
+        
+        <div id="groups-list">
+            @await Component.InvokeAsync("GroupsList")    
+        </div>
+        
         
     </div>
     <div class="sidebar-section">

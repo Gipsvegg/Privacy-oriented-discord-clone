@@ -1,0 +1,43 @@
+﻿@using System.Security.Claims
+@model Group
+
+<div class="conversation-information-window">
+    @if (!Model.IsDirect)
+    {
+        var me = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var isAdmin = Model.Members.Any(m => m.MemberId == me && m.Role == "admin"); 
+        <h6>Members</h6>
+        foreach (var member in Model.Members.OrderBy(m => m.Role))
+        {
+            if (isAdmin && member.Role != "admin")
+            {
+                <div class="member-control" data-member-id="@member.MemberId">
+                    <p class="members">@member.MemberName : @member.Role</p>
+                    <button type="button" class="kill-button" data-conversation-id="@Model.ConversationId">Dissipate</button>
+                </div>
+            }
+            else
+            {
+                <p class="member-control members" data-member-id="@member.MemberId">@member.MemberName : @member.Role</p>
+            }
+        }
+        <div class="group-button">
+            <button id="open-group-invitor" type="button">add</button>
+            <button id="open-group-leaver" data-conversation-id="@Model.ConversationId" type="button" class="btn-outline-danger">leave</button>
+        </div>
+    }
+    else
+    {
+        var friend =  Model.Members.FirstOrDefault(m => m.MemberId != User.FindFirstValue(ClaimTypes.NameIdentifier));
+        <h6>YOUR FRIEND</h6>
+        if (friend != null)
+        {
+            <p data-member-id="@friend.MemberId">@friend.MemberName</p>
+        }
+        else
+        {
+            <p>DELETED USER</p>
+        }
+    }
+</div>
+@await Component.InvokeAsync("FriendsList", new {invoker = "addToGroup", conversationId = Model.ConversationId})

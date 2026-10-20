@@ -62,9 +62,6 @@ public class DashboardController : Controller
     
     public IActionResult Conversation(string id)
     {
-        //Henter id-en til samtalen som er valgt i homepage
-        ViewBag.conversationId = id;
-        
         var groups = GetGroups();
         var group = groups.FirstOrDefault(m => m.ConversationId == id);
 
@@ -75,6 +72,30 @@ public class DashboardController : Controller
         
         return PartialView(group);
     }
+    
+    public IActionResult ConversationMemberList(string id)
+    {
+        var groups = GetGroups();
+        var group = groups.FirstOrDefault(m => m.ConversationId == id);
+
+        if (group == null)
+        {
+            return NotFound();
+        }
+        
+        return PartialView(group);
+    }
+
+    public IActionResult FriendsList()
+    {
+        return ViewComponent("FriendsList");
+    }
+
+    public IActionResult GroupsList()
+    {
+        return ViewComponent("GroupsList");
+    }
+
 
     public record SmallMessage(int Id, string ConversationId, string SenderId, string? SenderName, string ReceiverId, string Text, DateTime Timestamp);
     [HttpGet]
@@ -307,8 +328,14 @@ public class DashboardController : Controller
         await _db.GroupInvites
             .Where(m => m.ConversationId == removalPackage.ConversationId && m.ReceiverId == removalPackage.MemberId)
             .ExecuteDeleteAsync();
+
+        var members = await _db.ConversationMembers
+            .Where(m => m.ConversationId == removalPackage.ConversationId && m.MemberId != removalPackage.MemberId)
+            .Select(m => m.MemberId)
+            .ToArrayAsync();
         
-        await _hub.Clients.User(removalPackage.MemberId).SendAsync("RemoveFromGroup");
+        await _hub.Clients.User(removalPackage.MemberId).SendAsync("RemoveFromGroup", removalPackage.ConversationId);
+        await _hub.Clients.Users(members).SendAsync("MembersChanged", removalPackage.ConversationId);
         
         return Ok();
     }
@@ -372,6 +399,12 @@ public class DashboardController : Controller
         if (await _db.Conversations.FindAsync(welcome.ConversationId) == null) return NotFound();
         if (await _db.ConversationMembers.FindAsync([welcome.ConversationId, CurrentUserId]) == null) return StatusCode(403);
         if (await _db.Conversations.Where(m => m.ConversationId == welcome.ConversationId && m.ConversationMembers.Count >= 2 && m.IsDirect).AnyAsync()) return Conflict();
+        
+        var oldMembers = await _db.ConversationMembers
+            .Where(m => m.ConversationId == welcome.ConversationId)
+            .Select(m => m.MemberId)
+            .ToArrayAsync();
+        
         try
         {
             var exists = _db.GroupInvites.FirstOrDefault(m => (m.ReceiverId == welcome.ReceiverId && m.ConversationId == welcome.ConversationId)); 
@@ -399,7 +432,8 @@ public class DashboardController : Controller
             throw;
         }
         
-        await _hub.Clients.User(welcome.ReceiverId).SendAsync("ReceiveGroupInvite");
+        await _hub.Clients.User(welcome.ReceiverId).SendAsync("ReceiveGroupInvite", welcome.ConversationId);
+        await _hub.Clients.Users(oldMembers).SendAsync("MembersChanged", welcome.ConversationId);
         
         return Ok();
     }
