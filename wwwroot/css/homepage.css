@@ -194,6 +194,7 @@
     color: inherit; opacity: 0.8; cursor: pointer; border-radius: 4px; }
 .srv-add:hover { background: rgba(128, 128, 128, 0.2); }
 .srv-error { padding: 8px 12px; margin-bottom: 12px; border-radius: 4px; background: #f8d7da; color: #842029; }
+.srv-row { cursor: grab; }
 
 /* Create and edit dialogs */
 .srv-dialog { border: 0; border-radius: 8px; padding: 20px; width: 420px; max-width: 90vw; }

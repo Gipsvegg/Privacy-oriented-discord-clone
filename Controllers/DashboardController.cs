@@ -49,7 +49,7 @@ public class DashboardController : Controller
 
         var servers = await _db.Servers
             .Where(s => s.OwnerId == userId)
-            .OrderBy(s => s.Id)
+            .OrderBy(s => s.Position).ThenBy(s => s.Id)
             .ToListAsync();
 
         var model = new HomepageViewModel { Servers = servers };

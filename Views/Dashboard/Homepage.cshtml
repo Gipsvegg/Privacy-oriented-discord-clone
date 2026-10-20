@@ -33,60 +33,65 @@ Layout = "_AppLayout";
         <div class="sidebar-section">
             <h6 class="text-center">Servers</h6>
 
-            @foreach (var s in Model.Servers)
-            {
-            var isOpen = s.Id == Model.CurrentServer?.Id;
-
-            <div class="srv-row @(isOpen ? "active" : "")">
-                @* Clicking an open server links back to the Homepage with no server selected, which closes it. *@
-                @if (isOpen)
+            @* Each server is one .srv-item (its row and, when open, its channels), so they move together when dragged. *@
+            <div id="server-list">
+                @foreach (var s in Model.Servers)
                 {
-                <a asp-action="Homepage" class="srv-link">@s.Name</a>
-                }
-                else
-                {
-                <a asp-action="Homepage" asp-route-serverId="@s.Id" class="srv-link">@s.Name</a>
-                }
-                <button type="button" class="srv-edit" title="Edit server"
-                        data-id="@s.Id" data-name="@s.Name">✎</button>
-            </div>
+                    var isOpen = s.Id == Model.CurrentServer?.Id;
 
-            @* Channels come from CurrentServer, the only server loaded with its channels.
-                   The data-* ids and the draggable attributes are used by the drag and drop script below:
-                   each category header can be dragged, and so can each channel row. *@
-            @if (isOpen)
-            {
-            <div class="srv-channels" data-server-id="@s.Id">
-                @foreach (var cat in Model.CurrentServer!.Categories)
-                {
-                <div class="srv-cat" data-category-id="@cat.Id">
-                    <div class="srv-category" draggable="true">
-                        <span>@cat.Name</span>
-                        <button type="button" class="srv-cat-edit" title="Edit category"
-                                data-id="@cat.Id" data-name="@cat.Name">✎</button>
-                        <button type="button" class="srv-cat-add" title="Add channel"
-                                data-category-id="@cat.Id" data-category-name="@cat.Name">+</button>
-                    </div>
-
-                    <div class="srv-cat-channels">
-                        @foreach (var ch in cat.Channels)
-                        {
-                        <div class="srv-chan-row @(ch.Id == Model.CurrentChannel?.Id ? "active" : "")"
-                             draggable="true" data-channel-id="@ch.Id">
-                            @* draggable="false" on the link makes the whole row the thing that gets dragged. *@
-                            <a asp-action="Homepage" asp-route-serverId="@s.Id" asp-route-channelId="@ch.Id"
-                               class="srv-channel" draggable="false">@(ch.Type == ChannelType.Voice ? "🔊" : "#") @ch.Name</a>
-                            <button type="button" class="srv-chan-edit" title="Edit channel"
-                                    data-id="@ch.Id" data-name="@ch.Name" data-type="@ch.Type"
-                                    data-readonly="@(ch.ReadOnly ? "true" : "false")">✎</button>
+                    <div class="srv-item" data-server-id="@s.Id">
+                        <div class="srv-row @(isOpen ? "active" : "")" draggable="true">
+                            @* Clicking an open server links back to the Homepage with no server selected, which closes it.
+                               draggable="false" on the links makes the whole row the thing that gets dragged. *@
+                            @if (isOpen)
+                            {
+                                <a asp-action="Homepage" class="srv-link" draggable="false">@s.Name</a>
+                            }
+                            else
+                            {
+                                <a asp-action="Homepage" asp-route-serverId="@s.Id" class="srv-link" draggable="false">@s.Name</a>
+                            }
+                            <button type="button" class="srv-edit" title="Edit server"
+                                    data-id="@s.Id" data-name="@s.Name">✎</button>
                         </div>
+
+                        @* Channels come from CurrentServer, the only server loaded with its channels.
+                           The data-* ids and the draggable attributes are used by the drag and drop script below:
+                           each category header can be dragged, and so can each channel row. *@
+                        @if (isOpen)
+                        {
+                            <div class="srv-channels" data-server-id="@s.Id">
+                                @foreach (var cat in Model.CurrentServer!.Categories)
+                                {
+                                    <div class="srv-cat" data-category-id="@cat.Id">
+                                        <div class="srv-category" draggable="true">
+                                            <span>@cat.Name</span>
+                                            <button type="button" class="srv-cat-edit" title="Edit category"
+                                                    data-id="@cat.Id" data-name="@cat.Name">✎</button>
+                                            <button type="button" class="srv-cat-add" title="Add channel"
+                                                    data-category-id="@cat.Id" data-category-name="@cat.Name">+</button>
+                                        </div>
+
+                                        <div class="srv-cat-channels">
+                                            @foreach (var ch in cat.Channels)
+                                            {
+                                                <div class="srv-chan-row @(ch.Id == Model.CurrentChannel?.Id ? "active" : "")"
+                                                     draggable="true" data-channel-id="@ch.Id">
+                                                    <a asp-action="Homepage" asp-route-serverId="@s.Id" asp-route-channelId="@ch.Id"
+                                                       class="srv-channel" draggable="false">@(ch.Type == ChannelType.Voice ? "🔊" : "#") @ch.Name</a>
+                                                    <button type="button" class="srv-chan-edit" title="Edit channel"
+                                                            data-id="@ch.Id" data-name="@ch.Name" data-type="@ch.Type"
+                                                            data-readonly="@(ch.ReadOnly ? "true" : "false")">✎</button>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
                         }
                     </div>
-                </div>
                 }
             </div>
-            }
-            }
 
             <button type="button" id="open-create" class="srv-add">+ Create server</button>
         </div>
@@ -411,4 +416,72 @@ Layout = "_AppLayout";
             }
         });
     }
+
+    // ---- Drag and drop reordering of servers ----
+    const serverList = byId('server-list');
+    let draggedServer = null; // the .srv-item being dragged
+
+    const readServerOrder = () =>
+        [...serverList.querySelectorAll('.srv-item')].map(item => Number(item.dataset.serverId));
+
+    let savedServerOrder = JSON.stringify(readServerOrder()); // the order the database has right now
+
+    // Runs when the user starts dragging a server: remembers it and fades it out.
+    serverList.addEventListener('dragstart', e => {
+        const row = e.target.closest('.srv-row');
+        if (!row) return; // channel and category drags are handled by the channel list script above
+
+        draggedServer = row.closest('.srv-item');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', ''); // Firefox needs some data attached or the drag won't start. We don't use it.
+        setTimeout(() => draggedServer?.classList.add('dragging'), 0);
+    });
+
+    // Runs repeatedly while a server is dragged over the list: moves it to the spot under the mouse.
+    serverList.addEventListener('dragover', e => {
+        if (!draggedServer) return;
+        e.preventDefault(); // without this the browser treats the spot as not droppable
+
+        // The first other server whose row middle is below the mouse. The dragged server goes in front of it.
+        // Null means the mouse is below all of them, so it goes last.
+        const before = [...serverList.querySelectorAll('.srv-item')]
+            .filter(item => item !== draggedServer)
+            .find(item => {
+                const box = item.querySelector('.srv-row').getBoundingClientRect();
+                return e.clientY < box.top + box.height / 2;
+            }) ?? null;
+
+        if (draggedServer.nextElementSibling !== before) serverList.insertBefore(draggedServer, before);
+    });
+
+    // Runs when the user drops it: sends the new order to the server and reloads the page if saving fails.
+    serverList.addEventListener('dragend', async () => {
+        if (!draggedServer) return;
+        draggedServer.classList.remove('dragging');
+        draggedServer = null;
+
+        const order = JSON.stringify(readServerOrder());
+        if (order === savedServerOrder) return; // dropped back where it started
+
+        let saved = false;
+        try {
+            const response = await fetch('@Url.Action("ReorderServers", "Servers")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // The same anti-forgery token the dialog forms contain. The server rejects the request without it.
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: order
+            });
+            saved = response.ok;
+        } catch { /* network error: handled below */ }
+
+        if (saved) {
+            savedServerOrder = order;
+        } else {
+            alert('Could not save the new order.');
+            location.reload(); // show the order the database actually has
+        }
+    });
 </script>

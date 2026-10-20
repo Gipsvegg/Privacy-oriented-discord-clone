@@ -36,9 +36,8 @@ public class Server
     public int Id { get; set; }
     public string Name { get; set; } = "";
     public string Icon { get; set; } = "";
-
     public string OwnerId { get; set; } = "";
-
+    public int Position { get; set; }
     public List<Category> Categories { get; set; } = new();
 }
 

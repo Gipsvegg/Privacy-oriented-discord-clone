@@ -21,11 +21,19 @@ public class ServersController : Controller
         if (!ModelState.IsValid) return Fail("The server name must be 2-32 characters.");
 
         var name = model.Name.Trim();
+        var userId = GetUserId();
+
+        // New servers go at the bottom of the user's list.
+        var lastPosition = await _db.Servers
+            .Where(s => s.OwnerId == userId)
+            .MaxAsync(s => (int?)s.Position) ?? -1;
+
         var server = new Server
         {
             Name = name,
             Icon = MakeIcon(name),
-            OwnerId = GetUserId(),
+            OwnerId = userId,
+            Position = lastPosition + 1,
             Categories = ServerTemplates.Build(model.Template)
         };
 
@@ -206,6 +214,27 @@ public class ServersController : Controller
                 channel.CategoryId = category.Id; // changes category if the channel was dragged into another one
                 channel.Position = j;
             }
+        }
+
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+    
+    /// <summary>Saves the order of the user's servers after dragging. Called by JavaScript, so it returns no page.</summary>
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ReorderServers([FromBody] List<int>? serverIds)
+    {
+        if (serverIds == null) return BadRequest();
+
+        var userId = GetUserId();
+        var servers = await _db.Servers.Where(s => s.OwnerId == userId).ToListAsync();
+        var serversById = servers.ToDictionary(s => s.Id);
+
+        // Go through the ids and save each server's new position. Ids that aren't the user's own are rejected.
+        for (var i = 0; i < serverIds.Count; i++)
+        {
+            if (!serversById.TryGetValue(serverIds[i], out var server)) return BadRequest();
+            server.Position = i;
         }
 
         await _db.SaveChangesAsync();
