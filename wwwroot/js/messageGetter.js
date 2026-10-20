@@ -358,7 +358,7 @@ async function refreshGroupsList(){
     groupsList.innerHTML = await res.text();
     const openId = sessionStorage.getItem('openConversation');
     if(openId !== null && document.getElementById('message-area')){
-        document.querySelector(`.sidebar a.friend[data-conversation-id="${openId}"]`)?.click();
+        document.querySelector(`.sidebar a.friend[data-conversation-id="${openId}"]`)?.classList.add('active')
     }
 }
 
@@ -371,7 +371,7 @@ async function refreshFriendsList(){
     friendsList.innerHTML = await res.text();
     const openId = sessionStorage.getItem('openConversation');
     if(openId !== null && document.getElementById('message-area')){
-        document.querySelector(`.sidebar a.friend[data-conversation-id="${openId}"]`)?.click();
+        document.querySelector(`.sidebar a.friend[data-conversation-id="${openId}"]`)?.classList.add('active')
     }
 }
 
@@ -450,7 +450,7 @@ document.addEventListener('click', async e => {
         console.error(err);
     }
     await refreshGroupsList();
-    sessionStorage.removeItem('openConversation');
+    document.getElementById('message-area').innerHTML = '';
 })
 
 document.getElementById('group-form')?.addEventListener('submit', async (e) => {
@@ -591,6 +591,11 @@ connection.on('ReceiveGroupInvite', async (conversationId) => {
 })
 
 connection.on('RemoveFromGroup', async (conversationId) => {
+    const openId = sessionStorage.getItem('openConversation');
+    if (openId === conversationId) {
+        document.getElementById('message-area').innerHTML = '';
+        sessionStorage.removeItem('openConversation');
+    }
     await refreshGroupsList();
 })
 
