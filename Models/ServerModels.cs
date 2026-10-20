@@ -76,6 +76,15 @@ public class EditServerViewModel
     public List<string?> NewCategories { get; set; } = new();
 }
 
+/// <summary>The data submitted by the "Edit category" dialog.</summary>
+public class EditCategoryViewModel
+{
+    public int Id { get; set; }
+
+    [Required, StringLength(32)]
+    public string Name { get; set; } = "";
+}
+
 /// <summary>The data submitted by the "Add channel" dialog.</summary>
 public class CreateChannelViewModel
 {
@@ -97,4 +106,17 @@ public class EditChannelViewModel
     public string Name { get; set; } = "";
 
     public bool ReadOnly { get; set; }
+}
+
+/// <summary>The sidebar order sent after dragging: which categories, and which channels in each, top to bottom.</summary>
+public class ReorderRequest
+{
+    public int ServerId { get; set; }
+    public List<ReorderCategory> Categories { get; set; } = new();
+}
+
+public class ReorderCategory
+{
+    public int Id { get; set; }
+    public List<int> ChannelIds { get; set; } = new();
 }

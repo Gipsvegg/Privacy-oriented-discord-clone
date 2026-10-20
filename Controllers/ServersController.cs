@@ -82,16 +82,39 @@ public class ServersController : Controller
         return BackToHomepage();
     }
 
+    /// <summary>Renames a category. Owner of the server only.</summary>
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditCategory(EditCategoryViewModel model)
+    {
+        var category = await FindOwnedCategory(model.Id);
+        if (category == null) return NotFound();
+
+        if (!ModelState.IsValid) return Fail("The category name must be 1-32 characters.", category.ServerId);
+
+        category.Name = model.Name.Trim();
+        await _db.SaveChangesAsync();
+
+        return BackToHomepage(category.ServerId);
+    }
+
+    /// <summary>Deletes a category and all channels in it. Owner of the server only.</summary>
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteCategory(int id)
+    {
+        var category = await FindOwnedCategory(id);
+        if (category == null) return NotFound();
+
+        _db.Categories.Remove(category);
+        await _db.SaveChangesAsync();
+
+        return BackToHomepage(category.ServerId);
+    }
+
     /// <summary>Adds a channel to the end of a category and opens it. Owner of the server only.</summary>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateChannel(CreateChannelViewModel model)
     {
-        var userId = GetUserId();
-
-        // The category has to belong to a server owned by the logged-in user.
-        var category = await _db.Categories.FirstOrDefaultAsync(c =>
-            c.Id == model.CategoryId &&
-            _db.Servers.Any(s => s.Id == c.ServerId && s.OwnerId == userId));
+        var category = await FindOwnedCategory(model.CategoryId);
         if (category == null) return NotFound();
 
         if (!ModelState.IsValid) return Fail("The channel name must be 1-32 characters.", category.ServerId);
@@ -144,6 +167,51 @@ public class ServersController : Controller
         return BackToHomepage(owned.ServerId);
     }
 
+    /// <summary>
+    /// Saves the order from dragging: the position of every category, and which category
+    /// each channel is in plus its position there. Called by JavaScript, so it returns no page.
+    /// Owner of the server only.
+    /// </summary>
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Reorder([FromBody] ReorderRequest? request)
+    {
+        if (request == null) return BadRequest();
+
+        var server = await FindOwnedServer(request.ServerId);
+        if (server == null) return NotFound();
+
+        // Everything the server contains. Ids in the request that aren't in here are rejected,
+        // so a request can't move things into or out of someone else's server.
+        var categories = await _db.Categories
+            .Include(c => c.Channels)
+            .Where(c => c.ServerId == server.Id)
+            .ToListAsync();
+
+        var categoriesById = categories.ToDictionary(c => c.Id);
+        var channelsById = categories.SelectMany(c => c.Channels).ToDictionary(ch => ch.Id);
+
+        // Go through the categories in the order the browser sent them (top to bottom in the sidebar).
+        // For each category, save its new position and the new position of every channel inside it.
+        for (var i = 0; i < request.Categories.Count; i++)
+        {
+            var item = request.Categories[i];
+            if (!categoriesById.TryGetValue(item.Id, out var category)) return BadRequest();
+
+            category.Position = i;
+
+            for (var j = 0; j < item.ChannelIds.Count; j++)
+            {
+                if (!channelsById.TryGetValue(item.ChannelIds[j], out var channel)) return BadRequest();
+
+                channel.CategoryId = category.Id; // changes category if the channel was dragged into another one
+                channel.Position = j;
+            }
+        }
+
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+
     // A channel together with the id of the server it belongs to.
     private record OwnedChannel(Channel Channel, int ServerId);
 
@@ -152,6 +220,14 @@ public class ServersController : Controller
     {
         var userId = GetUserId();
         return _db.Servers.FirstOrDefaultAsync(s => s.Id == id && s.OwnerId == userId);
+    }
+
+    // Returns the category only if its server belongs to the logged-in user, otherwise null.
+    private Task<Category?> FindOwnedCategory(int id)
+    {
+        var userId = GetUserId();
+        return _db.Categories.FirstOrDefaultAsync(c =>
+            c.Id == id && _db.Servers.Any(s => s.Id == c.ServerId && s.OwnerId == userId));
     }
 
     // Returns the channel only if its server belongs to the logged-in user, otherwise null.
