@@ -3,6 +3,6 @@
 @foreach (var group in Model)
 {
     <a class="friend" data-conversation-id="@group.ConversationId" asp-controller="Dashboard" asp-action="Conversation" asp-route-id="@group.ConversationId">
-        @group.ConversationName<b class="unread" data-conversation-id="@group.ConversationId" hidden></b>
+        @group.ConversationName<b class="unread" data-conversation-id="@group.ConversationId" hidden></b><partial name="_CallCount" model="group.ConversationId"/>
     </a>
 }

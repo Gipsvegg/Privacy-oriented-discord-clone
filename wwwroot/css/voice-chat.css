@@ -34,16 +34,20 @@
     flex: 1;
 }
 
-#voice-room {
-    background-color: var(--input-colour);
-    color: var(--input-text-colour);
-    outline: transparent none;
-    border: 2px solid var(--border-colour);
+/*knappen i chatten for å bli med i samtalen*/
+#call-button {
+    font-size: 1.2rem;
+    margin-left: 0.5rem;
+    padding: 0 0.4rem;
 }
 
-#voice-room:focus {
-    box-shadow: none;
-    outline: none;
+/*antall i samtalen*/
+.call-count {
+    color: var(--success-colour);
+    font-size: 0.75rem;
+    margin-left: 0.3rem;
 }
 
-
+.call-count::before {
+    margin-right: 0.15rem;
+}
