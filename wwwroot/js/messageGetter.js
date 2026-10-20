@@ -411,7 +411,7 @@ document.addEventListener('click', async (e) => {
     const memberId = button.closest('[data-member-id]').dataset.memberId;
     try {
         await removeFromGroup(memberId, conversationId);
-        document.querySelector('.sidebar a.active')?.click()
+        await refreshMemberList(conversationId);
     }catch(err) {
         console.error(err);
     }
