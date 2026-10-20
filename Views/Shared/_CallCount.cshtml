@@ -1,6 +1,6 @@
 @* hvor mange som er i samtalen, voice-chat.js oppdaterer tallet *@
 @model string
 @{
-    var count = ikt201_project.Hubs.VoiceHub.CountInCall(Model);
+    var names = ikt201_project.Hubs.VoiceHub.NamesInCall(Model);
 }
-<span class="call-count bi bi-telephone-fill" data-conversation-id="@Model" hidden="@(count == 0)">@count</span>
+<span class="call-count bi bi-telephone-fill" data-conversation-id="@Model" title="@string.Join(", ", names)" hidden="@(names.Count == 0)">@names.Count</span>

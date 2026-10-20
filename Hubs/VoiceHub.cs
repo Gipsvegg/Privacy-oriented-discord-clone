@@ -11,8 +11,9 @@ namespace ikt201_project.Hubs;
 public class VoiceHub : Hub
 {
     private static readonly HttpClient _http = new HttpClient();
-    // connection id -> conversation id for alle som er i en samtale
-    private static readonly ConcurrentDictionary<string, string> _inCall = new();
+    // connection id -> hvilken samtale de er i og navnet deres
+    private record CallUser(string ConversationId, string Name);
+    private static readonly ConcurrentDictionary<string, CallUser> _inCall = new();
     private readonly IConfiguration _config;
     private readonly ApplicationDbContext _db;
 
@@ -22,10 +23,10 @@ public class VoiceHub : Hub
         _db = db;
     }
 
-    // brukes i viewene for å vise hvor mange som er i samtalen
-    public static int CountInCall(string conversationId)
+    // brukes i viewene for å vise hvem som er i samtalen
+    public static List<string> NamesInCall(string conversationId)
     {
-        return _inCall.Values.Count(c => c == conversationId);
+        return _inCall.Values.Where(c => c.ConversationId == conversationId).Select(c => c.Name).ToList();
     }
 
     // Henter TURN servere fra cloudflare
@@ -51,19 +52,19 @@ public class VoiceHub : Hub
         if (!isMember) throw new HubException("You are not in this conversation");
 
         await LeaveRoom();
-        _inCall[Context.ConnectionId] = conversationId;
+        _inCall[Context.ConnectionId] = new CallUser(conversationId, Context.User?.Identity?.Name ?? "");
         await Groups.AddToGroupAsync(Context.ConnectionId, conversationId);
         await Clients.OthersInGroup(conversationId).SendAsync("UserJoined", Context.ConnectionId, Context.User?.Identity?.Name);
-        await SendCallCount(conversationId);
+        await SendCallChanged(conversationId);
     }
 
     public async Task LeaveRoom()
     {
-        if (!_inCall.TryRemove(Context.ConnectionId, out var conversationId)) return;
+        if (!_inCall.TryRemove(Context.ConnectionId, out var call)) return;
 
-        await Groups.RemoveFromGroupAsync(Context.ConnectionId, conversationId);
-        await Clients.OthersInGroup(conversationId).SendAsync("UserLeft", Context.ConnectionId);
-        await SendCallCount(conversationId);
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, call.ConversationId);
+        await Clients.OthersInGroup(call.ConversationId).SendAsync("UserLeft", Context.ConnectionId);
+        await SendCallChanged(call.ConversationId);
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
@@ -71,22 +72,22 @@ public class VoiceHub : Hub
         await LeaveRoom();
     }
 
-    // alle i gruppen/dm-en får vite hvor mange som er i samtalen
-    private async Task SendCallCount(string conversationId)
+    // alle i gruppen/dm-en får vite hvem som er i samtalen
+    private async Task SendCallChanged(string conversationId)
     {
         var members = await _db.ConversationMembers
             .Where(m => m.ConversationId == conversationId)
             .Select(m => m.MemberId)
             .ToListAsync();
-        await Clients.Users(members).SendAsync("CallCount", conversationId, CountInCall(conversationId));
+        await Clients.Users(members).SendAsync("CallChanged", conversationId, NamesInCall(conversationId));
     }
 
     // Passes a WebRTC message (offer, answer or ICE candidate), only to someone in the same call
     public async Task SendSignal(string connectionId, string data)
     {
-        _inCall.TryGetValue(Context.ConnectionId, out var myCall);
-        _inCall.TryGetValue(connectionId, out var theirCall);
-        if (myCall == null || myCall != theirCall) return;
+        _inCall.TryGetValue(Context.ConnectionId, out var me);
+        _inCall.TryGetValue(connectionId, out var them);
+        if (me == null || them == null || me.ConversationId != them.ConversationId) return;
 
         await Clients.Client(connectionId).SendAsync("Signal", Context.ConnectionId, Context.User?.Identity?.Name, data);
     }

@@ -13,11 +13,6 @@
     margin-bottom: 0.5rem;
 }
 
-.voice-section summary {
-    margin-bottom: 0.5rem;
-    cursor: pointer;
-}
-
 .voice-section ul {
     list-style: none;
     padding-left: 1rem;
