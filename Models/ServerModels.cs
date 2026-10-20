@@ -12,7 +12,7 @@ public class Channel
     public ChannelType Type { get; set; }
     public bool ReadOnly { get; set; }
 
-    public int Position { get; set; }  // stores the display order
+    public int Position { get; set; }
 
     public int CategoryId { get; set; }
 }
@@ -24,12 +24,13 @@ public class Category
     public string Name { get; set; } = "";
     public int Position { get; set; }
 
+    // Must be <class name> + Id for EF Core to treat it as the foreign key.
     public int ServerId { get; set; }
 
     public List<Channel> Channels { get; set; } = new();
 }
 
-/// <summary>A server</summary>
+/// <summary>A server. Icon is the short text shown on its round button (e.g. "TS").</summary>
 public class Server
 {
     public int Id { get; set; }
@@ -47,7 +48,7 @@ public class HomepageViewModel
     // All servers the user owns, shown as links in the sidebar.
     public List<Server> Servers { get; set; } = new();
 
-    // Set only when the user has opened a server.
+    // Set only when the user has opened a server
     public Server? CurrentServer { get; set; }
     public Channel? CurrentChannel { get; set; }
 }
@@ -69,4 +70,31 @@ public class EditServerViewModel
 
     [Required, StringLength(32, MinimumLength = 2)]
     public string Name { get; set; } = "";
+
+    // Names of categories to add. Empty entries are ignored; items are nullable
+    // because the browser sends empty text fields as null.
+    public List<string?> NewCategories { get; set; } = new();
+}
+
+/// <summary>The data submitted by the "Add channel" dialog.</summary>
+public class CreateChannelViewModel
+{
+    public int CategoryId { get; set; }
+
+    [Required, StringLength(32)]
+    public string Name { get; set; } = "";
+
+    public ChannelType Type { get; set; }
+    public bool ReadOnly { get; set; }
+}
+
+/// <summary>The data submitted by the "Edit channel" dialog.</summary>
+public class EditChannelViewModel
+{
+    public int Id { get; set; }
+
+    [Required, StringLength(32)]
+    public string Name { get; set; } = "";
+
+    public bool ReadOnly { get; set; }
 }

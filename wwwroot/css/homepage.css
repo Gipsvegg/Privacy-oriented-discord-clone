@@ -178,17 +178,16 @@
 /* SERVERS */
 
 /* Server list in the sidebar */
-.srv-row { display: flex; align-items: center; border-radius: 4px; }
-.srv-row:hover { background: rgba(128, 128, 128, 0.2); }
-.srv-row.active { background: rgba(128, 128, 128, 0.3); font-weight: 600; }
-.srv-link { flex: 1; padding: 4px 8px; color: inherit; text-decoration: none; }
-.srv-edit { background: none; border: 0; color: inherit; opacity: 0.6; padding: 4px 8px; cursor: pointer; }
-.srv-edit:hover { opacity: 1; }
+.srv-row, .srv-chan-row { display: flex; align-items: center; border-radius: 4px; }
+.srv-row:hover, .srv-chan-row:hover { background: rgba(128, 128, 128, 0.2); }
+.srv-row.active, .srv-chan-row.active { background: rgba(128, 128, 128, 0.3); font-weight: 600; }
+.srv-link, .srv-channel { flex: 1; padding: 4px 8px; color: inherit; text-decoration: none; }
+.srv-edit, .srv-chan-edit, .srv-cat-add { background: none; border: 0; color: inherit; opacity: 0.6; padding: 4px 8px; cursor: pointer; }
+.srv-edit:hover, .srv-chan-edit:hover, .srv-cat-add:hover { opacity: 1; }
 .srv-channels { margin: 2px 0 8px 12px; }
-.srv-category { margin-top: 6px; font-size: 12px; text-transform: uppercase; opacity: 0.6; }
-.srv-channel { display: block; padding: 4px 8px; border-radius: 4px; color: inherit; text-decoration: none; }
-.srv-channel:hover { background: rgba(128, 128, 128, 0.2); }
-.srv-channel.active { background: rgba(128, 128, 128, 0.3); font-weight: 600; }
+.srv-category { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; padding-left: 8px;
+    font-size: 12px; text-transform: uppercase; }
+.srv-category span { opacity: 0.6; }
 .srv-add { display: block; width: 100%; text-align: left; padding: 4px 8px; background: none; border: 0;
     color: inherit; opacity: 0.8; cursor: pointer; border-radius: 4px; }
 .srv-add:hover { background: rgba(128, 128, 128, 0.2); }

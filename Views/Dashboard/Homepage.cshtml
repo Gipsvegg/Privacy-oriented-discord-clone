@@ -2,13 +2,13 @@
 @using ikt201_project.Models
 @model HomepageViewModel
 @{
-    ViewData["Title"] = "Home Page";
-    Layout = "_AppLayout";
+ViewData["Title"] = "Home Page";
+Layout = "_AppLayout";
 }
 
 @section Styles
 {
-    <link rel="stylesheet" href="~/css/homepage.css"/>
+<link rel="stylesheet" href="~/css/homepage.css"/>
 }
 
 <div class="page-layout">
@@ -23,11 +23,11 @@
             <h6 class="text-center">Friends & Groups</h6>
             @if (User.FindFirstValue(ClaimTypes.NameIdentifier) == "8b619ee5-5e13-4154-9843-582bfee5b97c")
             {
-                <a id="friend" asp-controller="Dashboard" asp-action="Conversation" asp-route-id="f3746277-afdb-4cef-9da0-149068536ebb">admin@test.com</a>
+            <a id="friend" asp-controller="Dashboard" asp-action="Conversation" asp-route-id="f3746277-afdb-4cef-9da0-149068536ebb">admin@test.com</a>
             }
             else
             {
-                <a id="friend" asp-controller="Dashboard" asp-action="Conversation" asp-route-id="8b619ee5-5e13-4154-9843-582bfee5b97c">test@test.no</a>
+            <a id="friend" asp-controller="Dashboard" asp-action="Conversation" asp-route-id="8b619ee5-5e13-4154-9843-582bfee5b97c">test@test.no</a>
             }
         </div>
         <div class="sidebar-section">
@@ -35,39 +35,46 @@
 
             @foreach (var s in Model.Servers)
             {
-                var isOpen = s.Id == Model.CurrentServer?.Id;
+            var isOpen = s.Id == Model.CurrentServer?.Id;
 
-                <div class="srv-row @(isOpen ? "active" : "")">
-                    @* Clicking an open server links back to the Homepage with no server selected, which closes it. *@
-                    @if (isOpen)
-                    {
-                        <a asp-action="Homepage" class="srv-link">@s.Name</a>
-                    }
-                    else
-                    {
-                        <a asp-action="Homepage" asp-route-serverId="@s.Id" class="srv-link">@s.Name</a>
-                    }
-                    <button type="button" class="srv-edit" title="Edit server"
-                            data-id="@s.Id" data-name="@s.Name">✎</button>
-                </div>
-
-                @* Channels come from CurrentServer, the only server loaded with its channels. *@
+            <div class="srv-row @(isOpen ? "active" : "")">
+                @* Clicking an open server links back to the Homepage with no server selected, which closes it. *@
                 @if (isOpen)
                 {
-                    <div class="srv-channels">
-                        @foreach (var cat in Model.CurrentServer!.Categories)
-                        {
-                            <div class="srv-category">@cat.Name</div>
-                            @foreach (var ch in cat.Channels)
-                            {
-                                <a asp-action="Homepage" asp-route-serverId="@s.Id" asp-route-channelId="@ch.Id"
-                                   class="srv-channel @(ch.Id == Model.CurrentChannel?.Id ? "active" : "")">
-                                    @(ch.Type == ChannelType.Voice ? "🔊" : "#") @ch.Name
-                                </a>
-                            }
-                        }
-                    </div>
+                <a asp-action="Homepage" class="srv-link">@s.Name</a>
                 }
+                else
+                {
+                <a asp-action="Homepage" asp-route-serverId="@s.Id" class="srv-link">@s.Name</a>
+                }
+                <button type="button" class="srv-edit" title="Edit server"
+                        data-id="@s.Id" data-name="@s.Name">✎</button>
+            </div>
+
+            @* Channels come from CurrentServer, the only server loaded with its channels. *@
+            @if (isOpen)
+            {
+            <div class="srv-channels">
+                @foreach (var cat in Model.CurrentServer!.Categories)
+                {
+                <div class="srv-category">
+                    <span>@cat.Name</span>
+                    <button type="button" class="srv-cat-add" title="Add channel"
+                            data-category-id="@cat.Id" data-category-name="@cat.Name">+</button>
+                </div>
+                @foreach (var ch in cat.Channels)
+                {
+                <div class="srv-chan-row @(ch.Id == Model.CurrentChannel?.Id ? "active" : "")">
+                    <a asp-action="Homepage" asp-route-serverId="@s.Id" asp-route-channelId="@ch.Id"
+                       class="srv-channel">@(ch.Type == ChannelType.Voice ? "🔊" : "#") @ch.Name</a>
+                    <button type="button" class="srv-chan-edit" title="Edit channel"
+                            data-id="@ch.Id" data-name="@ch.Name" data-type="@ch.Type"
+                            data-readonly="@(ch.ReadOnly ? "true" : "false")">✎</button>
+                </div>
+                }
+                }
+            </div>
+            }
             }
 
             <button type="button" id="open-create" class="srv-add">+ Create server</button>
@@ -78,7 +85,7 @@
         @* Set by ServersController when a submitted name was invalid. *@
         @if (TempData["ServerError"] is string serverError)
         {
-            <div class="srv-error">@serverError</div>
+        <div class="srv-error">@serverError</div>
         }
 
         <h2 class="text-center">Homepage</h2>
@@ -86,17 +93,15 @@
             @* Placeholder: server messaging isn't built yet. Opening a friend replaces this. *@
             @if (Model.CurrentServer != null && Model.CurrentChannel != null)
             {
-                <p class="text-muted">
-                    @(Model.CurrentChannel.Type == ChannelType.Voice ? "🔊" : "#")@Model.CurrentChannel.Name
-                    in @Model.CurrentServer.Name. Messages in server channels are not implemented yet.
-                </p>
+            <p class="text-muted">
+                @(Model.CurrentChannel.Type == ChannelType.Voice ? "🔊" : "#")@Model.CurrentChannel.Name
+                in @Model.CurrentServer.Name. Messages in server channels are not implemented yet.
+            </p>
             }
         </div>
     </div>
 </div>
 
-@* Native <dialog> elements: showModal() shows one on top of the page and dims the background.
-   Esc closes it. The pattern on the name inputs blocks names made only of spaces. *@
 <dialog id="create-dialog" class="srv-dialog">
     <form asp-controller="Servers" asp-action="Create" method="post">
         <h5>Create a server</h5>
@@ -107,10 +112,10 @@
         <div>Start from a layout</div>
         @foreach (var (name, description) in ServerTemplates.Options)
         {
-            <label class="srv-option">
-                <input type="radio" name="Template" value="@name" checked="@(name == "Community")" />
-                <strong>@name</strong>: @description
-            </label>
+        <label class="srv-option">
+            <input type="radio" name="Template" value="@name" checked="@(name == "Community")" />
+            <strong>@name</strong>: @description
+        </label>
         }
 
         <div class="srv-dialog-buttons">
@@ -129,6 +134,12 @@
         <label for="edit-name">Server name</label>
         <input id="edit-name" name="Name" class="srv-input" required minlength="2" maxlength="32" pattern=".*\S.*" />
 
+        @* Each click on the button below adds one more text field named NewCategories;
+           the server collects all of them into a list. *@
+        <div>Add categories</div>
+        <div id="new-categories"></div>
+        <button type="button" class="srv-btn" id="add-category-input">+ Add category</button>
+
         <div class="srv-dialog-buttons">
             @* The form="delete-form" attribute makes this button submit the separate delete form below.
                Forms can't be nested, so the delete form has to sit outside this one. *@
@@ -145,18 +156,111 @@
     </form>
 </dialog>
 
+<dialog id="create-channel-dialog" class="srv-dialog">
+    <form asp-controller="Servers" asp-action="CreateChannel" method="post">
+        <h5>Add channel to <span id="create-channel-category"></span></h5>
+
+        <input type="hidden" name="CategoryId" id="create-channel-category-id" />
+        <label for="create-channel-name">Channel name</label>
+        <input id="create-channel-name" name="Name" class="srv-input" required maxlength="32" pattern=".*\S.*" />
+
+        <label class="srv-option"><input type="radio" name="Type" value="Text" checked /> # Text channel</label>
+        <label class="srv-option"><input type="radio" name="Type" value="Voice" /> 🔊 Voice channel</label>
+        <label class="srv-option" id="create-channel-readonly-row">
+            <input type="checkbox" name="ReadOnly" value="true" /> Read-only (nobody can write in it)
+        </label>
+
+        <div class="srv-dialog-buttons">
+            <span class="srv-spacer"></span>
+            <button type="button" class="srv-btn" data-close>Cancel</button>
+            <button type="submit" class="srv-btn srv-btn-primary">Add channel</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog id="edit-channel-dialog" class="srv-dialog">
+    <form asp-controller="Servers" asp-action="EditChannel" method="post">
+        <h5>Edit channel</h5>
+
+        <input type="hidden" name="Id" id="edit-channel-id" />
+        <label for="edit-channel-name">Channel name</label>
+        <input id="edit-channel-name" name="Name" class="srv-input" required maxlength="32" pattern=".*\S.*" />
+
+        <label class="srv-option" id="edit-channel-readonly-row">
+            <input type="checkbox" name="ReadOnly" value="true" id="edit-channel-readonly" /> Read-only (nobody can write in it)
+        </label>
+
+        <div class="srv-dialog-buttons">
+            <button type="submit" form="delete-channel-form" class="srv-btn srv-btn-danger"
+                    onclick="return confirm('Delete this channel?')">Delete channel</button>
+            <span class="srv-spacer"></span>
+            <button type="button" class="srv-btn" data-close>Cancel</button>
+            <button type="submit" class="srv-btn srv-btn-primary">Save</button>
+        </div>
+    </form>
+
+    <form id="delete-channel-form" asp-controller="Servers" asp-action="DeleteChannel" method="post">
+        <input type="hidden" name="id" id="delete-channel-id" />
+    </form>
+</dialog>
+
 @* Inline instead of in a Scripts section, because I don't know whether _AppLayout renders one. *@
 <script>
-    document.getElementById('open-create').addEventListener('click', () =>
-        document.getElementById('create-dialog').showModal());
+    const byId = id => document.getElementById(id);
 
-    // Fills the edit dialog with the clicked server's id and name before opening it.
+    byId('open-create').addEventListener('click', () => byId('create-dialog').showModal());
+
+    // Fills the edit server dialog with the clicked server's id and name before opening it.
     document.querySelectorAll('.srv-edit').forEach(button => {
         button.addEventListener('click', () => {
-            document.getElementById('edit-id').value = button.dataset.id;
-            document.getElementById('delete-id').value = button.dataset.id;
-            document.getElementById('edit-name').value = button.dataset.name;
-            document.getElementById('edit-dialog').showModal();
+            byId('edit-id').value = button.dataset.id;
+            byId('delete-id').value = button.dataset.id;
+            byId('edit-name').value = button.dataset.name;
+            byId('new-categories').innerHTML = ''; // the dialog is reused, so drop fields from last time
+            byId('edit-dialog').showModal();
+        });
+    });
+
+    byId('add-category-input').addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.name = 'NewCategories';
+        input.className = 'srv-input';
+        input.maxLength = 32;
+        input.placeholder = 'Category name';
+        byId('new-categories').appendChild(input);
+        input.focus();
+    });
+
+    // The "+" next to a category name opens the add channel dialog for that category.
+    document.querySelectorAll('.srv-cat-add').forEach(button => {
+        button.addEventListener('click', () => {
+            byId('create-channel-category-id').value = button.dataset.categoryId;
+            byId('create-channel-category').textContent = button.dataset.categoryName;
+            byId('create-channel-name').value = '';
+            document.querySelector('#create-channel-dialog input[value="Text"]').checked = true;
+            document.querySelector('#create-channel-dialog input[name="ReadOnly"]').checked = false;
+            byId('create-channel-readonly-row').style.display = '';
+            byId('create-channel-dialog').showModal();
+        });
+    });
+ 
+    // Read-only only applies to text channels, so hide that option while "Voice" is selected.
+    document.querySelectorAll('#create-channel-dialog input[name="Type"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+            const isVoice = document.querySelector('#create-channel-dialog input[name="Type"]:checked').value === 'Voice';
+            byId('create-channel-readonly-row').style.display = isVoice ? 'none' : '';
+        });
+    });
+
+    // Fills the edit channel dialog with the clicked channel's data before opening it.
+    document.querySelectorAll('.srv-chan-edit').forEach(button => {
+        button.addEventListener('click', () => {
+            byId('edit-channel-id').value = button.dataset.id;
+            byId('delete-channel-id').value = button.dataset.id;
+            byId('edit-channel-name').value = button.dataset.name;
+            byId('edit-channel-readonly').checked = button.dataset.readonly === 'true';
+            byId('edit-channel-readonly-row').style.display = button.dataset.type === 'Voice' ? 'none' : '';
+            byId('edit-channel-dialog').showModal();
         });
     });
 
