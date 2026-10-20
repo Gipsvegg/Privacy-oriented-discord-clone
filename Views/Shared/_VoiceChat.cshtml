@@ -17,16 +17,19 @@
                 <b>Voice connected</b>
                 <span id="voice-call-name"></span>
             </div>
-            <button id="voice-mute" type="button" class="btn btn-sm btn-outline-secondary" title="Mute"><i class="bi bi-mic-fill"></i></button>
             <button id="voice-leave" type="button" class="btn btn-sm btn-danger" title="Leave call"><i class="bi bi-telephone-x-fill"></i></button>
         </div>
-        <div class="dropup">
-            <button type="button" class="btn btn-sm voice-people-button" data-bs-toggle="dropdown" title="Who is in the call">
-                <i class="bi bi-people-fill"></i> <span id="voice-count">1</span>
-            </button>
-            <ul id="voice-people" class="dropdown-menu">
-                <li class="me">@User.Identity?.Name (you)</li>
-            </ul>
+        <div class="voice-controls">
+            <div class="dropup">
+                <button type="button" class="btn btn-sm voice-people-button" data-bs-toggle="dropdown" data-bs-auto-close="outside" title="Who is in the call">
+                    <i class="bi bi-people-fill"></i> <span id="voice-count">1</span>
+                </button>
+                <ul id="voice-people" class="dropdown-menu">
+                    <li class="me">@User.Identity?.Name (you)</li>
+                </ul>
+            </div>
+            <button id="voice-mute" type="button" class="btn btn-sm btn-outline-secondary" title="Mute"><i class="bi bi-mic-fill"></i></button>
+            <button id="voice-deafen" type="button" class="btn btn-sm btn-outline-secondary" title="Deafen"><i class="bi bi-headphones"></i></button>
         </div>
     </div>
 </div>

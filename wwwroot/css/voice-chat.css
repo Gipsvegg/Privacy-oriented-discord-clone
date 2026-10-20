@@ -75,8 +75,18 @@
 }
 
 /*knappen med antall, viser hvem som er i samtalen når man trykker på den*/
-.voice-people-button {
+.voice-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
     margin-top: 0.4rem;
+}
+
+.voice-controls .dropup {
+    margin-right: auto;
+}
+
+.voice-people-button {
     padding: 0 0.5rem;
     border-radius: 1rem;
     font-size: 0.8rem;
@@ -95,10 +105,16 @@
     color: var(--text-colour);
     font-size: 0.85rem;
     padding: 0.3rem 0;
+    min-width: 12rem;
 }
 
 #voice-people li {
     padding: 0.15rem 0.75rem;
+}
+
+/*volum slideren for hver person*/
+#voice-people .form-range {
+    height: 1rem;
 }
 
 #voice-people .me {

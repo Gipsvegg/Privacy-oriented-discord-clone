@@ -8,11 +8,13 @@ const rtcConfig = { iceServers: [], iceTransportPolicy: "relay" };
 let microphone = null;
 let currentCall = null; // conversation id til samtalen vi er i
 let muted = false;
+let deafened = false;
 let ringingCall = null;
 let ringTimeout = null;
 const peers = {}; // En RTCPeerConnection per person i samtalen, key er SignalR connection id
 
 const muteButton = document.getElementById("voice-mute");
+const deafenButton = document.getElementById("voice-deafen");
 const leaveButton = document.getElementById("voice-leave");
 const statusText = document.getElementById("voice-status");
 const peopleList = document.getElementById("voice-people");
@@ -37,6 +39,13 @@ function updatePeopleCount() {
     peopleCount.textContent = peopleList.children.length;
 }
 
+// use speakers and volume from audio settings
+function applySpeaker(audio, volume = 1) {
+    audio.volume = volume * Number(localStorage.getItem("output-volume") ?? 100) / 100;
+    const speaker = localStorage.getItem("audio-output");
+    if (speaker && audio.setSinkId) audio.setSinkId(speaker).catch(console.error);
+}
+
 function chatName(conversationId) {
     return document.querySelector(`.sidebar a.friend[data-conversation-id="${conversationId}"]`)?.firstChild.textContent.trim();
 }
@@ -55,13 +64,28 @@ function createPeer(id, username) {
         }
     };
 
-    // Show them in the list and play their audio
+    // Show them in the list with a volume slider, and play their audio
     const item = document.createElement("li");
     item.id = "peer-" + id;
-    item.textContent = username;
+    const name = document.createElement("div");
+    name.textContent = username;
     const audio = document.createElement("audio");
     audio.autoplay = true;
-    item.append(audio);
+    audio.muted = deafened;
+
+    // remember per person volume
+    const volume = document.createElement("input");
+    volume.type = "range";
+    volume.className = "form-range";
+    volume.title = "Volume for " + username;
+    volume.value = localStorage.getItem("volume-" + username) ?? 100;
+    volume.addEventListener("input", () => {
+        localStorage.setItem("volume-" + username, volume.value);
+        applySpeaker(audio, volume.value / 100);
+    });
+    applySpeaker(audio, volume.value / 100);
+
+    item.append(name, volume, audio);
     peopleList.append(item);
     updatePeopleCount();
 
@@ -137,6 +161,7 @@ function startRinging(conversationId, text) {
     incomingText.textContent = text;
     incomingBox.hidden = false;
     ringSound.currentTime = 0;
+    applySpeaker(ringSound);
     ringSound.play().catch(() => {});
     clearTimeout(ringTimeout);
     ringTimeout = setTimeout(() => ringSound.pause(), ringSeconds * 1000);
@@ -179,10 +204,20 @@ function setMuted(value) {
     muteButton.innerHTML = muted ? '<i class="bi bi-mic-mute-fill"></i>' : '<i class="bi bi-mic-fill"></i>';
 }
 
+function setDeafened(value) {
+    deafened = value;
+    peopleList.querySelectorAll("audio").forEach(audio => audio.muted = deafened);
+    setMuted(deafened);
+    deafenButton.className = deafened ? "btn btn-sm btn-danger" : "btn btn-sm btn-outline-secondary";
+    deafenButton.title = deafened ? "Undeafen" : "Deafen";
+    deafenButton.innerHTML = deafened ? '<i class="bi bi-volume-mute-fill"></i>' : '<i class="bi bi-headphones"></i>';
+}
+
 async function joinCall(conversationId) {
     if (currentCall) await leaveCall();
     try {
-        microphone = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mic = localStorage.getItem("audio-input");
+        microphone = await navigator.mediaDevices.getUserMedia({ audio: mic ? { deviceId: mic } : true });
     } catch (error) {
         if (error.name === "NotAllowedError") showStatus("Microphone is blocked, allow it in the browser to join", true);
         else if (error.name === "NotFoundError") showStatus("No microphone found", true);
@@ -212,7 +247,7 @@ async function joinCall(conversationId) {
 async function leaveCall() {
     if (hub.state === "Connected") await hub.invoke("LeaveRoom");
     Object.keys(peers).forEach(removePeer);
-    setMuted(false);
+    setDeafened(false);
     microphone.getTracks().forEach(track => track.stop());
     currentCall = null;
     showStatus("Not in a call");
@@ -249,6 +284,7 @@ document.getElementById("incoming-join").addEventListener("click", async () => {
 
 document.getElementById("incoming-ignore").addEventListener("click", stopRinging);
 muteButton.addEventListener("click", () => setMuted(!muted));
+deafenButton.addEventListener("click", () => setDeafened(!deafened));
 leaveButton.addEventListener("click", leaveCall);
 
 hub.start().catch(console.error);

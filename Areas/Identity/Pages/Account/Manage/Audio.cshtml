@@ -5,34 +5,37 @@
 }
 
 <h3>@ViewData["Title"]</h3>
-<p class="text-muted">Audio settings test.</p>
+<p class="text-muted">Saved in this browser and used when you join a call.</p>
 
 <div class="row">
     <div class="col-md-6">
+        <button id="show-devices" type="button" class="btn btn-outline-secondary mb-3" hidden><i class="bi bi-mic-fill"></i> Allow microphone to see your devices</button>
+        <p id="audio-message" class="text-danger" hidden></p>
+
         <h5>Input</h5>
-        <div class="mb-3">
+        <div class="mb-4">
             <label for="audio-input" class="form-label">Microphone</label>
             <select id="audio-input" class="form-select">
-                <option>System default</option>
+                <option value="">System default</option>
             </select>
-        </div>
-        <div class="mb-4">
-            <label for="input-volume" class="form-label">Input volume</label>
-            <input type="range" class="form-range" id="input-volume" min="0" max="100" value="80" />
         </div>
 
         <h5>Output</h5>
         <div class="mb-3">
             <label for="audio-output" class="form-label">Speakers</label>
             <select id="audio-output" class="form-select">
-                <option>System default</option>
+                <option value="">System default</option>
             </select>
+            <div id="no-speaker-select" class="form-text" hidden>Your browser can't choose speakers, it uses the system default.</div>
         </div>
-        <div class="mb-4">
-            <label for="output-volume" class="form-label">Output volume</label>
-            <input type="range" class="form-range" id="output-volume" min="0" max="100" value="60" />
+        <div class="mb-3">
+            <label for="output-volume" class="form-label">Volume</label>
+            <input type="range" class="form-range" id="output-volume" min="0" max="100" value="100" />
         </div>
-
-        <button type="button" class="btn btn-primary" disabled>Save changes</button>
+        <button id="test-speakers" type="button" class="btn btn-outline-secondary"><i class="bi bi-volume-up-fill"></i> Test speakers</button>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/audio-settings.js" asp-append-version="true"></script>
+}
