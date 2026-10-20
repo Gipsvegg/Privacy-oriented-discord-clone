@@ -13,11 +13,30 @@
     margin-bottom: 0.5rem;
 }
 
-.voice-section ul {
-    list-style: none;
-    padding-left: 1rem;
-    margin-bottom: 0.5rem;
+#voice-status {
+    color: var(--muted-text-colour);
     font-size: 0.85rem;
+}
+
+#voice-status.voice-error {
+    color: var(--danger-colour);
+}
+
+/*boksene for samtalen vi er i og når noen ringer*/
+.voice-box {
+    background-color: var(--island-background-colour);
+    border-radius: 5px;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.incoming-call {
+    border: 2px solid var(--success-colour);
+    background-color: color-mix(in srgb, var(--success-colour) 15%, transparent);
+}
+
+.incoming-call p {
+    font-weight: 600;
 }
 
 .voice-buttons {
@@ -29,20 +48,128 @@
     flex: 1;
 }
 
-/*knappen i chatten for å bli med i samtalen*/
-#call-button {
-    font-size: 1.2rem;
-    margin-left: 0.5rem;
-    padding: 0 0.4rem;
+.voice-connected {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
 }
 
-/*antall i samtalen*/
-.call-count {
+.voice-connected-text {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    font-size: 0.85rem;
+    line-height: 1.2;
+}
+
+.voice-connected-text b {
     color: var(--success-colour);
-    font-size: 0.75rem;
+}
+
+#voice-call-name {
+    color: var(--muted-text-colour);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/*knappen med antall, viser hvem som er i samtalen når man trykker på den*/
+.voice-people-button {
+    margin-top: 0.4rem;
+    padding: 0 0.5rem;
+    border-radius: 1rem;
+    font-size: 0.8rem;
+    color: var(--text-colour);
+    background-color: var(--background-colour);
+}
+
+.voice-people-button:hover, .voice-people-button.show {
+    color: var(--text-colour);
+    background-color: var(--hover-colour);
+}
+
+#voice-people {
+    background-color: var(--island-background-colour);
+    border: 1px solid var(--border-colour);
+    color: var(--text-colour);
+    font-size: 0.85rem;
+    padding: 0.3rem 0;
+}
+
+#voice-people li {
+    padding: 0.15rem 0.75rem;
+}
+
+#voice-people .me {
+    font-weight: 600;
+}
+
+#voice-people .connecting {
+    opacity: 0.5;
+}
+
+#voice-people .failed {
+    color: var(--danger-colour);
+}
+
+/*call knappen og prikken helt til høyre i tittelen på chatten*/
+.conversation-name {
+    position: relative;
+}
+
+.call-info {
+    position: absolute;
+    right: 1rem;
+    top: 0;
+    bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    font-weight: normal;
+}
+
+.call-info .call-count.dm {
+    display: none;
+}
+
+/*grønn prikk og antall når noen er i samtalen*/
+.call-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: 1.5em;
+    vertical-align: middle;
+    background-color: var(--success-colour);
+    color: white;
+    border-radius: 1rem;
+    padding: 0 0.4rem;
     margin-left: 0.3rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
 .call-count::before {
-    margin-right: 0.15rem;
+    content: "";
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 50%;
+    background-color: white;
+}
+
+/*headset på samtalen vi er i*/
+.call-count.mine::before {
+    content: "\f414";
+    font-family: "bootstrap-icons";
+    width: auto;
+    height: auto;
+    line-height: 1;
+    background: none;
+}
+
+.call-info .call-count {
+    font-size: 0.8rem;
+    padding: 0.1rem 0.5rem;
 }

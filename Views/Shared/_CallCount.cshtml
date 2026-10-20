@@ -1,6 +1,6 @@
-@* hvor mange som er i samtalen, voice-chat.js oppdaterer tallet *@
-@model string
+@* grønn prikk og antall når noen er i samtalen, bare prikken for dms. voice-chat.js oppdaterer den *@
+@model (string ConversationId, bool IsDm)
 @{
-    var names = ikt201_project.Hubs.VoiceHub.NamesInCall(Model);
+    var names = ikt201_project.Hubs.VoiceHub.NamesInCall(Model.ConversationId);
 }
-<span class="call-count bi bi-telephone-fill" data-conversation-id="@Model" title="@string.Join(", ", names)" hidden="@(names.Count == 0)">@names.Count</span>
+<span class="call-count @(Model.IsDm ? "dm" : "")" data-conversation-id="@Model.ConversationId" title="In call: @string.Join(", ", names)" hidden="@(names.Count == 0)">@(Model.IsDm ? "" : names.Count.ToString())</span>

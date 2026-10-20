@@ -8,12 +8,38 @@ const rtcConfig = { iceServers: [], iceTransportPolicy: "relay" };
 let microphone = null;
 let currentCall = null; // conversation id til samtalen vi er i
 let muted = false;
+let ringingCall = null;
+let ringTimeout = null;
 const peers = {}; // En RTCPeerConnection per person i samtalen, key er SignalR connection id
 
 const muteButton = document.getElementById("voice-mute");
 const leaveButton = document.getElementById("voice-leave");
 const statusText = document.getElementById("voice-status");
 const peopleList = document.getElementById("voice-people");
+const peopleCount = document.getElementById("voice-count");
+const inCallBox = document.getElementById("voice-in-call");
+const callNameText = document.getElementById("voice-call-name");
+const incomingBox = document.getElementById("incoming-call");
+const incomingText = document.getElementById("incoming-text");
+const myName = document.getElementById("uuid")?.dataset.username;
+
+const ringSound = new Audio("/sounds/ring.wav");
+ringSound.loop = true;
+const ringSeconds = 30; // hvor lenge det ringer før lyden stopper
+
+function showStatus(text, isError = false) {
+    statusText.hidden = false;
+    statusText.textContent = text;
+    statusText.classList.toggle("voice-error", isError);
+}
+
+function updatePeopleCount() {
+    peopleCount.textContent = peopleList.children.length;
+}
+
+function chatName(conversationId) {
+    return document.querySelector(`.sidebar a.friend[data-conversation-id="${conversationId}"]`)?.firstChild.textContent.trim();
+}
 
 function createPeer(id, username) {
     const peer = new RTCPeerConnection(rtcConfig);
@@ -32,19 +58,18 @@ function createPeer(id, username) {
     // Show them in the list and play their audio
     const item = document.createElement("li");
     item.id = "peer-" + id;
-    const icon = document.createElement("i");
-    icon.className = "bi bi-person-fill";
-    const text = document.createElement("span");
+    item.textContent = username;
     const audio = document.createElement("audio");
     audio.autoplay = true;
-    item.append(icon, " ", text, audio);
+    item.append(audio);
     peopleList.append(item);
+    updatePeopleCount();
 
-    // bare vis status hvis det er error
+    // grå mens den kobler til, rød når error
     const showState = () => {
-        if (peer.connectionState === "connected") text.textContent = username;
-        else if (peer.connectionState === "failed") text.textContent = username + " (could not connect)";
-        else text.textContent = username + " (connecting...)";
+        if (peer.connectionState === "connected") item.className = "";
+        else if (peer.connectionState === "failed") item.className = "failed";
+        else item.className = "connecting";
     };
     showState();
     peer.onconnectionstatechange = showState;
@@ -57,6 +82,7 @@ function removePeer(id) {
     peers[id]?.close();
     delete peers[id];
     document.getElementById("peer-" + id)?.remove();
+    updatePeopleCount();
 }
 
 // Someone joined the call, we send them an offer
@@ -86,48 +112,100 @@ hub.on("UserLeft", id => removePeer(id));
 
 // Someone joined or left a call in one of our chats, update the number next to it
 hub.on("CallChanged", (conversationId, names) => {
-    document.querySelectorAll(`.call-count[data-conversation-id="${conversationId}"]`).forEach(element => {
-        element.textContent = names.length;
-        element.title = names.join(", ");
+    const counts = document.querySelectorAll(`.call-count[data-conversation-id="${conversationId}"]`);
+    const isDm = counts[0]?.classList.contains("dm");
+
+    // ring when call started
+    if (counts[0]?.hidden && names.length > 0 && !names.includes(myName)) {
+        startRinging(conversationId, isDm ? names[0] + " is calling you" : names[0] + " started a call in " + chatName(conversationId));
+    }
+
+    if (conversationId === ringingCall && (names.length === 0 || names.includes(myName))) {
+        stopRinging();
+    }
+
+    counts.forEach(element => {
+        element.textContent = isDm ? "" : names.length;
+        element.title = "In call: " + names.join(", ");
         element.hidden = names.length === 0;
     });
+    updateCallUI();
 });
 
-function updateCallButton() {
+function startRinging(conversationId, text) {
+    ringingCall = conversationId;
+    incomingText.textContent = text;
+    incomingBox.hidden = false;
+    ringSound.currentTime = 0;
+    ringSound.play().catch(() => {});
+    clearTimeout(ringTimeout);
+    ringTimeout = setTimeout(() => ringSound.pause(), ringSeconds * 1000);
+}
+
+function stopRinging() {
+    ringingCall = null;
+    incomingBox.hidden = true;
+    ringSound.pause();
+    clearTimeout(ringTimeout);
+}
+
+// headset icon on current voice chat
+function updateCallUI() {
+    document.querySelectorAll(".call-count").forEach(element => {
+        element.classList.toggle("mine", element.dataset.conversationId === currentCall);
+    });
+
     const button = document.getElementById("call-button");
     if (!button) return;
-    const inThisCall = button.dataset.conversationId === currentCall;
-    button.className = inThisCall ? "btn btn-danger" : "btn btn-outline-success";
-    button.title = inThisCall ? "Leave call" : "Join call";
-    button.innerHTML = inThisCall ? '<i class="bi bi-telephone-x-fill"></i>' : '<i class="bi bi-telephone-fill"></i>';
+    const someoneInCall = !document.querySelector(".call-info .call-count").hidden;
+
+    if (button.dataset.conversationId === currentCall) {
+        button.className = "btn btn-sm btn-danger";
+        button.innerHTML = '<i class="bi bi-telephone-x-fill"></i> Leave';
+    } else if (someoneInCall) {
+        button.className = "btn btn-sm btn-success";
+        button.innerHTML = '<i class="bi bi-telephone-fill"></i> Join';
+    } else {
+        button.className = "btn btn-sm btn-outline-success";
+        button.innerHTML = '<i class="bi bi-telephone-fill"></i> Call';
+    }
 }
 
 function setMuted(value) {
     muted = value;
     microphone?.getAudioTracks().forEach(track => track.enabled = !muted);
-    muteButton.classList.toggle("active", muted);
-    muteButton.innerHTML = muted ? '<i class="bi bi-mic-mute-fill"></i> Unmute' : '<i class="bi bi-mic-fill"></i> Mute';
+    muteButton.className = muted ? "btn btn-sm btn-warning" : "btn btn-sm btn-outline-secondary";
+    muteButton.title = muted ? "Unmute" : "Mute";
+    muteButton.innerHTML = muted ? '<i class="bi bi-mic-mute-fill"></i>' : '<i class="bi bi-mic-fill"></i>';
 }
 
 async function joinCall(conversationId) {
     if (currentCall) await leaveCall();
     try {
         microphone = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (error) {
+        if (error.name === "NotAllowedError") showStatus("Microphone is blocked, allow it in the browser to join", true);
+        else if (error.name === "NotFoundError") showStatus("No microphone found", true);
+        else showStatus("Could not use your microphone", true);
+        return;
+    }
+    try {
         if (hub.state === "Disconnected") await hub.start();
         const ice = JSON.parse(await hub.invoke("GetIceServers"));
         if (!ice.iceServers) throw new Error("TURN server is not set up");
         rtcConfig.iceServers = ice.iceServers;
         await hub.invoke("JoinRoom", conversationId);
         currentCall = conversationId;
-        muteButton.disabled = false;
-        leaveButton.disabled = false;
-        const name = document.querySelector(`.sidebar a.friend[data-conversation-id="${conversationId}"]`)?.firstChild.textContent.trim();
-        statusText.textContent = "In call: " + name;
-        peopleList.hidden = false;
-        updateCallButton();
+        callNameText.textContent = chatName(conversationId);
+        statusText.hidden = true;
+        inCallBox.hidden = false;
+        updateCallUI();
     } catch (error) {
-        microphone?.getTracks().forEach(track => track.stop());
-        statusText.textContent = "Could not join: " + error.message;
+        console.error(error);
+        microphone.getTracks().forEach(track => track.stop());
+        // feilmeldinger fra serveren kommer etter "HubException: "
+        if (error.message.includes("HubException: ")) showStatus(error.message.split("HubException: ")[1], true);
+        else showStatus("Could not join the call, try again", true);
     }
 }
 
@@ -137,11 +215,9 @@ async function leaveCall() {
     setMuted(false);
     microphone.getTracks().forEach(track => track.stop());
     currentCall = null;
-    muteButton.disabled = true;
-    leaveButton.disabled = true;
-    statusText.textContent = "Not in a call";
-    peopleList.hidden = true;
-    updateCallButton();
+    showStatus("Not in a call");
+    inCallBox.hidden = true;
+    updateCallUI();
 }
 
 // the call button in the chat
@@ -154,9 +230,24 @@ document.addEventListener("click", async e => {
     button.disabled = false;
 });
 
-// oppdaterer call-knappen når vi bytta samtale
-new MutationObserver(updateCallButton).observe(document.getElementById("message-area"), { childList: true });
+// update ui when sidebar changes
+const observer = new MutationObserver(updateCallUI);
+["message-area", "friends-list", "groups-list"].forEach(id => observer.observe(document.getElementById(id), { childList: true }));
 
+// asks before you leave the page
+window.addEventListener("beforeunload", e => {
+    if (currentCall) e.preventDefault();
+});
+
+// join from sidebar
+document.getElementById("incoming-join").addEventListener("click", async () => {
+    const conversationId = ringingCall;
+    stopRinging();
+    document.querySelector(`.sidebar a.friend[data-conversation-id="${conversationId}"]`)?.click();
+    await joinCall(conversationId);
+});
+
+document.getElementById("incoming-ignore").addEventListener("click", stopRinging);
 muteButton.addEventListener("click", () => setMuted(!muted));
 leaveButton.addEventListener("click", leaveCall);
 

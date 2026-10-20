@@ -1,12 +1,32 @@
 @* voice chat seksjonen nederst i sidebaren, voice-chat.js bruker iden til elementene *@
 <div class="sidebar-section voice-section">
     <h6 class="text-center">Voice chat</h6>
+    @* vises når noen ringer *@
+    <div id="incoming-call" class="voice-box incoming-call" hidden>
+        <p id="incoming-text"></p>
+        <div class="voice-buttons">
+            <button id="incoming-join" type="button" class="btn btn-success btn-sm"><i class="bi bi-telephone-fill"></i> Join</button>
+            <button id="incoming-ignore" type="button" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-lg"></i> Ignore</button>
+        </div>
+    </div>
     <p id="voice-status">Not in a call</p>
-    <ul id="voice-people" hidden>
-        <li><i class="bi bi-person-fill"></i> @User.Identity?.Name (you)</li>
-    </ul>
-    <div class="voice-buttons">
-        <button id="voice-mute" type="button" class="btn btn-outline-warning btn-sm" disabled><i class="bi bi-mic-fill"></i> Mute</button>
-        <button id="voice-leave" type="button" class="btn btn-outline-danger btn-sm" disabled><i class="bi bi-telephone-x-fill"></i> Leave</button>
+    @* samtalen vi er i *@
+    <div id="voice-in-call" class="voice-box" hidden>
+        <div class="voice-connected">
+            <div class="voice-connected-text">
+                <b>Voice connected</b>
+                <span id="voice-call-name"></span>
+            </div>
+            <button id="voice-mute" type="button" class="btn btn-sm btn-outline-secondary" title="Mute"><i class="bi bi-mic-fill"></i></button>
+            <button id="voice-leave" type="button" class="btn btn-sm btn-danger" title="Leave call"><i class="bi bi-telephone-x-fill"></i></button>
+        </div>
+        <div class="dropup">
+            <button type="button" class="btn btn-sm voice-people-button" data-bs-toggle="dropdown" title="Who is in the call">
+                <i class="bi bi-people-fill"></i> <span id="voice-count">1</span>
+            </button>
+            <ul id="voice-people" class="dropdown-menu">
+                <li class="me">@User.Identity?.Name (you)</li>
+            </ul>
+        </div>
     </div>
 </div>

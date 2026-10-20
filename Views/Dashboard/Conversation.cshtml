@@ -3,8 +3,10 @@
 <div class="conversation-message-window">
     <h2 class="conversation-name" class="text-center">
         @Model.ConversationName
-        <button id="call-button" type="button" class="btn btn-outline-success" data-conversation-id="@Model.ConversationId" title="Join call"><i class="bi bi-telephone-fill"></i></button>
-        <partial name="_CallCount" model="Model.ConversationId"/>
+        <span class="call-info">
+            <partial name="_CallCount" model="(Model.ConversationId, Model.IsDirect)"/>
+            <button id="call-button" type="button" class="btn btn-sm btn-outline-success" data-conversation-id="@Model.ConversationId"><i class="bi bi-telephone-fill"></i> Call</button>
+        </span>
     </h2>
     <div class="messages"></div>
 
