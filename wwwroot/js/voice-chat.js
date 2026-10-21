@@ -1,6 +1,7 @@
 // P2P Voice chat med WebRTC
 
-const hub = new signalR.HubConnectionBuilder().withUrl("/voiceHub").build();
+// Reconnect attempt
+const hub = new signalR.HubConnectionBuilder().withUrl("/voiceHub").withAutomaticReconnect().build();
 
 // Bare TURN, for å gjemme IP
 const rtcConfig = { iceServers: [], iceTransportPolicy: "relay" };
@@ -286,5 +287,43 @@ document.getElementById("incoming-ignore").addEventListener("click", stopRinging
 muteButton.addEventListener("click", () => setMuted(!muted));
 deafenButton.addEventListener("click", () => setDeafened(!deafened));
 leaveButton.addEventListener("click", leaveCall);
+
+// leave call if kicked from group
+connection.on("RemoveFromGroup", async conversationId => {
+    if (conversationId === currentCall) await leaveCall();
+});
+
+// leave call if we leave group
+document.addEventListener("click", async e => {
+    const button = e.target.closest("#open-group-leaver");
+    if (button && button.dataset.conversationId === currentCall) await leaveCall();
+});
+
+// lost the connection to the server
+hub.onreconnecting(() => {
+    if (currentCall) showStatus("Connection lost, reconnecting...", true);
+});
+
+hub.onreconnected(async () => {
+    refreshFriendsList();
+    refreshGroupsList();
+    if (!currentCall) return;
+    try {
+        Object.keys(peers).forEach(removePeer);
+        await hub.invoke("JoinRoom", currentCall);
+        statusText.hidden = true;
+    } catch (error) {
+        console.error(error);
+        await leaveCall();
+        showStatus("Could not rejoin the call", true);
+    }
+});
+
+// gave up reconnecting
+hub.onclose(async () => {
+    if (!currentCall) return;
+    await leaveCall();
+    showStatus("Lost connection to the server, try joining again", true);
+});
 
 hub.start().catch(console.error);
