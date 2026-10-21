@@ -39,6 +39,9 @@ public class GenerateRecoveryCodesModel : PageModel
     [TempData]
     public string? StatusMessage { get; set; }
 
+    [BindProperty]
+    public string? TwoFactorCode { get; set; }
+
     public async Task<IActionResult> OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User);
@@ -69,6 +72,12 @@ public class GenerateRecoveryCodesModel : PageModel
         if (!isTwoFactorEnabled)
         {
             throw new InvalidOperationException($"Cannot generate recovery codes for user as they do not have 2FA enabled.");
+        }
+
+        if (!await TwoFactorCheck.CheckCodeAsync(_userManager, user, TwoFactorCode))
+        {
+            ModelState.AddModelError("TwoFactorCode", "Invalid authenticator code.");
+            return Page();
         }
 
         var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);

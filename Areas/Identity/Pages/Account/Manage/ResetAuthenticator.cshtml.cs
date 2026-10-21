@@ -34,6 +34,9 @@ public class ResetAuthenticatorModel : PageModel
     [TempData]
     public string? StatusMessage { get; set; }
 
+    [BindProperty]
+    public string? TwoFactorCode { get; set; }
+
     public async Task<IActionResult> OnGet()
     {
         var user = await _userManager.GetUserAsync(User);
@@ -51,6 +54,12 @@ public class ResetAuthenticatorModel : PageModel
         if (user == null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+        }
+
+        if (!await TwoFactorCheck.CheckCodeAsync(_userManager, user, TwoFactorCode))
+        {
+            ModelState.AddModelError("TwoFactorCode", "Invalid authenticator code.");
+            return Page();
         }
 
         await _userManager.SetTwoFactorEnabledAsync(user, false);
