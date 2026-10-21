@@ -588,6 +588,7 @@ connection.on('ReceiveGroupInvite', async (conversationId) => {
     console.log("Welcome received");
     await refreshGroupsList();
     await refreshFriendsList();
+    document.querySelectorAll('.unread').forEach(b => showUnread(b.dataset.conversationId));
 })
 
 connection.on('RemoveFromGroup', async (conversationId) => {
@@ -597,6 +598,7 @@ connection.on('RemoveFromGroup', async (conversationId) => {
         sessionStorage.removeItem('openConversation');
     }
     await refreshGroupsList();
+    document.querySelectorAll('.unread').forEach(b => showUnread(b.dataset.conversationId));
 })
 
 connection.on('MembersChanged', async (conversationId) => {

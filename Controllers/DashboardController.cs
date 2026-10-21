@@ -78,10 +78,7 @@ public class DashboardController : Controller
         var groups = GetGroups();
         var group = groups.FirstOrDefault(m => m.ConversationId == id);
 
-        if (group == null)
-        {
-            return NotFound();
-        }
+        if (group == null) return NotFound();
         
         return PartialView(group);
     }
@@ -173,7 +170,7 @@ public class DashboardController : Controller
 
         await _friendService.SendRequestAsync(CurrentUserId, username.Trim());
 
-        // Same message whether or not the user exists, so the form can't be used to look up usernames
+        // Same message whether the user exists or not, so the form can't be used to look up usernames
         TempData["Message"] = "If that user exists, a friend request was sent.";
         return RedirectToAction(nameof(Friends));
     }
