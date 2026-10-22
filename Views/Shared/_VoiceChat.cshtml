@@ -1,17 +1,35 @@
 @* voice chat seksjonen nederst i sidebaren, voice-chat.js bruker iden til elementene *@
 <div class="sidebar-section voice-section">
     <h6 class="text-center">Voice chat</h6>
-    <input id="voice-room" type="text" class="form-control form-control-sm mb-2" placeholder="Room name" value="General" />
+    @* vises når noen ringer *@
+    <div id="incoming-call" class="voice-box incoming-call" hidden>
+        <p id="incoming-text"></p>
+        <div class="voice-buttons">
+            <button id="incoming-join" type="button" class="btn btn-success btn-sm"><i class="bi bi-telephone-fill"></i> Join</button>
+            <button id="incoming-ignore" type="button" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-lg"></i> Ignore</button>
+        </div>
+    </div>
     <p id="voice-status">Not in a call</p>
-    @* viser bare antall, trykk for å se hvem som er der *@
-    <details id="voice-details" hidden>
-        <summary id="voice-count">1 connected</summary>
-        <ul id="voice-people">
-            <li>@User.Identity?.Name (you)</li>
-        </ul>
-    </details>
-    <div class="voice-buttons">
-        <button id="voice-join" type="button" class="btn btn-outline-success btn-sm"><i class="bi bi-telephone-fill"></i> Join</button>
-        <button id="voice-leave" type="button" class="btn btn-outline-danger btn-sm" disabled><i class="bi bi-telephone-x-fill"></i> Leave</button>
+    @* samtalen vi er i *@
+    <div id="voice-in-call" class="voice-box" hidden>
+        <div class="voice-connected">
+            <div class="voice-connected-text">
+                <b>Voice connected</b>
+                <span id="voice-call-name"></span>
+            </div>
+            <button id="voice-leave" type="button" class="btn btn-sm btn-danger" title="Leave call"><i class="bi bi-telephone-x-fill"></i></button>
+        </div>
+        <div class="voice-controls">
+            <div class="dropup">
+                <button type="button" class="btn btn-sm voice-people-button" data-bs-toggle="dropdown" data-bs-auto-close="outside" title="Who is in the call">
+                    <i class="bi bi-people-fill"></i> <span id="voice-count">1</span>
+                </button>
+                <ul id="voice-people" class="dropdown-menu">
+                    <li class="me">@User.Identity?.Name (you)</li>
+                </ul>
+            </div>
+            <button id="voice-mute" type="button" class="btn btn-sm btn-outline-secondary" title="Mute"><i class="bi bi-mic-fill"></i></button>
+            <button id="voice-deafen" type="button" class="btn btn-sm btn-outline-secondary" title="Deafen"><i class="bi bi-headphones"></i></button>
+        </div>
     </div>
 </div>

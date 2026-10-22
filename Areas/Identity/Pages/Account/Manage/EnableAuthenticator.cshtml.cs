@@ -92,6 +92,12 @@ public class EnableAuthenticatorModel : PageModel
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
         }
 
+        // already set up, have to reset it first
+        if (await _userManager.GetTwoFactorEnabledAsync(user))
+        {
+            return RedirectToPage("./TwoFactorAuthentication");
+        }
+
         await LoadSharedKeyAndQrCodeUriAsync(user);
 
         return Page();
@@ -103,6 +109,12 @@ public class EnableAuthenticatorModel : PageModel
         if (user == null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+        }
+
+        // already set up, have to reset it first
+        if (await _userManager.GetTwoFactorEnabledAsync(user))
+        {
+            return RedirectToPage("./TwoFactorAuthentication");
         }
 
         if (!ModelState.IsValid)
@@ -180,7 +192,7 @@ public class EnableAuthenticatorModel : PageModel
         return string.Format(
             CultureInfo.InvariantCulture,
             AuthenticatorUriFormat,
-            _urlEncoder.Encode("Microsoft.AspNetCore.Identity.UI"),
+            _urlEncoder.Encode("PissCord"), // Midlertidig navn (kansje)
             _urlEncoder.Encode(email),
             unformattedKey);
     }
