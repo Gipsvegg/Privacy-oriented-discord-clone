@@ -470,6 +470,7 @@ document.getElementById('group-form')?.addEventListener('submit', async (e) => {
     } catch (err) {
         console.error('Could not create group:', err);
     } finally {
+        e.target.closest('dialog')?.close();
         submit.disabled = false;
     }
 });
