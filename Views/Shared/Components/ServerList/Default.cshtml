@@ -67,27 +67,7 @@
             <button type="button" id="open-create" class="srv-add">+ Create server</button>
         </div>
     </div>
-
-    <div class="main-content">
-        @* Set by ServersController when a submitted name was invalid. *@
-        @if (TempData["ServerError"] is string serverError)
-        {
-        <div class="srv-error">@serverError</div>
-        }
-
-        <h2 class="text-center">Homepage</h2>
-        <div id="message-area" class="message-area">
-            @* Placeholder: server messaging isn't built yet. Opening a friend replaces this. *@
-            @if (Model.CurrentServer != null && Model.CurrentChannel != null)
-            {
-            <p class="text-muted">
-                @(Model.CurrentChannel.Type == ChannelType.Voice ? "🔊" : "#")@Model.CurrentChannel.Name
-                in @Model.CurrentServer.Name. Messages in server channels are not implemented yet.
-            </p>
-            }
-        </div>
-    </div>
-
+        
 <dialog id="create-dialog" class="srv-dialog">
     <form asp-controller="Servers" asp-action="Create" method="post">
         <h5>Create a server</h5>
