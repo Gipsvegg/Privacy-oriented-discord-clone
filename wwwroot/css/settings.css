@@ -1,13 +1,36 @@
-.main-content {
+.sidebar .nav-link {
+    color: var(--text-colour);
+}
+
+.sidebar .nav-link:hover {
+    background: var(--hover-colour);
+}
+
+.sidebar .nav-link.active {
+    background-color: var(--active-background-colour);
+    color: var(--active-text-colour);
+}
+
+.settings-page-content{
+    padding-left: 20px;
     padding-right: 20px;
 }
 
-.sidebar .nav-link {
-    color: antiquewhite;
+.form-floating {
+    --bs-body-bg: var(--input-colour);
+}
+.form-floating > label {
+    color: var(--input-text-colour) !important;
+    opacity: 0.65;
 }
 
-.sidebar .nav-link:hover,
-.sidebar .nav-link.active {
-    background-color: #40444b;
-    color: white;
+.form-floating > label::after {
+    background-color: transparent !important;
+}
+
+.form-control:focus {
+    color: var(--input-text-colour);
+    background-color: var(--input-colour);
+    border-color: transparent;
+    box-shadow: none;
 }

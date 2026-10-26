@@ -1,0 +1,30 @@
+﻿@model List<ikt201_project.ViewComponents.FriendLink>
+
+@if (!Model.Any())
+{
+    <dialog id="add-to-group-dialog">
+        <div class="no-friends">
+            <p>Can't invite to group.</p>
+            <p>Reason: No more friends to add</p>
+            <button type="button" id="group-cancel">Cancel</button>    
+        </div>
+    </dialog>
+}
+else {
+    <dialog id="add-to-group-dialog">
+        <form id="add-to-group-form">
+            <h6 class="text-center">Add Friend to Group</h6>
+            <input id="friend-search" name="friendName" class="dialog-input" placeholder="Friend" maxlength="50" autocomplete="off"/>
+            @foreach (var friend in Model)
+            {
+                <label class="member-option" data-name="@friend.Name.ToLower()">
+                    <input type="checkbox" name="member" value="@friend.Id"/>@friend.Name
+                </label>
+            }
+            <div class="dialog-buttons">
+                <button type="submit">Add</button>
+                <button type="button" id="group-cancel">Cancel</button>
+            </div>
+        </form>
+    </dialog>
+}

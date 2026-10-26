@@ -1,0 +1,62 @@
+﻿.friends-page > * {
+    flex-shrink: 0; /* stop the flex column from squashing the lists */
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.friends-page .input-group input {
+    background-color: var(--input-colour);
+    color: var(--input-text-colour);
+    flex-grow: 1;
+    border: none;
+    outline: none;
+    border-radius: 0;
+    padding-left: .7rem;
+}
+
+.friends-page .input-group button {
+    background-color: var(--background-colour);
+    color: var(--text-colour);
+    outline: none;
+    border-left: 1px solid var(--border-colour);
+    border-radius: 0 !important;
+}
+
+.friends-page .input-group button:hover {
+    background-color: var(--hover-colour);
+}
+
+.friends-page .input-group button:active {
+    background-color: var(--active-background-colour);
+    color: var(--active-text-colour);
+}
+
+.friends-page .input-group {
+    height: 2.5rem;
+    border: 1px solid var(--border-colour);
+    background-color: var(--border-colour);
+    border-radius: 5px;
+    overflow: hidden;
+    outline: transparent !important;
+}
+
+.friends-page input:focus {
+    outline: transparent !important;
+}
+
+.friends-page .text-muted {
+    color: var(--muted-text-colour) !important;
+}
+
+.friends-page .list-group-item {
+    background-color: var(--island-background-colour);
+    color: var(--text-colour);
+    border-color: var(--border-colour);
+    
+}
+
+.friends-page .alert-info {
+    background-color: var(--island-background-colour);
+    color: var(--text-colour);
+    border-color: var(--border-colour);
+}

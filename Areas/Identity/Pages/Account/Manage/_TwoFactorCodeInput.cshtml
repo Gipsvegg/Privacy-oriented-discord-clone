@@ -1,0 +1,13 @@
+@inject UserManager<ApplicationUser> UserManager
+@{
+    var user = await UserManager.GetUserAsync(User);
+    var is2faEnabled = user != null && await UserManager.GetTwoFactorEnabledAsync(user);
+}
+@if (is2faEnabled)
+{
+    <div class="form-floating mb-3" style="max-width: 400px;">
+        <input name="TwoFactorCode" id="TwoFactorCode" class="form-control" autocomplete="one-time-code" placeholder="Authenticator code" />
+        <label for="TwoFactorCode" class="form-label">Authenticator code (or recovery code)</label>
+        <span class="text-danger">@ViewData.ModelState["TwoFactorCode"]?.Errors.FirstOrDefault()?.ErrorMessage</span>
+    </div>
+}

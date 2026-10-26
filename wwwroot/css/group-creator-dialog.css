@@ -1,0 +1,107 @@
+﻿body {
+    font-family: 'Outfit', sans-serif;
+}
+
+#group-dialog {
+    background: var(--background-colour);
+    color: var(--text-colour);
+    border: var(--border-colour) 2px solid;
+    border-radius: 8px;
+    max-height: 80%;
+    min-width: 300px;
+}
+
+
+
+.dialog-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin: 0.75rem;
+}
+
+.dialog-input {
+    width: 100%;
+    color: var(--input-text-colour);
+    background: var(--input-colour);
+    border: 2px solid var(--border-colour);
+    border-radius: 5px;
+    margin-bottom: 0.2rem;
+}
+
+#group-dialog input:focus{
+    outline: none;
+}
+
+#group-dialog button {
+    padding: 0.3rem 0.9rem;
+    font-size: 0.9rem;
+}
+
+
+.no-friends{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#group-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+#group-dialog label {
+    display: block;
+}
+
+.member-option {
+    position: relative;
+    display: block;
+    padding: 0.2rem 0.75rem;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.member-option:hover {
+    background-color: var(--hover-colour);
+}
+.member-option:has(input:checked) {
+    color: var(--active-text-colour);
+    background-color: var(--active-background-colour);
+}
+
+.member-option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.member-option:has(input:focus-visible) {
+    outline: 2px solid var(--text-colour);
+}
+
+#add-to-group-dialog{
+    background: var(--background-colour);
+    color: var(--text-colour);
+    border: var(--border-colour) 2px solid;
+    border-radius: 8px;
+    max-height: 80%;
+    min-width: 300px;
+}
+
+#add-to-group-dialog button {
+    padding: 0.3rem 0.9rem;
+    font-size: 0.9rem;
+}
+
+#add-to-group-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+#add-to-group-dialog label {
+    display: block;
+}
+
+#add-to-group-dialog input:focus{
+    outline: none;
+}

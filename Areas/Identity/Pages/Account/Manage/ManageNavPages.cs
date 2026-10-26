@@ -61,8 +61,7 @@ public static class ManageNavPages
     public static string TwoFactorAuthentication => "TwoFactorAuthentication";
 
     public static string Audio => "Audio";
-
-    public static string VoiceChat => "VoiceChat";
+    public static string Appearance => "Appearance";
 
     /// <summary>
     ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -112,7 +111,7 @@ public static class ManageNavPages
     /// </summary>
     public static string? TwoFactorAuthenticationNavClass(ViewContext viewContext) => PageNavClass(viewContext, TwoFactorAuthentication);
     public static string? AudioNavClass(ViewContext viewContext) => PageNavClass(viewContext, Audio);
-    public static string? VoiceChatNavClass(ViewContext viewContext) => PageNavClass(viewContext, VoiceChat);
+    public static string? AppearanceNavClass(ViewContext viewContext) => PageNavClass(viewContext, Appearance);
 
     /// <summary>
     ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used

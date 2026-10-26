@@ -6,14 +6,16 @@
     <link rel="stylesheet" href="~/css/settings.css" asp-append-version="true"/>
 }
 
-<div class="page-layout" data-bs-theme="dark">
+<div class="page-layout">
     <div class="sidebar">
         <partial name="_ManageNav" />
     </div>
 
     <div class="main-content">
         <h2 class="text-center">Settings</h2>
-        @RenderBody()
+        <div class="settings-page-content">
+            @RenderBody()
+        </div>
     </div>
 </div>
 

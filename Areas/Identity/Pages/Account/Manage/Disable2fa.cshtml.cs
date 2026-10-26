@@ -31,6 +31,9 @@ public class Disable2faModel : PageModel
     [TempData]
     public string? StatusMessage { get; set; }
 
+    [BindProperty]
+    public string? TwoFactorCode { get; set; }
+
     public async Task<IActionResult> OnGet()
     {
         var user = await _userManager.GetUserAsync(User);
@@ -53,6 +56,12 @@ public class Disable2faModel : PageModel
         if (user == null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+        }
+
+        if (!await TwoFactorCheck.CheckCodeAsync(_userManager, user, TwoFactorCode))
+        {
+            ModelState.AddModelError("TwoFactorCode", "Invalid authenticator code.");
+            return Page();
         }
 
         var disable2faResult = await _userManager.SetTwoFactorEnabledAsync(user, false);

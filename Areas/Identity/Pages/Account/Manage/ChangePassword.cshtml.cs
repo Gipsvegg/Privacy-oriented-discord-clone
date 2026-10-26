@@ -42,6 +42,9 @@ public class ChangePasswordModel : PageModel
     [TempData]
     public string? StatusMessage { get; set; }
 
+    [BindProperty]
+    public string? TwoFactorCode { get; set; }
+
     /// <summary>
     ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
     ///     directly from your code. This API may change or be removed in future releases.
@@ -105,6 +108,12 @@ public class ChangePasswordModel : PageModel
         if (user == null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+        }
+
+        if (!await TwoFactorCheck.CheckCodeAsync(_userManager, user, TwoFactorCode))
+        {
+            ModelState.AddModelError("TwoFactorCode", "Invalid authenticator code.");
+            return Page();
         }
 
         var changePasswordResult = await _userManager.ChangePasswordAsync(user, Input.OldPassword, Input.NewPassword);
