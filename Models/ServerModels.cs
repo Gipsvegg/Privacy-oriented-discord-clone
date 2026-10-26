@@ -1,0 +1,121 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace ikt201_project.Models;
+
+public enum ChannelType { Text, Voice }
+
+/// <summary>A single chat room</summary>
+public class Channel
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = "";
+    public ChannelType Type { get; set; }
+    public bool ReadOnly { get; set; }
+
+    public int Position { get; set; }
+
+    public int CategoryId { get; set; }
+}
+
+/// <summary>A titled group of channels</summary>
+public class Category
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = "";
+    public int Position { get; set; }
+
+    // Must be <class name> + Id for EF Core to treat it as the foreign key.
+    public int ServerId { get; set; }
+
+    public List<Channel> Channels { get; set; } = new();
+}
+
+/// <summary>A server. Icon is the short text shown on its round button (e.g. "TS").</summary>
+public class Server
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = "";
+    public string Icon { get; set; } = "";
+    public string OwnerId { get; set; } = "";
+    public int Position { get; set; }
+    public List<Category> Categories { get; set; } = new();
+}
+
+/// <summary>Server data for the Homepage sidebar.</summary>
+public class HomepageViewModel
+{
+    // All servers the user owns, shown as links in the sidebar.
+    public List<Server> Servers { get; set; } = new();
+
+    // Set only when the user has opened a server
+    public Server? CurrentServer { get; set; }
+    public Channel? CurrentChannel { get; set; }
+}
+
+/// <summary>The data submitted by the "Create server" dialog.</summary>
+public class CreateServerViewModel
+{
+    [Required, StringLength(32, MinimumLength = 2)]
+    public string Name { get; set; } = "";
+
+    // Must match one of the names in ServerTemplates.Options.
+    public string Template { get; set; } = "Community";
+}
+
+/// <summary>The data submitted by the "Edit server" dialog.</summary>
+public class EditServerViewModel
+{
+    public int Id { get; set; }
+
+    [Required, StringLength(32, MinimumLength = 2)]
+    public string Name { get; set; } = "";
+
+    // Names of categories to add. Empty entries are ignored; items are nullable
+    // because the browser sends empty text fields as null.
+    public List<string?> NewCategories { get; set; } = new();
+}
+
+/// <summary>The data submitted by the "Edit category" dialog.</summary>
+public class EditCategoryViewModel
+{
+    public int Id { get; set; }
+
+    [Required, StringLength(32)]
+    public string Name { get; set; } = "";
+}
+
+/// <summary>The data submitted by the "Add channel" dialog.</summary>
+public class CreateChannelViewModel
+{
+    public int CategoryId { get; set; }
+
+    [Required, StringLength(32)]
+    public string Name { get; set; } = "";
+
+    public ChannelType Type { get; set; }
+    public bool ReadOnly { get; set; }
+}
+
+/// <summary>The data submitted by the "Edit channel" dialog.</summary>
+public class EditChannelViewModel
+{
+    public int Id { get; set; }
+
+    [Required, StringLength(32)]
+    public string Name { get; set; } = "";
+
+    public bool ReadOnly { get; set; }
+}
+
+/// <summary>The sidebar order sent after dragging: which categories, and which channels in each, top to bottom.</summary>
+public class ReorderRequest
+{
+    public int ServerId { get; set; }
+    public List<ReorderCategory> Categories { get; set; } = new();
+}
+
+public class ReorderCategory
+{
+    public int Id { get; set; }
+    public List<int> ChannelIds { get; set; } = new();
+}

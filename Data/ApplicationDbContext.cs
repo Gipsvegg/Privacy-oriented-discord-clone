@@ -14,7 +14,13 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<KeyPackage>  KeyPackages { get; set; }
     public DbSet<GroupInvite> GroupInvites { get; set; }
     public DbSet<Friendship> Friendships => Set<Friendship>();
+    
+    // Servers
+    public DbSet<Server> Servers { get; set; }
+    public DbSet<Category> Categories { get; set; }
+    public DbSet<Channel> Channels { get; set; }
 
+    // Modelbuilder
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

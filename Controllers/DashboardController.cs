@@ -22,6 +22,7 @@ public class DashboardController : Controller
     
     //databasen
     private readonly ApplicationDbContext _db;
+    
     //lar meldinger bli sett med engang isteden for å måtte reloade siden
     private readonly IHubContext<ChatHub> _hub;
     
@@ -57,6 +58,39 @@ public class DashboardController : Controller
         return View();
     }
     
+    /// <summary>
+    /// Shows the homepage with the user's servers in the sidebar. If serverId is given, that
+    /// server's channels are loaded too, with channelId (or the first text channel) selected.
+    /// </summary>
+    public async Task<IActionResult> Homepage_servers(int? serverId = null, int? channelId = null)
+    {
+        var userId = CurrentUserId;
+
+        var servers = await _db.Servers
+            .Where(s => s.OwnerId == userId)
+            .OrderBy(s => s.Position).ThenBy(s => s.Id)
+            .ToListAsync();
+
+        var model = new HomepageViewModel { Servers = servers };
+
+        if (serverId != null)
+        {
+            // Filtering by OwnerId stops users from opening other people's servers via the URL.
+            var current = await _db.Servers
+                .Include(s => s.Categories.OrderBy(c => c.Position))
+                .ThenInclude(c => c.Channels.OrderBy(ch => ch.Position))
+                .FirstOrDefaultAsync(s => s.Id == serverId && s.OwnerId == userId);
+
+            if (current == null) return NotFound();
+
+            var channels = current.Categories.SelectMany(c => c.Channels).ToList();
+            model.CurrentServer = current;
+            model.CurrentChannel = channels.FirstOrDefault(c => c.Id == channelId)
+                                   ?? channels.FirstOrDefault(c => c.Type == ChannelType.Text);
+        }
+
+        return View(model);
+    }
     
     public IActionResult Conversation(string id)
     {
