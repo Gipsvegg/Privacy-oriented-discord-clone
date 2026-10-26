@@ -65,9 +65,6 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.Migrate();
-    //Console.ForegroundColor = ConsoleColor.Red;
-    //Console.Out.WriteLine("THE DATABASE TABLE FOR MESSAGES IS GETTING DELETED");
-    //Console.ResetColor();
 
     ApplicationUser user;
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();

@@ -54,9 +54,7 @@ public class DashboardController : Controller
     
     public IActionResult Homepage()
     {
-        var groups = GetGroups();
-        
-        return View(groups);
+        return View();
     }
     
     
