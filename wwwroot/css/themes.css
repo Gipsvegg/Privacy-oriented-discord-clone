@@ -81,3 +81,32 @@
     --input-colour: #fffdf8;
     --input-text-colour: #2c2f33;
 }
+
+/*Second test theme example copy paste, change values and rename to make your own*/
+[data-theme="hearth"] {
+    /*Background colours*/
+    --background-colour: #191412;        /*deep warm charcoal-brown*/
+    --island-background-colour: #211a17; /*slightly lifted umber for panels*/
+
+    /*Text colours*/
+    --text-colour: #f2e8dc;              /*warm cream, high contrast*/
+    --muted-text-colour: #a89a8a;        /*soft warm grey-brown*/
+
+    /*Button/Selectables colour*/
+    --hover-colour: #322822;             /*low warm glow on hover*/
+    --active-text-colour: #191412;       /*matches background, text "carves" into amber*/
+    --active-background-colour: #e8b268; /*muted amber highlight*/
+    --success-colour: #7fae6f;           /*warm-leaning green*/
+    --danger-colour: #d66f5e;            /*terracotta rather than pure red*/
+
+    /*Borders*/
+    --border-colour: #3a2f29;
+    --divider-colour: rgb(232 178 104 / 0.08);
+    --scrollbar-thumb-colour: #3a2f29;
+    --scrollbar-track-colour: transparent;
+
+    /*Input stuff colour*/
+    --input-colour: #29211b;             /*field plate, sits between the two backgrounds*/
+    --input-text-colour: #f2e8dc;
+    --focus-colour: #e8b268;             /*amber ring so focus echoes selection*/
+}

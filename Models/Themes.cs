@@ -9,5 +9,6 @@ public static class Themes
         {"default", "dark"},
         {"midnight", "dark"},
         {"paper",  "light"},
+        {"hearth", "dark"}
     };
 }

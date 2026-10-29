@@ -30,17 +30,16 @@
     color: var(--text-colour);
     text-decoration: none;
     padding-left: 1rem;
+    border-radius: 5px;
 }
 
 .sidebar-section a:hover {
     background-color: var(--hover-colour);
-    border-radius: 5px;
 }
 
 .sidebar-section a.active {
     color: var(--active-text-colour);
     background-color: var(--active-background-colour);
-    border-radius: 5px;
 }
 
 .group-button {
