@@ -46,29 +46,6 @@
     border-bottom: 2px solid var(--border-colour);
 }
 
-/*Baren på bunnen av homepage som lar deg gå til settings og kanskje andre ting(har ikke planlagt ennå)*/
-.info-bar{
-    display: flex;
-    position: static;
-    /*flex-shrink: 0;*/
-    align-items: center;
-    text-align: center;
-    padding: 0 5px;
-    height: 60px;
-    border-top: 1px solid var(--border-colour);
-}
-
-.info-bar a {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    padding-left: 0.4rem;
-    padding-right: 0.4rem;
-    color: var(--text-colour);
-    text-decoration: none;
-}
-
 .settings {
     display: flex;
     align-items: center;

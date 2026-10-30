@@ -6,6 +6,24 @@
     border-right: 2px solid var(--border-colour);
 }
 
+.sidebar .manage-friends {
+    border-radius: 5px;
+    min-height: 50px;
+    text-decoration: none;
+    color: var(--text-colour);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.sidebar .manage-friends:hover {
+    background: var(--hover-colour);
+}
+.sidebar .manage-friends.active {
+    color: var(--active-text-colour);
+    background: var(--active-background-colour);
+}
+
 .sidebar-section {
     margin-bottom: 1.5rem;
     display: flex;
@@ -13,7 +31,10 @@
 }
 
 .sidebar-section h6 {
-    border-bottom: 2px solid var(--text-colour);
+    height: 2rem;
+    font-size: .9rem;
+    color: var(--muted-text-colour);
+    border-bottom: 2px solid var(--muted-text-colour);
     padding-bottom: 0.5rem;
     display: flex;
     align-items: center;
@@ -58,4 +79,39 @@
 
 .sidebar .text-muted {
     color: var(--muted-text-colour) !important;
+}
+
+/*Baren på bunnen av homepage som lar deg gå til settings og kanskje andre ting(har ikke planlagt ennå)*/
+.sidebar .user-island {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    min-height: 60px;
+    border-radius: 5px;
+    border: 2px solid var(--border-colour);
+    background-color: var(--island-background-colour);
+    overflow: hidden;
+}
+
+.sidebar .settings-icon {
+    display: flex;
+    min-height: 100%;
+    min-width: 100%;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-colour);
+    text-decoration: none;
+}
+
+#uuid {
+    margin-bottom: 0;
+}
+
+.sidebar .settings-icon:hover {
+    background: var(--hover-colour);
+}
+
+.sidebar .settings-icon:active {
+    background: var(--active-background-colour);
+    color: var(--active-text-colour);
 }
