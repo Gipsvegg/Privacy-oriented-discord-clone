@@ -1,16 +1,17 @@
 /*sidebaren flex for å få voice seksjonen nederst*/
-.sidebar {
-    display: flex;
-    flex-direction: column;
-}
 
 .voice-section {
-    margin-top: auto;
+    display: grid;
     margin-bottom: 0;
 }
 
+.voice-section > * {
+    grid-area: 1/1;
+    align-self: end;
+}
+
 .voice-section p {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0;
 }
 
 #voice-status {
@@ -26,13 +27,36 @@
 .voice-box {
     background-color: var(--island-background-colour);
     border-radius: 5px;
-    padding: 0.5rem;
-    margin-bottom: 0.5rem;
+}
+
+.voice-box {
+    transform: translateY(100%);
+    visibility: hidden;
+    transition: transform var(--time) ease, visibility 0s var(--time);
+    border: 2px solid var(--border-colour);
+    border-bottom: none;
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+    pointer-events: auto;
+}
+
+.voice-box.open {
+    transform: none;
+    visibility: visible;
+    transition: transform var(--time) ease, visibility 0s;
+}
+
+.voice-inner {
+    overflow: hidden;
+    min-height: 0;
+}
+
+.voice-inner > * { 
+    flex-shrink: 0;
 }
 
 .incoming-call {
-    border: 2px solid var(--success-colour);
-    background-color: color-mix(in srgb, var(--success-colour) 15%, transparent);
+    padding: .5rem;
 }
 
 .incoming-call p {
@@ -52,6 +76,7 @@
     display: flex;
     align-items: center;
     gap: 0.4rem;
+    padding: .5rem;
 }
 
 .voice-connected-text {
@@ -79,7 +104,8 @@
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    margin-top: 0.4rem;
+    padding-left: .5rem;
+    padding-bottom: .5rem;
 }
 
 .voice-controls .dropup {

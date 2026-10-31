@@ -1,5 +1,10 @@
 ﻿@using System.Security.Claims
 
+@{
+    var name = User.FindFirstValue(ClaimTypes.Name);
+    var uuid = User.FindFirstValue(ClaimTypes.NameIdentifier);
+}
+
 <div class="sidebar">
     @if (ViewContext.RouteData.Values["action"]?.ToString() == "Friends")
     {
@@ -23,23 +28,23 @@
         <div id="groups-list">
             @await Component.InvokeAsync("GroupsList")
         </div>
-
-
     </div>
     <div class="sidebar-section">
         <h6 class="text-center">Town-squares</h6>
         @await Component.InvokeAsync("ServerList")
     </div>
-    <partial name="_VoiceChat"/>
-
-    <div class="user-island">
-        <a class="settings-icon" asp-area="Identity" asp-page="/Account/Manage/Index">
-            @{
-                var name = User.FindFirstValue(ClaimTypes.Name);
-                var uuid = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            }
-            <p id="uuid" class="user-info" data-uuid="@uuid" data-username="@name">@name <i class="bi bi-gear"></i></p>
-        </a>
+    
+    <div class="voice-island">
+        <div class="voice-slot">
+            <partial name="_VoiceChat"/>
+        </div>
+        <div class="user-island">
+            <a class="settings-icon" asp-area="Identity" asp-page="/Account/Manage/Index">
+                <p id="uuid" class="user-info" data-uuid="@uuid" data-username="@name">@name <i class="bi bi-gear"></i></p>
+            </a>
+            <button id="voice-mute" type="button" class="btn btn-sm btn-outline-secondary" title="Mute"><i class="bi bi-mic-fill"></i></button>
+            <button id="voice-deafen" type="button" class="btn btn-sm btn-outline-secondary" title="Deafen"><i class="bi bi-headphones"></i></button>
+        </div>
     </div>
 
 </div>

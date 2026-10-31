@@ -26,7 +26,7 @@ const incomingBox = document.getElementById("incoming-call");
 const incomingText = document.getElementById("incoming-text");
 const myName = document.getElementById("uuid")?.dataset.username;
 
-const ringSound = new Audio("/sounds/ring.wav");
+const ringSound = new Audio("/sounds/bass_ring.mp3");
 ringSound.loop = true;
 const ringSeconds = 30; // hvor lenge det ringer før lyden stopper
 
@@ -160,7 +160,7 @@ hub.on("CallChanged", (conversationId, names) => {
 function startRinging(conversationId, text) {
     ringingCall = conversationId;
     incomingText.textContent = text;
-    incomingBox.hidden = false;
+    incomingBox.classList.add("open");
     ringSound.currentTime = 0;
     applySpeaker(ringSound);
     ringSound.play().catch(() => {});
@@ -170,7 +170,7 @@ function startRinging(conversationId, text) {
 
 function stopRinging() {
     ringingCall = null;
-    incomingBox.hidden = true;
+    incomingBox.classList.remove("open");
     ringSound.pause();
     clearTimeout(ringTimeout);
 }
@@ -234,7 +234,7 @@ async function joinCall(conversationId) {
         currentCall = conversationId;
         callNameText.textContent = chatName(conversationId);
         statusText.hidden = true;
-        inCallBox.hidden = false;
+        inCallBox.classList.add("open")
         updateCallUI();
     } catch (error) {
         console.error(error);
@@ -251,8 +251,8 @@ async function leaveCall() {
     setDeafened(false);
     microphone.getTracks().forEach(track => track.stop());
     currentCall = null;
-    showStatus("Not in a call");
-    inCallBox.hidden = true;
+    statusText.hidden = true;
+    inCallBox.classList.remove("open");
     updateCallUI();
 }
 

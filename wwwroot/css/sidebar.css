@@ -1,4 +1,6 @@
 ﻿.sidebar {
+    display: flex;
+    flex-direction: column;
     position: sticky;
     width: 250px;
     overflow-y: auto;
@@ -82,21 +84,42 @@
 }
 
 /*Baren på bunnen av homepage som lar deg gå til settings og kanskje andre ting(har ikke planlagt ennå)*/
-.sidebar .user-island {
+.sidebar .voice-island .user-island {
+    display: flex;
+    flex-direction: row;
+    min-height: 60px;
+    overflow: hidden;
+    border: 2px solid var(--border-colour);
+    border-radius: 5px;
+    background-color: var(--island-background-colour);
+    transition: border-radius 0s var(--time);
+}
+
+.voice-island:has(.voice-box.open) .user-island {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    transition: border-radius 0s 50ms;
+}
+
+.sidebar .voice-island {
     position: sticky;
+    margin-top: auto;
     bottom: 0;
     z-index: 1;
-    min-height: 60px;
-    border-radius: 5px;
-    border: 2px solid var(--border-colour);
-    background-color: var(--island-background-colour);
+}
+
+.voice-slot {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
     overflow: hidden;
+    pointer-events: none;
 }
 
 .sidebar .settings-icon {
     display: flex;
-    min-height: 100%;
-    min-width: 100%;
+    flex-grow: 1;
     align-items: center;
     justify-content: center;
     color: var(--text-colour);
@@ -114,4 +137,30 @@
 .sidebar .settings-icon:active {
     background: var(--active-background-colour);
     color: var(--active-text-colour);
+}
+
+.user-island > .btn-outline-secondary {
+    min-width: 40px;
+    border: none;
+    border-left: 1px solid var(--border-colour);
+    border-radius: 0;
+}
+
+.user-island > .btn-outline-secondary:hover {
+    color: var(--text-colour);
+    background: var(--hover-colour);
+    border-radius: 0;
+}
+
+.user-island > .btn-outline-secondary:active {
+    background: var(--active-background-colour);
+    color: var(--active-text-colour);
+    border-radius: 0;
+}
+
+.user-island > .btn-warning, .user-island > .btn-danger {
+    min-width: 40px;
+    border: none;
+    border-left: 1px solid var(--border-colour);
+    border-radius: 0;
 }

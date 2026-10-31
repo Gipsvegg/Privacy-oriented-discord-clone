@@ -23,6 +23,7 @@
     /*Input stuff colour*/
     --input-colour: antiquewhite;            /*antiquewhite <--- old input background colour*/
     --input-text-colour: black;             /*black <--- old input text colour*/
+    --time: 100ms;
 }
 
 /*First test theme example copy paste, change values and rename to make your own*/

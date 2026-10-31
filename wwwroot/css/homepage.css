@@ -134,7 +134,7 @@
     position: static;
     width: 90%;
     margin-top: auto;
-    margin-bottom: 5px;
+    margin-bottom: 1rem;
     background-color: var(--input-colour);
     border: 2px solid var(--border-colour);
     border-radius: 5px;
