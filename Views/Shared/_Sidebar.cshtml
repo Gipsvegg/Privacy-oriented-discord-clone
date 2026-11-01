@@ -8,11 +8,11 @@
 <div class="sidebar">
     @if (ViewContext.RouteData.Values["action"]?.ToString() == "Friends")
     {
-        <a class="active manage-friends" asp-controller="Dashboard" asp-action="Friends"><i class="bi bi-people"></i>Manage friends</a>
+        <a class="active manage-friends" asp-controller="Dashboard" asp-action="Friends"><i class="bi bi-people"></i>  Manage friends</a>
     }
     else
     {
-        <a class="manage-friends" asp-controller="Dashboard" asp-action="Friends"><i class="bi bi-people"></i>Manage friends</a>
+        <a class="manage-friends" asp-controller="Dashboard" asp-action="Friends"><i class="bi bi-people"></i>  Manage friends</a>
     }
     <div class="sidebar-section">
         <h6 class="text-center" type="button">
@@ -46,6 +46,5 @@
             <button id="voice-deafen" type="button" class="btn btn-sm btn-outline-secondary" title="Deafen"><i class="bi bi-headphones"></i></button>
         </div>
     </div>
-
 </div>
 @await Component.InvokeAsync("FriendsList", new {invoker = "groupCreator"})

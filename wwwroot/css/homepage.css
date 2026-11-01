@@ -1,16 +1,73 @@
 ﻿.conversation-information-window .group-button {
+    display: flex;
+    flex-direction: column;
+    width: 80%;
+    height: 5rem;
+    position: sticky;
     margin-top: auto;
     margin-bottom: 0.3rem;
-    gap: 1.3rem;
+    background-color: var(--island-background-colour);
+    border: 1px solid var(--border-colour);
+    border-radius: 5px;
+    gap: 5px;
+}
+
+.conversation-information-window .group-button > * {
+    width: 90%;
+    height: 40%;
+    font-size: .8rem;
+    border: 1px solid var(--border-colour);
+    background-color: var(--background-colour);
+    text-align: left;
+    padding: 0 .5rem;
+}
+
+.conversation-information-window .group-button > *:first-child:hover {
+    color: var(--text-colour);
+    background-color: var(--hover-colour);
+}
+
+.conversation-information-window .group-button > *:first-child:active {
+    color: var(--active-text-colour);
+    background-color: var(--active-background-colour);
+}
+
+.conversation-information-window .group-button > *:last-child:hover {
+    color: var(--danger-colour);
+    background-color: var(--hover-colour);
+}
+
+.conversation-information-window .group-button > *:last-child:active {
+    color: var(--background-colour);
+    background-color: var(--danger-colour);
+}
+
+.conversation-information-window .member-list {
+    display: flex;
+    flex-direction: row;
     width: 100%;
+    height: 2rem;
+    padding-left: 0.5rem;
+    align-items: center;
+    justify-content: center;
 }
 
-#open-group-invitor {
-    width: 35%;
+.conversation-information-window .member-list .group-control {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    margin-right: 0.5rem;
+    gap: .25rem;
+    height: 100%;
+    width: 40%;
 }
 
-#open-group-leaver{
-    width: 35%;
+.conversation-information-window .member-list .group-control > * {
+    font-size: 1.3rem;
+    flex-grow: 1;
+    
 }
 
 /*hvor alt app ting går så hele siden ikke kan bli skrollet(kun individuelle elementer skal skrolle)*/
@@ -44,6 +101,14 @@
 
 .main-content h2 {
     border-bottom: 2px solid var(--border-colour);
+    justify-content: center;
+    align-items: center;
+    padding: .5rem;
+    margin: 0;
+}
+
+.main-content .conversation-name .call-info {
+    min-height: 100%;
 }
 
 .settings {
@@ -66,10 +131,6 @@
     padding-left: 10px;
 }
 
-.messages h6 {
-    border-top: var(--divider-colour) solid 1px;
-}
-
 .conversation-message-window {
     display: flex;
     flex-direction: column;
@@ -78,30 +139,85 @@
     width: 100%;
 }
 
-.conversation-information-window{
+.conversation-message-window .date {
+    display: flex;
+    flex: 1;
+    color: var(--muted-text-colour);
+    flex-direction: row;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: .8rem;
+    gap: 1rem;
+}
+
+.conversation-message-window .date-separator {
+    border: 1px solid var(--border-colour);
+    height: 1px;
+    flex-grow: 1;
+}
+
+.conversation-information-window {
     display: flex;
     flex-direction: column;
     align-items: center;
     min-width: 200px;
     max-width: 30%;
     border-left: var(--border-colour) solid 2px;
-    padding-top: 10px;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.conversation-information-window .dropdown{
+    display: flex;
+    width: 100%;
 }
 
 .conversation-information-window .member-control {
+    gap: 0.5rem;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding-bottom: 1rem;
+    flex-grow: 1;
+    flex-direction: row;
+    justify-content: left;
+    align-items: flex-start;
+    margin-left: .5rem;
+    margin-right: .5rem;
+    cursor: pointer;
+}
+
+.conversation-information-window .dropdown-menu {
+    color: var(--text-colour);
+    background-color: var(--island-background-colour);
+    border: 1px solid var(--border-colour);
+}
+
+.conversation-information-window .dropdown-item {
+    color: var(--text-colour);
+}
+
+.conversation-information-window .dropdown-item:hover {
+    background-color: var(--hover-colour);
+    margin: 0 .5rem;
+    border-radius: 5px;
+}
+
+.conversation-information-window .dropdown-item:active {
+    background-color: var(--active-background-colour);
+    color: var(--active-text-colour);
 }
 
 .conversation-information-window .member-control button {
     border: 1px solid var(--border-colour);
 }
 
-.conversation-information-window .members {
+.conversation-information-window .roles {
     margin: 0;
+    justify-self: left;
+    align-self: flex-start;
+    padding: 0 0 0 .65rem;
+    font-size: .75rem;
+    color: var(--muted-text-colour);
 }
 
 .cant-read{
@@ -109,12 +225,14 @@
     background-color: color-mix(in srgb, var(--danger-colour) 15%, transparent);
 }
 
-.conversation-name {
+.main-content .conversation-name {
     display: flex;
-    justify-content: center;
-    align-items: center;
+    justify-content: left;
+    align-items: flex-start;
     padding-bottom: 0.5rem;
     margin-bottom: 0;
+    font-size: 1.5rem;
+    padding-left: 1rem;
 }
 
 .message-area {

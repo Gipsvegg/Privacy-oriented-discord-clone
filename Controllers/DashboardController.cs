@@ -92,7 +92,7 @@ public class DashboardController : Controller
         return View(model);
     }
     
-    public IActionResult Conversation(string id)
+    public async Task<IActionResult> Conversation(string id)
     {
         var groups = GetGroups();
         var group = groups.FirstOrDefault(m => m.ConversationId == id);
@@ -101,16 +101,22 @@ public class DashboardController : Controller
         {
             return NotFound();
         }
+
+        var friends = await _friendService.GetFriendsAsync(CurrentUserId);
+        ViewBag.FriendIds = friends.Select(f => f.Id).ToList();
         
         return PartialView(group);
     }
     
-    public IActionResult ConversationMemberList(string id)
+    public async Task<IActionResult> ConversationMemberList(string id)
     {
         var groups = GetGroups();
         var group = groups.FirstOrDefault(m => m.ConversationId == id);
 
         if (group == null) return NotFound();
+        
+        var friends = await _friendService.GetFriendsAsync(CurrentUserId);
+        ViewBag.FriendIds = friends.Select(f => f.Id).ToList();
         
         return PartialView(group);
     }

@@ -159,21 +159,37 @@ function appendMessage(senderId, senderName, text, dateTime){
     
     const allTimestamps = box.querySelectorAll('p[data-date-time]');
     const lastTimestamp = allTimestamps[allTimestamps.length - 1];
+    
+    let lastMessageTime = null;
+    if (lastTimestamp !== undefined){
+        lastMessageTime = new Date(Number(lastTimestamp.dataset.dateTime));
+    }
+    const time = new Date(dateTime)
+    const currentTime = new Date(Date.now());
 
+    if (lastMessageTime === null || lastMessageTime.getDate() !== time.getDate()) {
+        const dates = document.createElement('div');
+        dates.classList.add('date');
+        let datesSeparator = document.createElement('div');
+        datesSeparator.classList.add('date-separator');
+        
+        dates.appendChild(datesSeparator);
+        if(time.toDateString() !== currentTime.toDateString()){
+            dates.append(`${time.toLocaleString([], { day: '2-digit', month: 'short', year: 'numeric' })}`);
+        } else {
+            dates.append("Today");
+        }
+        dates.appendChild(datesSeparator.cloneNode(true));
+
+        box.appendChild(dates);
+    }
+    
     
     if ((!last || last.dataset.senderId !== senderId) || (dateTime > (Number(lastTimestamp.dataset.dateTime) + 300000))) {
         const name = document.createElement('h6');
-        const time = new Date(dateTime)
-        const currentTime = new Date(Date.now());
-        
-        if((time.getDate() !== currentTime.getDate()) && (time.getMonth() === currentTime.getMonth()) && (time.getFullYear() === currentTime.getFullYear())){
-            //\u2022 dot
-            name.textContent = `${senderName} \u2022 ${time.toLocaleString([], { day: '2-digit', month: 'short', year: 'numeric' })}`;
-        } else {
-            name.textContent = `${senderName} \u2022 ${time.toLocaleString([], { hour: '2-digit', minute: '2-digit' })}`;
-        }
+        //\u2022 dot
+        name.textContent = `${senderName} \u2022 ${time.toLocaleString([], { hour: '2-digit', minute: '2-digit' })}`;
         name.dataset.senderId = senderId;
-        
         box.appendChild(name);
     }
 
@@ -402,13 +418,14 @@ document.addEventListener('click', async (e) => {
     await rosterCheck(conversationId);
 });
 
+//conversation information window js
 document.addEventListener('click', async (e) => {
     const button = e.target.closest('.kill-button');
     if (button == null) return;
     e.preventDefault();
     
-    const conversationId = button.dataset.conversationId;
-    const memberId = button.closest('[data-member-id]').dataset.memberId;
+    const conversationId = document.querySelector(`.friend.active`).dataset.conversationId;
+    const memberId = e.target.closest('.dropdown').querySelector('.member-control').dataset.memberId;
     try {
         await removeFromGroup(memberId, conversationId);
         await refreshMemberList(conversationId);
@@ -417,7 +434,6 @@ document.addEventListener('click', async (e) => {
     }
 })
 
-//conversation information window js
 const groupDialog = document.getElementById('group-dialog');
 document.addEventListener('click', e => {
     if(e.target.closest('#open-group-creator')) {
@@ -504,6 +520,20 @@ document.addEventListener('submit', async (e) => {
         submit.disabled = false;
     }
     
+})
+
+function closeMemberMenus() {
+    document.querySelectorAll('.member-control.show').forEach(b =>
+        bootstrap.Dropdown.getInstance(b)?.hide()
+    );
+}
+
+document.addEventListener('click', e => {
+    closeMemberMenus();
+    const button = e.target.closest('.member-control');
+    if (!button) return;
+    e.preventDefault();
+    bootstrap.Dropdown.getOrCreateInstance(button).show();
 })
 //end
 

@@ -6,24 +6,48 @@
     {
         var me = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var isAdmin = Model.Members.Any(m => m.MemberId == me && m.Role == "admin"); 
-        <h6>Members</h6>
+        var currentRole = Model.Members.OrderBy(m => m.Role).FirstOrDefault()?.Role ?? "unknown";
+        var changed = true;
+        <h6 class="member-list">
+            Members
+            <div class="group-control">
+                <button id="open-group-invitor" type="button"><i class="bi bi-person-add"></i></button>
+                <button type="button"><i class="bi bi-three-dots"></i></button>
+            </div>
+        </h6>
         foreach (var member in Model.Members.OrderBy(m => m.Role))
         {
-            if (isAdmin && member.Role != "admin")
+            if (member.Role != currentRole)
             {
-                <div class="member-control" data-member-id="@member.MemberId">
-                    <p class="members">@member.MemberName : @member.Role</p>
-                    <button type="button" class="kill-button" data-conversation-id="@Model.ConversationId">Dissipate</button>
-                </div>
+                changed = true;
+                currentRole = member.Role;
             }
-            else
+            if (changed)
             {
-                <p class="member-control members" data-member-id="@member.MemberId">@member.MemberName : @member.Role</p>
+                <p class="roles">@currentRole - @Model.Members.Count(m => m.Role == currentRole)</p>
+                changed = false;
             }
+            
+            <div class="dropdown">
+                <button class="member-control" data-member-id="@member.MemberId">@member.MemberName</button>
+                <ul class="dropdown-menu">
+                    <li class="dropdown-item send-dm">Message</li>
+                    @if (!ViewBag.FriendIds.Contains(member.MemberId) && me != member.MemberId)
+                    {
+                        <li><button class="dropdown-item add-friend">Add friend</button></li>
+                    }
+                    @if (isAdmin && member.Role != "admin") 
+                    {
+                        <li><button class="dropdown-item promote">Make admin</button></li>
+                        <li><hr class="dropdown-divider"/></li>
+                        <li><button class="dropdown-item text-danger kill-button">Dissipate</button></li>
+                    }
+                </ul>
+            </div>
         }
         <div class="group-button">
-            <button id="open-group-invitor" type="button">add</button>
-            <button id="open-group-leaver" data-conversation-id="@Model.ConversationId" type="button" class="btn-outline-danger">leave</button>
+            <button id="rename-group" type="button"><i class="bi bi-pencil-square"></i> Rename group</button>
+            <button id="open-group-leaver" data-conversation-id="@Model.ConversationId" type="button" class="btn btn-outline-danger"><i class="bi bi-box-arrow-right"></i> Leave group</button>
         </div>
     }
     else
