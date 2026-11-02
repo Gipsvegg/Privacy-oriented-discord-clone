@@ -31,10 +31,13 @@
             <div class="dropdown">
                 <button class="member-control" data-member-id="@member.MemberId">@member.MemberName</button>
                 <ul class="dropdown-menu">
-                    <li class="dropdown-item send-dm">Message</li>
                     @if (!ViewBag.FriendIds.Contains(member.MemberId) && me != member.MemberId)
                     {
                         <li><button class="dropdown-item add-friend">Add friend</button></li>
+                    }
+                    else
+                    {
+                        <li class="dropdown-item send-dm">Message</li>
                     }
                     @if (isAdmin && member.Role != "admin") 
                     {

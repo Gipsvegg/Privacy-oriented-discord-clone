@@ -1,4 +1,8 @@
-﻿.conversation-information-window .group-button {
+﻿.conversation-information-window {
+    flex-shrink: 0;
+}
+
+.conversation-information-window .group-button {
     display: flex;
     flex-direction: column;
     width: 80%;
@@ -97,6 +101,7 @@
     flex-direction: column;
     flex: 1;
     overflow-y: auto;
+    min-width: 0;
 }
 
 .main-content h2 {
@@ -124,11 +129,89 @@
     padding: 0 1rem 1rem 1rem;
 }
 
-.messages p {
-    line-height: 1rem;
-    margin-bottom: 0.4rem;
-    white-space: pre-wrap;
+.messages .message-text {
+    line-height: 1.4rem;
+    margin-bottom: .3rem;
     padding-left: 10px;
+}
+
+/*
+Denne setter dine egne meldinger på høyre siden av skjermen, ser stygt ut
+og det ødelegger codeblocks(vet ikke hvorfor gidder ikke å fikse)
+.messages .self {
+    align-self: flex-end;
+    text-align: left;
+}
+*/
+
+
+.message-text p {
+    margin: 0;
+}
+
+.message-text code {
+    color: var(--focus-colour);
+    background-color: var(--island-background-colour);
+    padding: .3rem .2rem;
+    border-radius: 5px;
+    margin: .5rem 0;
+}
+
+.message-text pre {
+    background-color: var(--island-background-colour);
+    border: 1px solid var(--border-colour);
+    line-height: 1.2rem;
+    overflow-y: auto;
+    overflow-x: auto;
+    border-radius: 5px;
+    padding: 0.5rem;
+    margin: .5rem 0;
+}
+
+.message-text pre code {
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+.message-text blockquote {
+    border-left: 4px solid var(--active-background-colour);
+    border-radius: 5px;
+    background-color: var(--island-background-colour);
+    padding: .5rem .7rem;
+    margin: .5rem 0;
+}
+
+.message-text ul, .message-text ol {
+    padding: 1rem .5rem .5rem 2rem;
+    background-color: var(--island-background-colour);
+    border-radius: 10px;
+}
+
+.message-text li { 
+    margin: 0;
+}
+.message-text ul ul { 
+    list-style-type: circle; 
+}
+.message-text ul ul ul { 
+    list-style-type: square;
+}
+
+.message-text a {
+    color: var(--text-colour);
+    padding: .2rem .2rem;
+}
+
+.message-text a:hover {
+    color: var(--active-background-colour);
+    background-color: var(--island-background-colour);
+    border-radius: 5px;
+}
+
+.messages h6 {
+    color: var(--active-background-colour);
 }
 
 .conversation-message-window {
@@ -137,6 +220,7 @@
     margin-bottom: 10px;
     height: 100%;
     width: 100%;
+    min-width: 0;
 }
 
 .conversation-message-window .date {

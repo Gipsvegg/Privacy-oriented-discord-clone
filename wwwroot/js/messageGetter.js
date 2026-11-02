@@ -154,10 +154,10 @@ function appendMessage(senderId, senderName, text, dateTime){
     if (!box) return;
 
     const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
-    const all = box.querySelectorAll('p[data-sender-id]');
+    const all = box.querySelectorAll('.message-text[data-sender-id]');
     const last = all[all.length - 1];
     
-    const allTimestamps = box.querySelectorAll('p[data-date-time]');
+    const allTimestamps = box.querySelectorAll('.message-text[data-date-time]');
     const lastTimestamp = allTimestamps[allTimestamps.length - 1];
     
     let lastMessageTime = null;
@@ -167,7 +167,7 @@ function appendMessage(senderId, senderName, text, dateTime){
     const time = new Date(dateTime)
     const currentTime = new Date(Date.now());
 
-    if (lastMessageTime === null || lastMessageTime.getDate() !== time.getDate()) {
+    if (lastMessageTime === null || lastMessageTime.toDateString() !== time.toDateString()) {
         const dates = document.createElement('div');
         dates.classList.add('date');
         let datesSeparator = document.createElement('div');
@@ -190,13 +190,20 @@ function appendMessage(senderId, senderName, text, dateTime){
         //\u2022 dot
         name.textContent = `${senderName} \u2022 ${time.toLocaleString([], { hour: '2-digit', minute: '2-digit' })}`;
         name.dataset.senderId = senderId;
+        if(senderId === userId) name.classList.add('self');
+            
         box.appendChild(name);
     }
 
-    const p = document.createElement('p');
+    const p = document.createElement('div');
+    p.classList.add('message-text');
     p.dataset.senderId = senderId;
     p.dataset.dateTime = dateTime;
-    p.textContent = text;
+    if(senderId === userId) p.classList.add('self');
+    
+    if (window.markdown) p.innerHTML = window.markdown.renderMessage(text);
+    else p.textContent = text;
+    
     box.appendChild(p);
 
     if (nearBottom) scrollToBottom();
@@ -432,6 +439,23 @@ document.addEventListener('click', async (e) => {
     }catch(err) {
         console.error(err);
     }
+})
+
+//button for adding friend from dropdown menu in conversation window
+document.addEventListener('click', async (e) => {
+    const button = e.target.closest('.add-friend');
+    if (button == null) return;
+    e.preventDefault();
+    
+    const memberName = e.target.closest('.dropdown').querySelector('.member-control').textContent.trim();
+    const conversationId = document.querySelector(`.friend.active`).dataset.conversationId;
+    
+    const res = await fetch(`/Dashboard/SendFriendRequest?username=${encodeURIComponent(memberName)}`, {
+        method: 'POST',
+        headers: { 'RequestVerificationToken': csrfToken }
+    })
+    if (!res.ok) return;
+    await refreshMemberList(conversationId);
 })
 
 const groupDialog = document.getElementById('group-dialog');

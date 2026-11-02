@@ -58,40 +58,6 @@ public class DashboardController : Controller
         return View();
     }
     
-    /// <summary>
-    /// Shows the homepage with the user's servers in the sidebar. If serverId is given, that
-    /// server's channels are loaded too, with channelId (or the first text channel) selected.
-    /// </summary>
-    public async Task<IActionResult> Homepage_servers(int? serverId = null, int? channelId = null)
-    {
-        var userId = CurrentUserId;
-
-        var servers = await _db.Servers
-            .Where(s => s.OwnerId == userId)
-            .OrderBy(s => s.Position).ThenBy(s => s.Id)
-            .ToListAsync();
-
-        var model = new HomepageViewModel { Servers = servers };
-
-        if (serverId != null)
-        {
-            // Filtering by OwnerId stops users from opening other people's servers via the URL.
-            var current = await _db.Servers
-                .Include(s => s.Categories.OrderBy(c => c.Position))
-                .ThenInclude(c => c.Channels.OrderBy(ch => ch.Position))
-                .FirstOrDefaultAsync(s => s.Id == serverId && s.OwnerId == userId);
-
-            if (current == null) return NotFound();
-
-            var channels = current.Categories.SelectMany(c => c.Channels).ToList();
-            model.CurrentServer = current;
-            model.CurrentChannel = channels.FirstOrDefault(c => c.Id == channelId)
-                                   ?? channels.FirstOrDefault(c => c.Type == ChannelType.Text);
-        }
-
-        return View(model);
-    }
-    
     public async Task<IActionResult> Conversation(string id)
     {
         var groups = GetGroups();
@@ -197,6 +163,8 @@ public class DashboardController : Controller
         return View(model);
     }
 
+    //checks whether the request is from a user or a fetch request
+    private bool IsFetch => Request.Headers.TryGetValue("Sec-Fetch-Mode", out var mode) && mode != "navigate";
     [HttpPost]
     public async Task<IActionResult> SendFriendRequest(string username)
     {
@@ -208,6 +176,7 @@ public class DashboardController : Controller
 
         await _friendService.SendRequestAsync(CurrentUserId, username.Trim());
 
+        if (IsFetch) return Ok();
         // Same message whether the user exists or not, so the form can't be used to look up usernames
         TempData["Message"] = "If that user exists, a friend request was sent.";
         return RedirectToAction(nameof(Friends));
@@ -234,7 +203,7 @@ public class DashboardController : Controller
         return RedirectToAction(nameof(Friends));
     }
     
-    //sender meldingen til serveren og setter den inn i databasen
+    //sender meldingen til serveren og setter den inn i databasen, for å så bli sendt videre til andre i conversation
     [HttpPost]
     public async Task<IActionResult> SendMessage(string conversationId, string text)
     {
