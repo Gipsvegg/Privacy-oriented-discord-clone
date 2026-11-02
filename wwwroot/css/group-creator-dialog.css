@@ -1,8 +1,4 @@
-﻿body {
-    font-family: 'Outfit', sans-serif;
-}
-
-#group-dialog {
+﻿#group-dialog {
     background: var(--background-colour);
     color: var(--text-colour);
     border: var(--border-colour) 2px solid;
@@ -10,8 +6,6 @@
     max-height: 80%;
     min-width: 300px;
 }
-
-
 
 .dialog-buttons {
     display: flex;
