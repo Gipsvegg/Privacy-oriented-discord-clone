@@ -136,7 +136,7 @@ hub.on("Signal", async (id, username, data) => {
 hub.on("UserLeft", id => removePeer(id));
 
 // Someone joined or left a call in one of our chats, update the number next to it
-hub.on("CallChanged", (conversationId, names) => {
+hub.on("CallChanged", async (conversationId, names) => {
     const counts = document.querySelectorAll(`.call-count[data-conversation-id="${conversationId}"]`);
     const isDm = counts[0]?.classList.contains("dm");
 
@@ -155,6 +155,7 @@ hub.on("CallChanged", (conversationId, names) => {
         element.hidden = names.length === 0;
     });
     updateCallUI();
+    await refreshMemberList(conversationId);
 });
 
 function startRinging(conversationId, text) {

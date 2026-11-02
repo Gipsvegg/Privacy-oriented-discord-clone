@@ -8,6 +8,7 @@ using ikt201_project.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using ikt201_project.Models.ViewModels;
 using ikt201_project.Services;
+using Microsoft.CodeAnalysis.Elfie.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -73,6 +74,26 @@ public class DashboardController : Controller
         
         return PartialView(group);
     }
+
+    public record NameChange(string ConversationId, string NewName);
+    [HttpPost]
+    public async Task<IActionResult> ConversationNameChange([FromBody] NameChange nameChange)
+    {
+        if (string.IsNullOrWhiteSpace(nameChange.ConversationId) || string.IsNullOrWhiteSpace(nameChange.NewName) || nameChange.NewName.Length > 30) return  BadRequest("invalid package");
+
+        var members = await _db.ConversationMembers.Where(m => m.ConversationId == nameChange.ConversationId).ToListAsync();
+        var isMember = members.Any(m => m.MemberId == CurrentUserId);
+        if(!isMember) return StatusCode(403);
+
+        var nameUpdate = await _db.Conversations
+            .Where(m => m.ConversationId == nameChange.ConversationId)
+            .ExecuteUpdateAsync(m => m.SetProperty(name => name.ConversationName, nameChange.NewName));
+        
+        if(nameUpdate == 0) return NotFound();
+
+        await _hub.Clients.Users([.. members.Select(m => m.MemberId)]).SendAsync("ConversationNameChange", nameChange.ConversationId, nameChange.NewName);
+        return Ok();
+    }
     
     public async Task<IActionResult> ConversationMemberList(string id)
     {
@@ -85,6 +106,33 @@ public class DashboardController : Controller
         ViewBag.FriendIds = friends.Select(f => f.Id).ToList();
         
         return PartialView(group);
+    }
+
+    public record PromotedMember(string MemberId, string ConversationId);
+    [HttpPost]
+    public async Task<IActionResult> ConversationPromotion([FromBody] PromotedMember memberPromotion)
+    {
+        if(string.IsNullOrWhiteSpace(memberPromotion.ConversationId) || string.IsNullOrWhiteSpace(memberPromotion.MemberId)) return  BadRequest("invalid package");
+        
+        var conversation = await _db.ConversationMembers
+            .Where(m => m.ConversationId == memberPromotion.ConversationId)
+            .ToListAsync();
+        
+        var isAdmin = conversation.Any(m => m.MemberId == CurrentUserId && m.Role == "admin");
+        if (!isAdmin) return StatusCode(403);
+        var isMember = conversation.Any(m => m.MemberId == memberPromotion.MemberId && m.Role != "admin");
+        if (!isMember) return NotFound();
+
+        var updated = await _db.ConversationMembers
+            .Where(m => m.ConversationId == memberPromotion.ConversationId && m.MemberId == memberPromotion.MemberId)
+            .ExecuteUpdateAsync(m => m.SetProperty(role => role.Role, "admin"));
+
+        if (updated == 0) return NotFound();
+
+        var members = conversation.Select(m => m.MemberId).ToList();
+        await _hub.Clients.Users(members).SendAsync("MembersChanged", memberPromotion.ConversationId);
+        
+        return Ok();
     }
 
     public IActionResult FriendsList()

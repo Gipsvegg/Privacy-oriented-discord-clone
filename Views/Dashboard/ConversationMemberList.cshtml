@@ -1,6 +1,10 @@
 ﻿@using System.Security.Claims
 @model Group
 
+@{
+    var inVoiceCall = ikt201_project.Hubs.VoiceHub.NamesInCall(Model.ConversationId);
+}
+
 <div class="conversation-information-window">
     @if (!Model.IsDirect)
     {
@@ -29,7 +33,14 @@
             }
             
             <div class="dropdown">
-                <button class="member-control" data-member-id="@member.MemberId">@member.MemberName</button>
+                <button class="member-control" data-member-id="@member.MemberId">
+                    @member.MemberName
+                    @if (inVoiceCall.Contains(member.MemberName))
+                    {
+                        <i class="bi bi-headset call-status"></i>
+                    }
+                </button>
+                
                 <ul class="dropdown-menu">
                     @if (!ViewBag.FriendIds.Contains(member.MemberId) && me != member.MemberId)
                     {
@@ -39,7 +50,7 @@
                     {
                         <li class="dropdown-item send-dm">Message</li>
                     }
-                    @if (isAdmin && member.Role != "admin") 
+                    @if (isAdmin && member.Role != "admin")
                     {
                         <li><button class="dropdown-item promote">Make admin</button></li>
                         <li><hr class="dropdown-divider"/></li>
@@ -49,7 +60,7 @@
             </div>
         }
         <div class="group-button">
-            <button id="rename-group" type="button"><i class="bi bi-pencil-square"></i> Rename group</button>
+            <button id="open-group-renamer" type="button"><i class="bi bi-pencil-square"></i> Rename group</button>
             <button id="open-group-leaver" data-conversation-id="@Model.ConversationId" type="button" class="btn btn-outline-danger"><i class="bi bi-box-arrow-right"></i> Leave group</button>
         </div>
     }
@@ -68,3 +79,14 @@
     }
 </div>
 @await Component.InvokeAsync("FriendsList", new {invoker = "addToGroup", conversationId = Model.ConversationId})
+
+<dialog id="rename-group-dialog" class="group-dialog">
+    <form>
+        <h6 class="text-center">Rename group</h6>
+        <input id="group-name-input" name="groupName" class="dialog-input" placeholder="@Model.ConversationName" maxlength="30" autocomplete="off"/>
+        <div class="dialog-buttons">
+            <button type="submit" id="rename-group">Rename</button>
+            <button type="button" id="group-cancel">Cancel</button>
+        </div>
+    </form>
+</dialog>

@@ -2,24 +2,26 @@
 @model Group
 
 <div class="conversation-message-window">
-    <h2 class="conversation-name" class="text-center">
-        @{
-            if (Model.IsDirect)
-            {
-                var me = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var dmName = Model.Members.FirstOrDefault(m => m.MemberId != me)?.MemberName;
-                @dmName
+    <div class="conversation-header">
+        <h2 class="conversation-name" class="text-center">
+            @{
+                if (Model.IsDirect)
+                {
+                    var me = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    var dmName = Model.Members.FirstOrDefault(m => m.MemberId != me)?.MemberName;
+                    @dmName
+                }
+                else
+                {
+                    @Model.ConversationName
+                }
             }
-            else
-            {
-                @Model.ConversationName
-            }
-        }
+        </h2>
         <span class="call-info">
             <partial name="_CallCount" model="(Model.ConversationId, Model.IsDirect)"/>
             <button id="call-button" type="button" class="btn btn-sm btn-outline-success" data-conversation-id="@Model.ConversationId"><i class="bi bi-telephone-fill"></i> Call</button>
         </span>
-    </h2>
+    </div>
     <div class="messages"></div>
 
     <form id="send-form" class="input-field" data-conversation-id="@Model.ConversationId">

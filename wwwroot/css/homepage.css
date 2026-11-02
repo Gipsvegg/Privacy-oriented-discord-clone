@@ -71,7 +71,11 @@
 .conversation-information-window .member-list .group-control > * {
     font-size: 1.3rem;
     flex-grow: 1;
-    
+}
+
+.conversation-information-window .call-status {
+    color: var(--active-background-colour);
+    margin-left: auto;
 }
 
 /*hvor alt app ting går så hele siden ikke kan bli skrollet(kun individuelle elementer skal skrolle)*/
@@ -104,16 +108,29 @@
     min-width: 0;
 }
 
-.main-content h2 {
+.main-content .conversation-header {
+    display: flex;
+    flex-direction: row;
     border-bottom: 2px solid var(--border-colour);
-    justify-content: center;
-    align-items: center;
     padding: .5rem;
     margin: 0;
+    align-items: center;
+    justify-content: center;
+    height: 4rem;
+    width: 100%;
 }
 
-.main-content .conversation-name .call-info {
-    min-height: 100%;
+.conversation-header .call-info {
+    align-self: center;
+    justify-self: center;
+    margin-left: auto;
+    
+}
+
+.conversation-header .conversation-name {
+    margin: 0;
+    padding: 0!important;
+    text-align: center;
 }
 
 .settings {
