@@ -48,7 +48,14 @@
                     }
                     else
                     {
-                        <li class="dropdown-item send-dm">Message</li>
+                        if (member.MemberId != me)
+                        {
+                            <li class="dropdown-item send-dm">Message</li>
+                        }
+                        else
+                        {
+                            <li class="dropdown-item">Fake button</li>
+                        }
                     }
                     @if (isAdmin && member.Role != "admin")
                     {

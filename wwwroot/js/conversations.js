@@ -410,7 +410,14 @@ document.addEventListener('click', async (e) => {
         location.href = '/Dashboard/Homepage';
         return;
     }
-    document.querySelectorAll('.sidebar a.active').forEach(a => a.classList.remove('active'));
+    document.querySelectorAll('.sidebar a.active').forEach(a => {
+        a.classList.remove('active')
+        const icon = a.querySelector('i');
+        if(icon){
+            icon.classList.remove('bi-people-fill');
+            icon.classList.add('bi-people');    
+        }
+    });
     link.classList.add('active');
     clearUnread(link.dataset.conversationId);
     sessionStorage.setItem('openConversation', link.dataset.conversationId)

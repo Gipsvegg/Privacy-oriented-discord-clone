@@ -1,12 +1,17 @@
 ﻿// @ts-check
 //click handler for manage friends
 document.addEventListener('click', async (e) => {
-    const link = e.target.closest('.manage-friends');
+    const link = e.target.closest('.sidebar a.manage-friends');
     if(!link) return;
     e.preventDefault();
 
-    document.querySelectorAll('.sidebar a.active').forEach((element) => { element.classList.remove('active') });
+    document.querySelectorAll('.sidebar a.active').forEach((element) => { 
+        element.classList.remove('active');
+    });
     link.classList.add('active');
+    const icon = link.querySelector('i');
+    icon.classList.remove('bi-people');
+    icon.classList.add('bi-people-fill');
 
     const res = await fetch(link.href);
     if (!res.ok) return;
