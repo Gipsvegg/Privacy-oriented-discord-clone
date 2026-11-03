@@ -8,7 +8,6 @@ using ikt201_project.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using ikt201_project.Models.ViewModels;
 using ikt201_project.Services;
-using Microsoft.CodeAnalysis.Elfie.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -135,16 +134,23 @@ public class DashboardController : Controller
         return Ok();
     }
 
+    [HttpGet]
     public IActionResult FriendsList()
     {
         return ViewComponent("FriendsList");
     }
 
+    [HttpGet]
     public IActionResult GroupsList()
     {
         return ViewComponent("GroupsList");
     }
 
+    [HttpGet]
+    public IActionResult ManageFriends()
+    {
+        return ViewComponent("FriendsList", new { invoker = "ManageFriends" });
+    }
 
     public record SmallMessage(int Id, string ConversationId, string SenderId, string? SenderName, string ReceiverId, string Text, DateTime Timestamp);
     [HttpGet]
@@ -208,47 +214,59 @@ public class DashboardController : Controller
             Incoming = await _friendService.GetIncomingAsync(CurrentUserId),
             Outgoing = await _friendService.GetOutgoingAsync(CurrentUserId)
         };
-        return View(model);
+        return PartialView(model);
     }
 
     //checks whether the request is from a user or a fetch request
-    private bool IsFetch => Request.Headers.TryGetValue("Sec-Fetch-Mode", out var mode) && mode != "navigate";
+    //private bool IsFetch => Request.Headers.TryGetValue("Sec-Fetch-Mode", out var mode) && mode != "navigate";
     [HttpPost]
     public async Task<IActionResult> SendFriendRequest(string username)
     {
         if (string.IsNullOrWhiteSpace(username))
         {
-            TempData["Message"] = "Please enter a username.";
-            return RedirectToAction(nameof(Friends));
+            //TempData["Message"] = "Please enter a username.";
+            return BadRequest("Username is required");
         }
 
         await _friendService.SendRequestAsync(CurrentUserId, username.Trim());
 
-        if (IsFetch) return Ok();
+        //if (IsFetch) return Ok();
         // Same message whether the user exists or not, so the form can't be used to look up usernames
-        TempData["Message"] = "If that user exists, a friend request was sent.";
-        return RedirectToAction(nameof(Friends));
+        //TempData["Message"] = "If that user exists, a friend request was sent.";
+        var person = await _db.Users
+            .Where(m => m.UserName == username)
+            .Select(m => m.Id)
+            .ToListAsync();
+        //if(person.Count != 1) return NotFound();
+        person.Add(CurrentUserId);
+        await _hub.Clients.Users(person).SendAsync("FriendListUpdate");
+        return Ok();
     }
 
     [HttpPost]
     public async Task<IActionResult> AcceptFriend(int id)
     {
-        await _friendService.AcceptRequestAsync(CurrentUserId, id);
-        return RedirectToAction(nameof(Friends));
+        var requesterId = await _friendService.AcceptRequestAsync(CurrentUserId, id);
+        await _hub.Clients.Users([CurrentUserId, requesterId]).SendAsync("FriendListUpdate");
+        return Ok();
     }
 
     [HttpPost]
     public async Task<IActionResult> DeclineFriend(int id)
     {
-        await _friendService.DeclineRequestAsync(CurrentUserId, id);
-        return RedirectToAction(nameof(Friends));
+        var addressee = await _friendService.DeclineRequestAsync(CurrentUserId, id);
+        await _hub.Clients.Users([CurrentUserId, addressee]).SendAsync("FriendListUpdate");
+        
+        return Ok();
     }
 
     [HttpPost]
     public async Task<IActionResult> RemoveFriend(string friendId)
     {
         await _friendService.RemoveFriendAsync(CurrentUserId, friendId);
-        return RedirectToAction(nameof(Friends));
+        
+        await _hub.Clients.Users([CurrentUserId, friendId]).SendAsync("FriendListUpdate");
+        return Ok();
     }
     
     //sender meldingen til serveren og setter den inn i databasen, for å så bli sendt videre til andre i conversation

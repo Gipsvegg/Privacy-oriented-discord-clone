@@ -1,4 +1,5 @@
 ﻿using ikt201_project.Data;
+using ikt201_project.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using ikt201_project.Services;
 using Microsoft.EntityFrameworkCore;
@@ -34,6 +35,17 @@ public class FriendsListViewComponent : ViewComponent
             .OrderBy(f => f.Name)
             .ToList();
 
+        if (invoker == "ManageFriends")
+        {
+            var model = new FriendsViewModel
+            {
+                Friends = await _friendService.GetFriendsAsync(userId),
+                Incoming = await _friendService.GetIncomingAsync(userId),
+                Outgoing = await _friendService.GetOutgoingAsync(userId)
+            };
+            return View("ManageFriends", model);
+        }
+        
         if (invoker == "groupCreator")
         {
             return View("GroupDialog", links);

@@ -46,32 +46,33 @@ public class FriendService : IFriendService
         await _db.SaveChangesAsync();
     }
 
-    public async Task<bool> AcceptRequestAsync(string userId, int requestId)
+    public async Task<string> AcceptRequestAsync(string userId, int requestId)
     {
         var request = await _db.Friendships.FirstOrDefaultAsync(f =>
             f.Id == requestId &&
             f.AddresseeId == userId &&              // only the recipient can accept
             f.Status == FriendshipStatus.Pending);
 
-        if (request == null) return false;
+        if (request == null) return "";
 
         request.Status = FriendshipStatus.Accepted;
         await _db.SaveChangesAsync();
-        return true;
+        
+        return request.RequesterId;
     }
 
-    public async Task<bool> DeclineRequestAsync(string userId, int requestId)
+    public async Task<string> DeclineRequestAsync(string userId, int requestId)
     {
         var request = await _db.Friendships.FirstOrDefaultAsync(f =>
             f.Id == requestId &&
             f.Status == FriendshipStatus.Pending &&
             (f.AddresseeId == userId || f.RequesterId == userId)); // decline or cancel
 
-        if (request == null) return false;
+        if (request == null) return "";
 
         _db.Friendships.Remove(request);
         await _db.SaveChangesAsync();
-        return true;
+        return userId != request.AddresseeId ? request.AddresseeId : request.RequesterId;
     }
 
     public async Task RemoveFriendAsync(string userId, string friendId)
