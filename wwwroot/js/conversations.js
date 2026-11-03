@@ -188,8 +188,11 @@ function appendMessage(senderId, senderName, text, dateTime){
     if ((!last || last.dataset.senderId !== senderId) || (dateTime > (Number(lastTimestamp.dataset.dateTime) + 300000))) {
         const name = document.createElement('h6');
         //\u2022 dot
-        name.textContent = `${senderName} \u2022 ${time.toLocaleString([], { hour: '2-digit', minute: '2-digit' })}`;
+        name.textContent = `${senderName}`;
         name.dataset.senderId = senderId;
+        const timeSpan = document.createElement('span');
+        timeSpan.textContent = ` \u2022 ${time.toLocaleString([], { hour: '2-digit', minute: '2-digit' })}`;
+        name.appendChild(timeSpan);
         if(senderId === userId) name.classList.add('self');
             
         box.appendChild(name);
@@ -623,6 +626,8 @@ document.addEventListener('click', e => {
     e.preventDefault();
     bootstrap.Dropdown.getOrCreateInstance(button).show();
 })
+
+
 //end
 
 

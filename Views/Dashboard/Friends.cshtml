@@ -10,7 +10,7 @@
            {
                <div class="alert alert-info">@message</div>
            }
-        <form asp-controller="Dashboard" asp-action="SendFriendRequest" method="post" class="mb-4">
+        <form asp-controller="Dashboard" asp-action="SendFriendRequest" method="post" id="friend-form" class="mb-4">
             <div class="input-group">
                 <input type="text" name="username"  placeholder="Add friend by username" required />
                 <button id="add-friend-button" type="submit" >Send request</button>

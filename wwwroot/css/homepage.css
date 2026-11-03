@@ -68,9 +68,19 @@
     width: 40%;
 }
 
+.conversation-information-window .member-list .group-control #group-control {
+    margin: 0!important;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+}
+
 .conversation-information-window .member-list .group-control > * {
-    font-size: 1.3rem;
+    font-size: 1.4rem;
     flex-grow: 1;
+    height: 100%;
+    width: 100%;
+    
 }
 
 .conversation-information-window .call-status {
@@ -231,6 +241,10 @@ og det ødelegger codeblocks(vet ikke hvorfor gidder ikke å fikse)
     color: var(--active-background-colour);
 }
 
+.messages span {
+    color: var(--muted-text-colour);
+}
+
 .conversation-message-window {
     display: flex;
     flex-direction: column;
@@ -254,7 +268,7 @@ og det ødelegger codeblocks(vet ikke hvorfor gidder ikke å fikse)
 }
 
 .conversation-message-window .date-separator {
-    border: 1px solid var(--border-colour);
+    border: 1px solid var(--divider-colour);
     height: 1px;
     flex-grow: 1;
 }

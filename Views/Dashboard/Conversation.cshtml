@@ -1,14 +1,17 @@
 ﻿@using System.Security.Claims
 @model Group
 
+@{
+    var me = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var dmName = Model.Members.FirstOrDefault(m => m.MemberId != me)?.MemberName;
+}
+
 <div class="conversation-message-window">
     <div class="conversation-header">
         <h2 class="conversation-name" class="text-center">
             @{
                 if (Model.IsDirect)
                 {
-                    var me = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                    var dmName = Model.Members.FirstOrDefault(m => m.MemberId != me)?.MemberName;
                     @dmName
                 }
                 else
@@ -28,7 +31,15 @@
         <button id="create-group-btn" type="button" class="icon-btn">
             <i class="bi bi-plus"></i>
         </button>
-        <textarea id="message-input" name="text" rows="1" autocomplete="off"></textarea>
+        @if (Model.IsDirect)
+        {
+            <textarea id="message-input" name="text" rows="1" autocomplete="off" placeholder="Message @dmName"></textarea>
+        }
+        else
+        {
+            <textarea id="message-input" name="text" rows="1" autocomplete="off" placeholder="Message @Model.ConversationName"></textarea>
+        }
+        
     </form>
 </div>
 <div id="member-panel">

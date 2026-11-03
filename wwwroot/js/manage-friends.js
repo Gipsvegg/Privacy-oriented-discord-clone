@@ -19,14 +19,14 @@ document.addEventListener('click', async (e) => {
 })
 
 document.addEventListener('submit', async (e) => {
-    const form = e.target.closest('form');
-    if(!form) return;
+    const form = e.target;
+    if(form.id !== 'friend-form') return;
     
     e.preventDefault();
     const formData = new FormData(form);
     //const submit = form.querySelector('button[type="submit"]');
     
-    const res = await fetch(form.action, {
+    await fetch(form.action, {
         method: 'POST',
         body: formData,
     });

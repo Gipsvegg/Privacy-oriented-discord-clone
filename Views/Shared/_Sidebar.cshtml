@@ -15,16 +15,18 @@
         <a class="manage-friends" asp-controller="Dashboard" asp-action="Friends"><i class="bi bi-people"></i>  Manage friends</a>
     }
     <div class="sidebar-section">
-        <h6 class="text-center" type="button">
-            <button id="open-group-creator" type="button" class="group-button">
-                <h6>Friends & Groups</h6>
-                <i class="bi bi-plus"></i>
-            </button>
-        </h6>
+        <h6 class="text-center">Friends</h6>
         <div id="friends-list">
             @await Component.InvokeAsync("FriendsList")
         </div>
-
+    </div>
+    <div class="sidebar-section">
+        <h6 class="text-center" type="button">
+            <button id="open-group-creator" type="button" class="group-button">
+                <h6>Groups</h6>
+                <i class="bi bi-plus"></i>
+            </button>
+        </h6>
         <div id="groups-list">
             @await Component.InvokeAsync("GroupsList")
         </div>

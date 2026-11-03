@@ -48,7 +48,7 @@ function applySpeaker(audio, volume = 1) {
 }
 
 function chatName(conversationId) {
-    return document.querySelector(`.sidebar a.friend[data-conversation-id="${conversationId}"]`)?.firstChild.textContent.trim();
+    return document.querySelector(`.sidebar a.friend[data-conversation-id="${conversationId}"] span.friend-text`)?.textContent.trim() ?? "Unknown conversation";
 }
 
 function createPeer(id, username) {

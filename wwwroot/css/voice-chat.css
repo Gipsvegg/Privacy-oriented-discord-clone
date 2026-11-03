@@ -8,6 +8,7 @@
 .voice-section > * {
     grid-area: 1/1;
     align-self: end;
+    min-width: 0;
 }
 
 .voice-section p {
