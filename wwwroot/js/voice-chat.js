@@ -40,13 +40,6 @@ function updatePeopleCount() {
     peopleCount.textContent = peopleList.children.length;
 }
 
-// use speakers and volume from audio settings
-function applySpeaker(audio, volume = 1) {
-    audio.volume = volume * Number(localStorage.getItem("output-volume") ?? 100) / 100;
-    const speaker = localStorage.getItem("audio-output");
-    if (speaker && audio.setSinkId) audio.setSinkId(speaker).catch(console.error);
-}
-
 function chatName(conversationId) {
     return document.querySelector(`.sidebar a.friend[data-conversation-id="${conversationId}"] span.friend-text`)?.textContent.trim() ?? "Unknown conversation";
 }
@@ -115,6 +108,7 @@ hub.on("UserJoined", async (id, username) => {
     const peer = createPeer(id, username);
     await peer.setLocalDescription(await peer.createOffer());
     await hub.invoke("SendSignal", id, JSON.stringify({ description: peer.localDescription }));
+    playSound("callJoined")
 });
 
 // A message from someone else. an offer, an answer, or an ICE candidate
@@ -133,7 +127,10 @@ hub.on("Signal", async (id, username, data) => {
     }
 });
 
-hub.on("UserLeft", id => removePeer(id));
+hub.on("UserLeft", id => {
+    removePeer(id)
+    playSound("callLeft")
+});
 
 // Someone joined or left a call in one of our chats, update the number next to it
 hub.on("CallChanged", async (conversationId, names) => {
@@ -156,6 +153,7 @@ hub.on("CallChanged", async (conversationId, names) => {
     });
     updateCallUI();
     await refreshMemberList(conversationId);
+    
 });
 
 function startRinging(conversationId, text) {
@@ -244,6 +242,7 @@ async function joinCall(conversationId) {
         if (error.message.includes("HubException: ")) showStatus(error.message.split("HubException: ")[1], true);
         else showStatus("Could not join the call, try again", true);
     }
+    playSound("callJoined")
 }
 
 async function leaveCall() {
@@ -285,8 +284,22 @@ document.getElementById("incoming-join").addEventListener("click", async () => {
 });
 
 document.getElementById("incoming-ignore").addEventListener("click", stopRinging);
-muteButton.addEventListener("click", () => setMuted(!muted));
-deafenButton.addEventListener("click", () => setDeafened(!deafened));
+muteButton.addEventListener("click", () => {
+    setMuted(!muted)
+    if(muted === true){
+        playSound("mute")
+    } else {
+        playSound("unmute")
+    }
+});
+deafenButton.addEventListener("click", () => {
+    setDeafened(!deafened)
+    if(deafened === true){
+        playSound("deafen")
+    } else {
+        playSound("undeafen")
+    }
+});
 leaveButton.addEventListener("click", leaveCall);
 
 // leave call if kicked from group

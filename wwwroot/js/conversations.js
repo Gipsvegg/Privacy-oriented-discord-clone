@@ -16,6 +16,7 @@ async function getWelcomes(){
         try {
             await e2ee.inviteAccept(userId, welcome.conversationId, welcome.data); 
             await deleteWelcome(welcome.id)
+            playSound("joinedGroup")
         }catch(err) {
             if(err.message === "Invite already accepted"){
                 try {
@@ -124,9 +125,13 @@ async function fetchPendingMessages(){
         
         const form = document.getElementById('send-form');
         if (!form || form.dataset.conversationId !== message.conversationId) {
+            playSound("receivedMessage");
             addUnread(message.conversationId)
             continue
         }  // not the open chat
+        else {
+            playSound("sentMessage");
+        }
         appendMessage(message.senderId, message.senderName ?? message.senderId, decryptedText, message.timestamp);
     }
 }
@@ -438,6 +443,14 @@ document.addEventListener('click', async (e) => {
     await rosterCheck(conversationId);
 });
 
+/*Godforsaken global button press */
+addEventListener('click', async (e) => {
+    const button = e.target.closest('button');
+    const link = e.target.closest('a');
+    if(!button && !link) return;
+    playSound("buttonPress");
+})
+
 //conversation information window js
 //button that kicks user from the group(only available to admins)
 document.addEventListener('click', async (e) => {
@@ -579,6 +592,7 @@ document.getElementById('group-form')?.addEventListener('submit', async (e) => {
     } finally {
         e.target.closest('dialog')?.close();
         submit.disabled = false;
+        playSound("joinedGroup")
     }
 });
 
@@ -659,6 +673,7 @@ document.addEventListener('submit', async (e) => {
     input.value = '';
     input.style.height = '';
     input.focus();
+    playSound("sentMessage");
 });
 
 document.addEventListener('input', (e) => {

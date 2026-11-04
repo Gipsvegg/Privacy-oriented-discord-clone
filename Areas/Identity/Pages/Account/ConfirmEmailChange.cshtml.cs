@@ -53,12 +53,12 @@ public class ConfirmEmailChangeModel : PageModel
 
         // In our UI email and user name are one and the same, so when we update the email
         // we need to update the user name.
-        var setUserNameResult = await _userManager.SetUserNameAsync(user, email);
+        /*var setUserNameResult = await _userManager.SetUserNameAsync(user, email);
         if (!setUserNameResult.Succeeded)
         {
             StatusMessage = "Error changing user name.";
             return Page();
-        }
+        } THIS IS DEFAULT; WE HAVE DIFFERENT USERNAME AND EMAIL WE DO NOT WANT THIS      */
 
         await _signInManager.RefreshSignInAsync(user);
         StatusMessage = "Thank you for confirming your email change.";

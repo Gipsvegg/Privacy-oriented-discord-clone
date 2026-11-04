@@ -13,11 +13,11 @@ else
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 <span>@req.Requester.UserName</span>
                 <span class="d-flex gap-2">
-                    <form asp-controller="Dashboard" asp-action="AcceptFriend" method="post">
+                    <form asp-controller="Dashboard" asp-action="AcceptFriend" method="post" class="friend-form accept-friend">
                         <input type="hidden" name="id" value="@req.Id" />
                         <button type="submit" class="btn btn-sm btn-outline-success">Accept</button>
                     </form>
-                    <form asp-controller="Dashboard" asp-action="DeclineFriend" method="post">
+                    <form asp-controller="Dashboard" asp-action="DeclineFriend" method="post" class="friend-form reject-friend">
                         <input type="hidden" name="id" value="@req.Id" />
                         <button type="submit" class="btn btn-sm btn-outline-danger">Decline</button>
                     </form>
@@ -38,7 +38,7 @@ else
         {
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 <span>@req.Addressee.UserName</span>
-                <form asp-controller="Dashboard" asp-action="DeclineFriend" method="post">
+                <form asp-controller="Dashboard" asp-action="DeclineFriend" method="post" class="friend-form reject-friend">
                     <input type="hidden" name="id" value="@req.Id" />
                     <button type="submit" class="btn btn-sm btn-outline-secondary">Cancel</button>
                 </form>
@@ -58,7 +58,7 @@ else
          {
              <li class="list-group-item d-flex justify-content-between align-items-center">
                  <span>@friend.UserName</span>
-                 <form asp-controller="Dashboard" asp-action="RemoveFriend" method="post">
+                 <form asp-controller="Dashboard" asp-action="RemoveFriend" method="post" class="friend-form abandon-friend">
                      <input type="hidden" name="friendId" value="@friend.Id" />
                      <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
                  </form>

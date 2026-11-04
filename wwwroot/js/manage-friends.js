@@ -20,16 +20,22 @@ document.addEventListener('click', async (e) => {
 
 document.addEventListener('submit', async (e) => {
     const form = e.target;
-    if(form.id !== 'friend-form') return;
+    if(!form.classList.contains("friend-form")) return;
     
     e.preventDefault();
     const formData = new FormData(form);
+    form.querySelector('input').value = "";
     //const submit = form.querySelector('button[type="submit"]');
     
-    await fetch(form.action, {
+    const res = await fetch(form.action, {
         method: 'POST',
         body: formData,
     });
+    if (!res.ok) return;
+    if(form.classList.contains("request-friend")) playSound("incomingFriend");
+    if(form.classList.contains("accept-friend")) playSound("acceptedFriend");
+    if(form.classList.contains("reject-friend")) playSound("rejectedFriend");
+    if(form.classList.contains("abandon-friend")) playSound("abandonedFriend");
 })
 
 async function refreshFriends(){
