@@ -10,7 +10,21 @@ body {
     font-family: 'Outfit', sans-serif;
 }
 
+::selection {
+    color: var(--active-text-colour);
+    background-color: var(--active-background-colour);
+    border-radius: 5px;
+}
 
+.active::selection {
+    color: var(--active-background-colour);
+    background-color: var(--active-text-colour);
+}
+
+.sidebar a.friend.active .friend-text::selection {
+    color: var(--active-background-colour);
+    background-color: var(--active-text-colour);
+}
 
 button {
     background-color: var(--background-colour);
