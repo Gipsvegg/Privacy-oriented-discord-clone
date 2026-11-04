@@ -33,11 +33,11 @@
         </button>
         @if (Model.IsDirect)
         {
-            <textarea id="message-input" name="text" rows="1" autocomplete="off" placeholder="Message @dmName"></textarea>
+            <textarea id="message-input" name="text" rows="1" autocomplete="off" maxlength="100000" placeholder="Message @dmName"></textarea>
         }
         else
         {
-            <textarea id="message-input" name="text" rows="1" autocomplete="off" placeholder="Message @Model.ConversationName"></textarea>
+            <textarea id="message-input" name="text" rows="1" autocomplete="off" maxlength="100000" placeholder="Message @Model.ConversationName"></textarea>
         }
         
     </form>

@@ -22,11 +22,12 @@ public class DashboardController : Controller
     
     //databasen
     private readonly ApplicationDbContext _db;
-    
     //lar meldinger bli sett med engang isteden for å måtte reloade siden
     private readonly IHubContext<ChatHub> _hub;
-    
     private readonly IFriendService _friendService;
+    
+    private const long RequestMaxSize = 10_000_000; //10MB
+    private const int MaxNameLength = 30;
     
     public DashboardController(ApplicationDbContext db,  IHubContext<ChatHub> hub, IFriendService friendService) //setter opp database, hub og friendservice
     {
@@ -60,6 +61,8 @@ public class DashboardController : Controller
     
     public async Task<IActionResult> Conversation(string id)
     {
+        if(!Guid.TryParse(id, out _)) return  BadRequest();
+        
         var groups = GetGroups();
         var group = groups.FirstOrDefault(m => m.ConversationId == id);
 
@@ -73,12 +76,13 @@ public class DashboardController : Controller
         
         return PartialView(group);
     }
-
+    
     public record NameChange(string ConversationId, string NewName);
     [HttpPost]
     public async Task<IActionResult> ConversationNameChange([FromBody] NameChange nameChange)
     {
-        if (string.IsNullOrWhiteSpace(nameChange.ConversationId) || string.IsNullOrWhiteSpace(nameChange.NewName) || nameChange.NewName.Length > 30) return  BadRequest("invalid package");
+        if (string.IsNullOrWhiteSpace(nameChange.ConversationId) || string.IsNullOrWhiteSpace(nameChange.NewName) || nameChange.NewName.Length > MaxNameLength) return  BadRequest("invalid package");
+        if(!Guid.TryParse(nameChange.ConversationId, out _)) return  BadRequest("invalid conversation id");
 
         var members = await _db.ConversationMembers.Where(m => m.ConversationId == nameChange.ConversationId).ToListAsync();
         var isMember = members.Any(m => m.MemberId == CurrentUserId);
@@ -96,6 +100,8 @@ public class DashboardController : Controller
     
     public async Task<IActionResult> ConversationMemberList(string id)
     {
+        if(!Guid.TryParse(id, out _)) return  BadRequest("invalid conversation id");
+        
         var groups = GetGroups();
         var group = groups.FirstOrDefault(m => m.ConversationId == id);
 
@@ -112,6 +118,7 @@ public class DashboardController : Controller
     public async Task<IActionResult> ConversationPromotion([FromBody] PromotedMember memberPromotion)
     {
         if(string.IsNullOrWhiteSpace(memberPromotion.ConversationId) || string.IsNullOrWhiteSpace(memberPromotion.MemberId)) return  BadRequest("invalid package");
+        if(!Guid.TryParse(memberPromotion.ConversationId, out _) || !Guid.TryParse(memberPromotion.MemberId, out _)) return  BadRequest();
         
         var conversation = await _db.ConversationMembers
             .Where(m => m.ConversationId == memberPromotion.ConversationId)
@@ -152,6 +159,12 @@ public class DashboardController : Controller
         return ViewComponent("FriendsList", new { invoker = "ManageFriends" });
     }
 
+    [HttpGet]
+    public IActionResult CreateGroup()
+    {
+        return ViewComponent("FriendsList", new { invoker = "groupCreator" });
+    }
+
     public record SmallMessage(int Id, string ConversationId, string SenderId, string? SenderName, string ReceiverId, string Text, DateTime Timestamp);
     [HttpGet]
     public IActionResult Mailbox()
@@ -179,7 +192,7 @@ public class DashboardController : Controller
 
     [HttpDelete]
     public IActionResult DeleteMessageFromDb(int id)
-    {
+    { 
         _db.Messages.RemoveRange(_db.Messages.Where(m => m.Id == id && m.ReceiverId == CurrentUserId));
         _db.SaveChanges();
         
@@ -256,13 +269,13 @@ public class DashboardController : Controller
     {
         var addressee = await _friendService.DeclineRequestAsync(CurrentUserId, id);
         await _hub.Clients.Users([CurrentUserId, addressee]).SendAsync("FriendListUpdate");
-        
         return Ok();
     }
 
     [HttpPost]
     public async Task<IActionResult> RemoveFriend(string friendId)
     {
+        if(!Guid.TryParse(friendId, out _)) return  BadRequest("invalid id");
         await _friendService.RemoveFriendAsync(CurrentUserId, friendId);
         
         await _hub.Clients.Users([CurrentUserId, friendId]).SendAsync("FriendListUpdate");
@@ -273,6 +286,7 @@ public class DashboardController : Controller
     [HttpPost]
     public async Task<IActionResult> SendMessage(string conversationId, string text)
     {
+        if(!Guid.TryParse(conversationId, out _)) return  BadRequest("invalid id");
         //om du sender ingenting blir du skutt
         if (string.IsNullOrWhiteSpace(text)) return BadRequest();
         if (string.IsNullOrWhiteSpace(conversationId)) return BadRequest();
@@ -303,8 +317,8 @@ public class DashboardController : Controller
     [HttpPost]
     public async Task<IActionResult> SubmitCommit([FromBody] CommitPackage commitPackage)
     {
-        if (commitPackage?.Commit == null || commitPackage.Commit.Length == 0) return BadRequest();
-        if (string.IsNullOrWhiteSpace(commitPackage.ConversationId)) return BadRequest();
+        if (commitPackage?.Commit == null || commitPackage.Commit.Length == 0) return BadRequest("Commit is empty");
+        if(!Guid.TryParse(commitPackage.ConversationId, out _)) return  BadRequest("invalid id");
         
         var conversation = await _db.Conversations.FindAsync(commitPackage.ConversationId);
         if (conversation == null) return NotFound();
@@ -339,7 +353,8 @@ public class DashboardController : Controller
     [HttpDelete]
     public async Task<IActionResult> LeaveGroup(string conversationId)
     {
-        if (string.IsNullOrWhiteSpace(conversationId)) return BadRequest();
+        if(!Guid.TryParse(conversationId, out _)) return  BadRequest("invalid id");
+        
         var isMember = await _db.ConversationMembers.AnyAsync(m => m.ConversationId == conversationId && m.MemberId == CurrentUserId);
         if(!isMember) return NotFound();
         var isDm = await _db.Conversations.AnyAsync(m => m.ConversationId == conversationId && m.IsDirect);
@@ -377,7 +392,7 @@ public class DashboardController : Controller
     [HttpDelete]
     public async Task<IActionResult> RemoveFromGroup([FromBody]RemovalPackage removalPackage)
     {
-        if(string.IsNullOrWhiteSpace(removalPackage.ConversationId) || string.IsNullOrWhiteSpace(removalPackage.MemberId)) return BadRequest();
+        if(!Guid.TryParse(removalPackage.ConversationId, out _) || !Guid.TryParse(removalPackage.MemberId, out _)) return  BadRequest("invalid id");
         if(removalPackage.MemberId == CurrentUserId) return StatusCode(403);
         
         var isDm = await _db.Conversations.AnyAsync(m => m.ConversationId == removalPackage.ConversationId && m.IsDirect);
@@ -433,7 +448,7 @@ public class DashboardController : Controller
     [HttpGet]//downloads the public key package that a user has
     public IActionResult DownloadKeyPackage(string userId)
     {
-        if(string.IsNullOrWhiteSpace(userId)) return BadRequest();
+        if(!Guid.TryParse(userId, out _)) return  BadRequest("invalid id");
         var keyPackage = _db.KeyPackages.Find(userId);
         if (keyPackage == null) return NotFound();
         
@@ -444,12 +459,13 @@ public class DashboardController : Controller
     [HttpPost]
     public IActionResult ConversationCreation([FromBody] CreateConversation? request)
     {
-        if(request == null || string.IsNullOrWhiteSpace(request.ConversationId) || string.IsNullOrWhiteSpace(request.ConversationName) || !Guid.TryParse(request.ConversationId, out var conversationId)) return BadRequest();
-        if(_db.Conversations.Find(conversationId.ToString()) != null) return Conflict();
+        if(request == null || string.IsNullOrWhiteSpace(request.ConversationName) || !Guid.TryParse(request.ConversationId, out _)) return BadRequest();
+        if (request.ConversationName.Length > MaxNameLength) return BadRequest("conversation name is too long");
+        var conversationId = request.ConversationId;
         try
         {
-                _db.Conversations.Add(new Conversation { ConversationId = conversationId.ToString(), ConversationName = request.ConversationName, CreatedAt = DateTime.UtcNow, CreatorId = CurrentUserId, IsDirect = request.IsDirect, Epoch = 1});
-                _db.ConversationMembers.Add(new ConversationMember {ConversationId = conversationId.ToString(), MemberId = CurrentUserId, JoinedAt = DateTime.UtcNow, Role = "admin"} );
+                _db.Conversations.Add(new Conversation { ConversationId = conversationId, ConversationName = request.ConversationName, CreatedAt = DateTime.UtcNow, CreatorId = CurrentUserId, IsDirect = request.IsDirect, Epoch = 1});
+                _db.ConversationMembers.Add(new ConversationMember {ConversationId = conversationId, MemberId = CurrentUserId, JoinedAt = DateTime.UtcNow, Role = "admin"} );
                 _db.SaveChanges();    
         }
         catch (Exception e)
@@ -465,7 +481,9 @@ public class DashboardController : Controller
     [HttpPost]//Uploads the invitations to the group to the server
     public async Task<IActionResult> UploadGroupInvite([FromBody] UploadWelcome? welcome)
     {
-        if (welcome == null || welcome?.Welcome == null || welcome.Welcome.Length == 0 || string.IsNullOrWhiteSpace(welcome.ReceiverId) || string.IsNullOrWhiteSpace(welcome.ConversationId) || welcome.ReceiverId == CurrentUserId) return BadRequest();
+        if (welcome == null || welcome?.Welcome == null || welcome.Welcome.Length == 0 || welcome.ReceiverId == CurrentUserId) return BadRequest();
+        if(!Guid.TryParse(welcome.ConversationId, out _) || !Guid.TryParse(welcome.ReceiverId, out _)) return  BadRequest("invalid id");
+        
         if (await _db.Conversations.FindAsync(welcome.ConversationId) == null) return NotFound();
         if (await _db.ConversationMembers.FindAsync([welcome.ConversationId, CurrentUserId]) == null) return StatusCode(403);
         if (await _db.Conversations.Where(m => m.ConversationId == welcome.ConversationId && m.ConversationMembers.Count >= 2 && m.IsDirect).AnyAsync()) return Conflict();

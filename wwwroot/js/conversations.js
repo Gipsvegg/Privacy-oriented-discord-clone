@@ -406,6 +406,16 @@ async function refreshFriendsList(){
     if(openId !== null && document.getElementById('message-area')){
         document.querySelector(`.sidebar a.friend[data-conversation-id="${openId}"]`)?.classList.add('active')
     }
+    await refreshGroupCreator();
+}
+
+async function refreshGroupCreator(){
+    const groupCreator = document.getElementById('group-creator-dialog');
+    if(!groupCreator) return;
+    
+    const res = await fetch(`/Dashboard/createGroup`)
+    if (!res.ok) return;
+    groupCreator.innerHTML = await res.text();
 }
 
 //click handler for friends and groups
@@ -535,8 +545,9 @@ document.addEventListener('click', async (e) => {
     await refreshMemberList(conversationId);
 })
 
-const groupDialog = document.getElementById('group-dialog');
+
 document.addEventListener('click', e => {
+    const groupDialog = document.getElementById('group-dialog');
     if(e.target.closest('#open-group-creator')) {
         groupDialog.showModal();
     }

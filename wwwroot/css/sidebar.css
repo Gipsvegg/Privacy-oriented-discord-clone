@@ -49,7 +49,7 @@
     color: var(--muted-text-colour);
     border-bottom: 0 transparent!important;
     padding-bottom: 0!important;
-    margin: 0 !important;
+    margin: 0 !important;   
 }
 
 .sidebar-section a {

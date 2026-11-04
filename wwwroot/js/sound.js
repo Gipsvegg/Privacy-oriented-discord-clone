@@ -21,7 +21,9 @@ function playSound(name) {
     const soundElement = sounds[name];
     soundElement.currentTime = 0;
     applySpeaker(soundElement);
-    soundElement.play().catch(() => {});
+    soundElement.play().catch((reason) => {
+        console.error(reason);
+    });
 }
 
 

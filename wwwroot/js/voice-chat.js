@@ -44,7 +44,7 @@ function chatName(conversationId) {
     return document.querySelector(`.sidebar a.friend[data-conversation-id="${conversationId}"] span.friend-text`)?.textContent.trim() ?? "Unknown conversation";
 }
 
-function createPeer(id, username) {
+function createPeer(id, username, userId) {
     const peer = new RTCPeerConnection(rtcConfig);
     peers[id] = peer;
 
@@ -72,9 +72,9 @@ function createPeer(id, username) {
     volume.type = "range";
     volume.className = "form-range";
     volume.title = "Volume for " + username;
-    volume.value = localStorage.getItem("volume-" + username) ?? 100;
+    volume.value = localStorage.getItem("volume-" + userId) ?? 100;
     volume.addEventListener("input", () => {
-        localStorage.setItem("volume-" + username, volume.value);
+        localStorage.setItem("volume-" + userId, volume.value);
         applySpeaker(audio, volume.value / 100);
     });
     applySpeaker(audio, volume.value / 100);
@@ -104,19 +104,19 @@ function removePeer(id) {
 }
 
 // Someone joined the call, we send them an offer
-hub.on("UserJoined", async (id, username) => {
-    const peer = createPeer(id, username);
+hub.on("UserJoined", async (id, username, userId) => {
+    const peer = createPeer(id, username, userId);
     await peer.setLocalDescription(await peer.createOffer());
     await hub.invoke("SendSignal", id, JSON.stringify({ description: peer.localDescription }));
     playSound("callJoined")
 });
 
 // A message from someone else. an offer, an answer, or an ICE candidate
-hub.on("Signal", async (id, username, data) => {
+hub.on("Signal", async (id, username, userId, data) => {
     const message = JSON.parse(data);
 
     if (message.description?.type === "offer") {
-        const peer = createPeer(id, username);
+        const peer = createPeer(id, username, userId);
         await peer.setRemoteDescription(message.description);
         await peer.setLocalDescription(await peer.createAnswer());
         await hub.invoke("SendSignal", id, JSON.stringify({ description: peer.localDescription }));

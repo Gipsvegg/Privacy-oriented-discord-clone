@@ -5,6 +5,7 @@ using ikt201_project.Data;
 using ikt201_project.Data.BackgroundTasks;
 using ikt201_project.Hubs;
 using ikt201_project.Services;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -54,6 +55,12 @@ builder.Services.ConfigureApplicationCookie(options =>
         };
     }
 );
+
+//setting max size of requests
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.Limits.MaxRequestBodySize = 1 * 1024* 1024;//1MegaByte
+});
 
 var app = builder.Build();
 
@@ -127,5 +134,6 @@ app.MapRazorPages()
 
 app.MapHub<VoiceHub>("/voiceHub");
 app.MapHub<ChatHub>("/chathub");
+
 
 app.Run();

@@ -49,4 +49,7 @@
         </div>
     </div>
 </div>
-@await Component.InvokeAsync("FriendsList", new {invoker = "groupCreator"})
+<div id="group-creator-dialog">
+    @await Component.InvokeAsync("FriendsList", new { invoker = "groupCreator" })
+</div>
+
