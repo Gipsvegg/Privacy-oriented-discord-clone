@@ -5,8 +5,7 @@ using ikt201_project.Data;
 using ikt201_project.Data.BackgroundTasks;
 using ikt201_project.Hubs;
 using ikt201_project.Services;
-using Microsoft.AspNetCore.Http.Features;
-using Microsoft.Extensions.Options;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -134,6 +133,5 @@ app.MapRazorPages()
 
 app.MapHub<VoiceHub>("/voiceHub");
 app.MapHub<ChatHub>("/chathub");
-
 
 app.Run();

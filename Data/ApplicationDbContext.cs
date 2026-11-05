@@ -28,6 +28,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasOne(k => k.User)
             .WithOne()
             .HasForeignKey<KeyPackage>(k => k.UserId);
+
+        builder.Entity<ConversationMember>(entity =>
+        {
+            entity.Property(r => r.Role).HasConversion<string>();
+        });
         
         builder.Entity<Friendship>(entity =>
         {

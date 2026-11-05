@@ -220,7 +220,7 @@ function appendMessage(senderId, senderName, text, dateTime){
 //loadhandler runs when the homepage is loaded/ runs necessary checks against server
 window.addEventListener('DOMContentLoaded', async () => {
     if(!userId) return;
-    console.log(userId);
+    //console.log(userId);
     document.querySelectorAll('.unread').forEach(b => showUnread(b.dataset.conversationId));
     await getWelcomes();
     await checkMailbox();
@@ -233,10 +233,10 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (!res.ok) {
         console.error('Key Package failed to upload: ', res.status);
     }
-    const openId = sessionStorage.getItem('openConversation');
+    /*const openId = sessionStorage.getItem('openConversation');
     if(openId !== null && document.getElementById('message-area')){
         document.querySelector(`.sidebar a.friend[data-conversation-id="${openId}"]`)?.click();
-    }
+    }*/
 })
 
 document.addEventListener('click', async (e) => {
@@ -389,6 +389,7 @@ async function refreshGroupsList(){
     const res = await fetch(`/Dashboard/GroupsList`)
     if (!res.ok || res.redirected) return;
     groupsList.innerHTML = await res.text();
+    document.querySelectorAll('.unread').forEach(b => showUnread(b.dataset.conversationId));
     const openId = sessionStorage.getItem('openConversation');
     if(openId !== null && document.getElementById('message-area')){
         document.querySelector(`.sidebar a.friend[data-conversation-id="${openId}"]`)?.classList.add('active')
@@ -402,6 +403,7 @@ async function refreshFriendsList(){
     const res = await fetch(`/Dashboard/FriendsList`)
     if (!res.ok || res.redirected) return;
     friendsList.innerHTML = await res.text();
+    document.querySelectorAll('.unread').forEach(b => showUnread(b.dataset.conversationId));
     const openId = sessionStorage.getItem('openConversation');
     if(openId !== null && document.getElementById('message-area')){
         document.querySelector(`.sidebar a.friend[data-conversation-id="${openId}"]`)?.classList.add('active')
@@ -478,7 +480,7 @@ document.addEventListener('click', async (e) => {
     }
 })
 
-//promotes person to admin
+//promotes person to admin | Can be used for demotion aswell
 document.addEventListener('click', async (e) => {
     const button = e.target.closest('.promote');
     if (button == null) return;
@@ -486,11 +488,12 @@ document.addEventListener('click', async (e) => {
     
     const conversationId = document.querySelector(`.friend.active`).dataset.conversationId;
     const memberId = e.target.closest('.dropdown').querySelector('.member-control').dataset.memberId;
+    const newRole = button.dataset.role;
     
     const res = await fetch(`/Dashboard/ConversationPromotion`, {
         method: 'POST',
         headers: {'content-type': 'application/json', 'RequestVerificationToken': csrfToken },
-        body: JSON.stringify({memberId, conversationId}),
+        body: JSON.stringify({ memberId, conversationId, role: newRole }),
     })
 })
 

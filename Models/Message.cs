@@ -38,7 +38,7 @@ public class ConversationMember
     public Conversation Conversation { get; set; } = null!;
     public string MemberId { get; set; } = "";
     public ApplicationUser Member { get; set; } = null!;
-    public string Role { get; set; } = "";
+    public Role Role { get; set; } = Role.None;
     public DateTime JoinedAt { get; set; }
 }
 
@@ -63,5 +63,5 @@ public class GroupInvite
     public DateTime Timestamp { get; set; }
 }
 
-public record Member(string MemberId, string MemberName, string Role);
+public record Member(string MemberId, string MemberName, Role Role);
 public record Group(string ConversationId, string ConversationName, Member[] Members, bool IsDirect);

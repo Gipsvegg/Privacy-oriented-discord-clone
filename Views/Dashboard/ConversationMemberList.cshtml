@@ -9,8 +9,8 @@
     @if (!Model.IsDirect)
     {
         var me = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var isAdmin = Model.Members.Any(m => m.MemberId == me && m.Role == "admin"); 
-        var currentRole = Model.Members.OrderBy(m => m.Role).FirstOrDefault()?.Role ?? "unknown";
+        var myRole = Model.Members.FirstOrDefault(m => m.MemberId == me)?.Role ?? Role.None;
+        var currentRole = Model.Members.OrderBy(m => m.Role).FirstOrDefault()?.Role ?? Role.None;
         var changed = true;
         <h6 class="member-list">
             Members
@@ -20,12 +20,13 @@
                     <button id="group-control" class="member-control" type="button"><i class="bi bi-three-dots"></i></button>
                     <ul class="dropdown-menu">
                         <li><button id="open-group-renamer" class="dropdown-item" type="button"><i class="bi bi-pencil-square"></i> Rename group</button></li>
-                        <li><button id="open-group-leaver" data-conversation-id="@Model.ConversationId" type="button" class="btn btn-outline-danger dropdown-item"><i class="bi bi-box-arrow-right"></i> Leave group</button></li>
+                        <li><hr class="dropdown-divider"/></li>
+                        <li><button id="open-group-leaver" data-conversation-id="@Model.ConversationId" type="button" class="text-danger dropdown-item"><i class="bi bi-box-arrow-right"></i> Leave group</button></li>
                     </ul>
                 </div>
             </div>
         </h6>
-        foreach (var member in Model.Members.OrderBy(m => m.Role))
+        foreach (var member in Model.Members.OrderByDescending(m => m.Role))
         {
             if (member.Role != currentRole)
             {
@@ -63,9 +64,12 @@
                             <li class="dropdown-item">Fake button</li>
                         }
                     }
-                    @if (isAdmin && member.Role != "admin")
+                    @if(Roles.IsAllowed(myRole, Permissions.Promote) && Roles.IsHigherRank(myRole, member.Role))
                     {
-                        <li><button class="dropdown-item promote">Make admin</button></li>
+                        <li><button class="dropdown-item promote" data-role="Admin">Make admin</button></li>
+                    }
+                    @if(Roles.IsAllowed(myRole, Permissions.Kick) && Roles.IsHigherRank(myRole, member.Role))
+                    {
                         <li><hr class="dropdown-divider"/></li>
                         <li><button class="dropdown-item text-danger kill-button">Dissipate</button></li>
                     }
@@ -87,7 +91,7 @@
         }
     }
 </div>
-@await Component.InvokeAsync("FriendsList", new {invoker = "addToGroup", conversationId = Model.ConversationId})
+@await Component.InvokeAsync("FriendsList", new { invoker = "addToGroup", conversationId = Model.ConversationId })
 
 <dialog id="rename-group-dialog" class="group-dialog">
     <form>

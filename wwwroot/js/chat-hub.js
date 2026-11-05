@@ -49,9 +49,13 @@ connection.on('ConversationNameChange', async (conversationId, newName) => {
     await refreshGroupsList()
 })
 
-connection.on('FriendListUpdate', async () => {
+connection.on('FriendListUpdate', async (receiver) => {
     await refreshFriends()
     await refreshFriendsList()
+    if(receiver !== null && receiver[0] === userId){
+        if(receiver[1] === null) return;
+        playSound(receiver[1])
+    }
 })
 
 connection.start().catch(console.error)

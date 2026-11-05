@@ -9,8 +9,9 @@ document.addEventListener('click', async (e) => {
         element.classList.remove('active');
     });
     link.classList.add('active');
+    sessionStorage.removeItem('openConversation');
     const icon = link.querySelector('i');
-    icon.classList.remove('bi-people');
+    icon.classList.remove('bi-people'); 
     icon.classList.add('bi-people-fill');
 
     const res = await fetch(link.href);
@@ -24,7 +25,10 @@ document.addEventListener('submit', async (e) => {
     
     e.preventDefault();
     const formData = new FormData(form);
-    form.querySelector('input').value = "";
+    const input = form.querySelector('input[name="username"]');
+    if(input) {
+        input.value = '';
+    }
     //const submit = form.querySelector('button[type="submit"]');
     
     const res = await fetch(form.action, {

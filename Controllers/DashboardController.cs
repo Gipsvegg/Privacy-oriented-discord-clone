@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Reflection.Metadata.Ecma335;
 using Microsoft.AspNetCore.Mvc;
 using ikt201_project.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -26,7 +27,7 @@ public class DashboardController : Controller
     private readonly IHubContext<ChatHub> _hub;
     private readonly IFriendService _friendService;
     
-    private const long RequestMaxSize = 10_000_000; //10MB
+    private const long RequestMaxSize = 10_000_000; //10MB | Tenker å sette dette som maxen for bilder
     private const int MaxNameLength = 30;
     
     public DashboardController(ApplicationDbContext db,  IHubContext<ChatHub> hub, IFriendService friendService) //setter opp database, hub og friendservice
@@ -113,25 +114,34 @@ public class DashboardController : Controller
         return PartialView(group);
     }
 
-    public record PromotedMember(string MemberId, string ConversationId);
+    //currently no check if user role is lower than their new role so can be used for demotion might change later
+    public record PromotedMember(string MemberId, string ConversationId, Role Role);
     [HttpPost]
-    public async Task<IActionResult> ConversationPromotion([FromBody] PromotedMember memberPromotion)
+    public async Task<IActionResult> ConversationPromotion([FromBody] PromotedMember? memberPromotion)
     {
+        if(memberPromotion == null) return BadRequest();
         if(string.IsNullOrWhiteSpace(memberPromotion.ConversationId) || string.IsNullOrWhiteSpace(memberPromotion.MemberId)) return  BadRequest("invalid package");
-        if(!Guid.TryParse(memberPromotion.ConversationId, out _) || !Guid.TryParse(memberPromotion.MemberId, out _)) return  BadRequest();
+        if(!Guid.TryParse(memberPromotion.ConversationId, out _) || !Guid.TryParse(memberPromotion.MemberId, out _)) return  BadRequest("invalid id");
+        if (!Enum.IsDefined(memberPromotion.Role)) return BadRequest("invalid role");
+        if(memberPromotion.Role == Role.None) return BadRequest("Can't be demoted to nothing");
+        if (memberPromotion.Role == Role.Owner) return BadRequest("Can't be promoted to owner");
         
         var conversation = await _db.ConversationMembers
             .Where(m => m.ConversationId == memberPromotion.ConversationId)
             .ToListAsync();
         
-        var isAdmin = conversation.Any(m => m.MemberId == CurrentUserId && m.Role == "admin");
+        var currentUserRole = conversation.Where(m => m.MemberId == CurrentUserId).Select(m => m.Role).FirstOrDefault();
+        
+        var isAdmin = conversation.Any(m => m.MemberId == CurrentUserId && Roles.IsAllowed(m.Role, Permissions.Promote));
         if (!isAdmin) return StatusCode(403);
-        var isMember = conversation.Any(m => m.MemberId == memberPromotion.MemberId && m.Role != "admin");
+        var isMember = conversation.Any(m => m.MemberId == memberPromotion.MemberId && Roles.IsHigherRank(currentUserRole, m.Role));
         if (!isMember) return NotFound();
-
+        var rankTooLow = Roles.IsHigherRank(memberPromotion.Role, currentUserRole);
+        if (rankTooLow) return StatusCode(403);
+        
         var updated = await _db.ConversationMembers
             .Where(m => m.ConversationId == memberPromotion.ConversationId && m.MemberId == memberPromotion.MemberId)
-            .ExecuteUpdateAsync(m => m.SetProperty(role => role.Role, "admin"));
+            .ExecuteUpdateAsync(m => m.SetProperty(role => role.Role, memberPromotion.Role));
 
         if (updated == 0) return NotFound();
 
@@ -252,7 +262,8 @@ public class DashboardController : Controller
             .ToListAsync();
         //if(person.Count != 1) return NotFound();
         person.Add(CurrentUserId);
-        await _hub.Clients.Users(person).SendAsync("FriendListUpdate");
+        var receiver = new List<string>{ person[0], "incomingFriend" };
+        await _hub.Clients.Users(person).SendAsync("FriendListUpdate", receiver);
         return Ok();
     }
 
@@ -260,7 +271,8 @@ public class DashboardController : Controller
     public async Task<IActionResult> AcceptFriend(int id)
     {
         var requesterId = await _friendService.AcceptRequestAsync(CurrentUserId, id);
-        await _hub.Clients.Users([CurrentUserId, requesterId]).SendAsync("FriendListUpdate");
+        var receiver = new List<string>{ requesterId, "acceptedFriend" };   
+        await _hub.Clients.Users([CurrentUserId, requesterId]).SendAsync("FriendListUpdate",  receiver);
         return Ok();
     }
 
@@ -361,20 +373,18 @@ public class DashboardController : Controller
         if(isDm) return StatusCode(403);
 
         await using var transaction = await _db.Database.BeginTransactionAsync();
-        var isAdmin = await _db.ConversationMembers.AnyAsync(m => m.ConversationId == conversationId && m.MemberId == CurrentUserId  && m.Role == "admin");
-        if (isAdmin)
+        
+        var isOwner = await _db.ConversationMembers.AnyAsync(m => m.ConversationId == conversationId && m.MemberId == CurrentUserId  && m.Role == Role.Owner);
+        if (isOwner)
         {
-            var lastAdmin = await _db.ConversationMembers.CountAsync(m => m.ConversationId == conversationId  && m.Role == "admin");
-            if (lastAdmin < 2)
+            var otherMembers = await _db.ConversationMembers
+                .Where(m => m.ConversationId == conversationId && m.MemberId != CurrentUserId)
+                .ToListAsync();
+            var newOwner = otherMembers.OrderByDescending(m => m.Role).ThenBy(m => m.JoinedAt).FirstOrDefault();
+            if (newOwner != null)
             {
-                var newAdmin = await _db.ConversationMembers
-                    .Where(m => m.ConversationId == conversationId && m.MemberId != CurrentUserId)
-                    .OrderBy(m => m.JoinedAt).FirstOrDefaultAsync();
-                if (newAdmin != null)
-                {
-                    newAdmin.Role = "admin";
-                    await _db.SaveChangesAsync();
-                }
+                newOwner.Role = Role.Owner;
+                await _db.SaveChangesAsync();
             }
         }
 
@@ -394,18 +404,27 @@ public class DashboardController : Controller
     {
         if(!Guid.TryParse(removalPackage.ConversationId, out _) || !Guid.TryParse(removalPackage.MemberId, out _)) return  BadRequest("invalid id");
         if(removalPackage.MemberId == CurrentUserId) return StatusCode(403);
+
+        var members = await _db.ConversationMembers.Where(m =>
+                m.ConversationId == removalPackage.ConversationId &&
+                (m.MemberId == CurrentUserId || m.MemberId == removalPackage.MemberId))
+            .Select(m => new {m.MemberId, m.Role}).ToListAsync();
+
+        var currentUserRole = members.Where(m => m.MemberId == CurrentUserId).Select(m => m.Role).FirstOrDefault();
+        var kickedUserRole =  members.Where(m => m.MemberId == removalPackage.MemberId).Select(m => m.Role).FirstOrDefault();
+        
         
         var isDm = await _db.Conversations.AnyAsync(m => m.ConversationId == removalPackage.ConversationId && m.IsDirect);
         if(isDm) return StatusCode(403);
         
-        var isAdmin = await _db.ConversationMembers.AnyAsync(m => m.ConversationId == removalPackage.ConversationId && m.MemberId == CurrentUserId && m.Role == "admin");
-        if (!isAdmin) return StatusCode(403);
-        
-        var memberIsAdmin = await _db.ConversationMembers.AnyAsync(m => m.ConversationId == removalPackage.ConversationId && m.MemberId == removalPackage.MemberId && m.Role == "admin");
-        if(memberIsAdmin) return Conflict();
+        var canKick = Roles.IsAllowed(currentUserRole, Permissions.Kick);
+        if (!canKick) return StatusCode(403);
+
+        var memberCanBeKicked = Roles.IsHigherRank(currentUserRole, kickedUserRole);
+        if(memberCanBeKicked) return Conflict();
 
         var count = await _db.ConversationMembers
-            .Where(m => m.ConversationId == removalPackage.ConversationId && m.MemberId == removalPackage.MemberId && m.Role != "admin")
+            .Where(m => m.ConversationId == removalPackage.ConversationId && m.MemberId == removalPackage.MemberId)
             .ExecuteDeleteAsync();
         
         if(count == 0) return NotFound();
@@ -413,14 +432,10 @@ public class DashboardController : Controller
         await _db.GroupInvites
             .Where(m => m.ConversationId == removalPackage.ConversationId && m.ReceiverId == removalPackage.MemberId)
             .ExecuteDeleteAsync();
-
-        var members = await _db.ConversationMembers
-            .Where(m => m.ConversationId == removalPackage.ConversationId && m.MemberId != removalPackage.MemberId)
-            .Select(m => m.MemberId)
-            .ToArrayAsync();
+        
         
         await _hub.Clients.User(removalPackage.MemberId).SendAsync("RemoveFromGroup", removalPackage.ConversationId);
-        await _hub.Clients.Users(members).SendAsync("MembersChanged", removalPackage.ConversationId);
+        await _hub.Clients.Users(members.Select(m => m.MemberId)).SendAsync("MembersChanged", removalPackage.ConversationId);
         
         return Ok();
     }
@@ -465,7 +480,7 @@ public class DashboardController : Controller
         try
         {
                 _db.Conversations.Add(new Conversation { ConversationId = conversationId, ConversationName = request.ConversationName, CreatedAt = DateTime.UtcNow, CreatorId = CurrentUserId, IsDirect = request.IsDirect, Epoch = 1});
-                _db.ConversationMembers.Add(new ConversationMember {ConversationId = conversationId, MemberId = CurrentUserId, JoinedAt = DateTime.UtcNow, Role = "admin"} );
+                _db.ConversationMembers.Add(new ConversationMember { ConversationId = conversationId, MemberId = CurrentUserId, JoinedAt = DateTime.UtcNow, Role = Role.Owner } );
                 _db.SaveChanges();    
         }
         catch (Exception e)
@@ -509,7 +524,7 @@ public class DashboardController : Controller
 
             if (await _db.ConversationMembers.FindAsync([welcome.ConversationId, welcome.ReceiverId]) == null)
             {
-                _db.ConversationMembers.Add(new ConversationMember {ConversationId = welcome.ConversationId, JoinedAt = DateTime.UtcNow, MemberId = welcome.ReceiverId, Role = "default"});
+                _db.ConversationMembers.Add(new ConversationMember { ConversationId = welcome.ConversationId, JoinedAt = DateTime.UtcNow, MemberId = welcome.ReceiverId, Role = Role.Default });
             }
             
             await _db.SaveChangesAsync();
