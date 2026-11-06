@@ -724,5 +724,3 @@ function clearUnread(conversationId) {
     localStorage.removeItem(unreadKey(conversationId));
     showUnread(conversationId);
 }
-
-
