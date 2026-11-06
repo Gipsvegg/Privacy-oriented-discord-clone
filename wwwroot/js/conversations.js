@@ -4,12 +4,25 @@ const userId = document.getElementById('uuid')?.dataset.uuid;
 const userName = document.getElementById('uuid')?.dataset.username;
 const csrfToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
 
+async function uploadNewKeyPackage() {
+    await e2ee.generateNewKeyPackage(userId);
+    const res = await fetch('/Dashboard/UploadKeyPackage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': csrfToken },
+        body: JSON.stringify({ keyPackage: await e2ee.getMyKeyPackage(userId) })
+    })
+    if (!res.ok) {
+        console.error('Key Package failed to upload: ', res.status);
+    }
+}
+
 async function getWelcomes(){
     //downloads the group invite and waits for the data
     if(!userId) return;
     const res = await fetch(`/Dashboard/DownloadWelcome`)
     if(!res.ok) return;
     const data = await res.json();
+    let inviteAccepted = false;
     
     //goes through all the welcomes and deletes them from the server AFTER accepting them
     for (const welcome of data) {
@@ -27,6 +40,12 @@ async function getWelcomes(){
             }
             console.error(err);
         }
+        finally {
+            inviteAccepted = true;
+        }
+    }
+    if (inviteAccepted) {
+        await uploadNewKeyPackage(userId);
     }
 }
 
@@ -172,6 +191,7 @@ function appendMessage(senderId, senderName, text, dateTime){
     const time = new Date(dateTime)
     const currentTime = new Date(Date.now());
 
+    //Sets the date separator in chat --- somedate ---
     if (lastMessageTime === null || lastMessageTime.toDateString() !== time.toDateString()) {
         const dates = document.createElement('div');
         dates.classList.add('date');
@@ -189,7 +209,7 @@ function appendMessage(senderId, senderName, text, dateTime){
         box.appendChild(dates);
     }
     
-    
+    //adds who sent the message depending on the last sender and if it has been 5 min since last message
     if ((!last || last.dataset.senderId !== senderId) || (dateTime > (Number(lastTimestamp.dataset.dateTime) + 300000))) {
         const name = document.createElement('h6');
         //\u2022 dot
@@ -224,21 +244,15 @@ window.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.unread').forEach(b => showUnread(b.dataset.conversationId));
     await getWelcomes();
     await checkMailbox();
+    //await uploadNewKeyPackage();  // TO MANY KEYS
     
-    const res = await fetch('/Dashboard/UploadKeyPackage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': csrfToken },
-        body: JSON.stringify({ keyPackage: await e2ee.getMyKeyPackage(userId) })
-    })
-    if (!res.ok) {
-        console.error('Key Package failed to upload: ', res.status);
-    }
-    /*const openId = sessionStorage.getItem('openConversation');
+    /*const openId = sessionStorage.getItem('openConversation'); //auto opens last open conversation
     if(openId !== null && document.getElementById('message-area')){
         document.querySelector(`.sidebar a.friend[data-conversation-id="${openId}"]`)?.click();
     }*/
 })
 
+//Starts a new conversation with a friend that does not have one yet, opens after reloading or refreshing the friends list
 document.addEventListener('click', async (e) => {
     const button = e.target.closest('.start-dm');
     if (!button) return;
@@ -324,7 +338,7 @@ async function removeFromGroup(memberId, conversationId) {
     const res = await fetch('/Dashboard/RemoveFromGroup', {
         method: 'DELETE',
         headers: {'Content-Type': 'application/json', 'RequestVerificationToken': csrfToken},
-        body: JSON.stringify({memberId: memberId, conversationId: conversationId}),
+        body: JSON.stringify({ memberId: memberId, conversationId: conversationId }),
     })
     if (!res.ok) throw new Error(`Failed to remove ${memberId} from server`);
     
@@ -343,7 +357,7 @@ async function checkGroupHealth(conversationId, serverMembers) {
     const trolledMembers = serverMembers.filter(id => id !== userId && !localMembers.includes(id));
     const leavingMembers = localMembers.filter(id => id !== userId && !serverMembers.includes(id));
     
-    return {trolledMembers, leavingMembers};
+    return { trolledMembers, leavingMembers };
 }
 
 function scrollToBottom() {
@@ -453,6 +467,12 @@ document.addEventListener('click', async (e) => {
     scrollToBottom();
     
     await rosterCheck(conversationId);
+    const lastRotation = await e2ee.lastRotationTimestamp(userId, conversationId)
+    //checks if last rotation more than 7 days ago
+    if(lastRotation < Date.now() - ( 7 * 24 * 60 * 60 * 1000 )) {
+        //await sendCommit(null, , conversationId);
+        await e2ee.rotateGroupKeys(userId, conversationId, sendCommit);
+    }
 });
 
 /*Godforsaken global button press */
