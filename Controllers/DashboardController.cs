@@ -421,7 +421,7 @@ public class DashboardController : Controller
         if (!canKick) return StatusCode(403);
 
         var memberCanBeKicked = Roles.IsHigherRank(currentUserRole, kickedUserRole);
-        if(memberCanBeKicked) return Conflict();
+        if(!memberCanBeKicked) return Conflict();
 
         var count = await _db.ConversationMembers
             .Where(m => m.ConversationId == removalPackage.ConversationId && m.MemberId == removalPackage.MemberId)
