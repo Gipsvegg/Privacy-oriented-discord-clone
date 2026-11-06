@@ -541,13 +541,13 @@ public class DashboardController : Controller
         return Ok();
     }
     
-    private record SmallWelcome(int Id, string SenderId, string ConversationId, byte[] Data);
+    private record SmallWelcome(int Id, string SenderId, string ConversationId, byte[] Data, DateTime Timestamp);
     [HttpGet]//sends the group invitation to the user
     public IActionResult DownloadWelcome()
     {
         var welcomes = _db.GroupInvites
             .Where(m => m.ReceiverId == CurrentUserId)
-            .Select(m => new SmallWelcome(m.Id, m.SenderId, m.ConversationId, m.Data))
+            .Select(m => new SmallWelcome(m.Id, m.SenderId, m.ConversationId, m.Data, DateTime.SpecifyKind(m.Timestamp, DateTimeKind.Utc)))
             .ToList();
         
         return Ok(welcomes);

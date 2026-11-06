@@ -436,6 +436,7 @@ async function rotateGroupKeys(userId, conversationId, sendCommit) {
         }
         
         await saveGroupState(userId, conversationId, groupState);
+        await setRotationTimestamp(userId, conversationId, Date.now());
         
         return {commit: encodedCommit}
     })
@@ -564,7 +565,7 @@ async function getMyKeyPackage(userId){
 }
 
 async function lastRotationTimestamp(userId, conversationId) {
-    return (await get(`${userId}:history:${conversationId}:lastRotation`))
+    return (await get(`${userId}:history:${conversationId}:lastRotation`) ?? Date.now() - (10 * 24 * 60 * 60 * 1000));
 }
 async function setRotationTimestamp(userId, conversationId, time){
     await set(`${userId}:history:${conversationId}:lastRotation`, time);

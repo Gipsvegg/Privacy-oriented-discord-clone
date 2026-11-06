@@ -16,6 +16,17 @@ async function uploadNewKeyPackage() {
     }
 }
 
+async function uploadKeyPackage() {
+    const res = await fetch('/Dashboard/UploadKeyPackage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': csrfToken },
+        body: JSON.stringify({ keyPackage: await e2ee.getMyKeyPackage(userId) })
+    })
+    if (!res.ok) {
+        console.error('Key Package failed to upload: ', res.status);
+    }
+}
+
 async function getWelcomes(){
     //downloads the group invite and waits for the data
     if(!userId) return;
@@ -27,9 +38,14 @@ async function getWelcomes(){
     //goes through all the welcomes and deletes them from the server AFTER accepting them
     for (const welcome of data) {
         try {
-            await e2ee.inviteAccept(userId, welcome.conversationId, welcome.data); 
+            await e2ee.inviteAccept(userId, welcome.conversationId, welcome.data);
+            try {
+                const timestamp = new Date(welcome.timestamp).getTime();
+                await e2ee.setRotationTimestamp(userId, welcome.conversationId, timestamp);    
+            } catch {}
             await deleteWelcome(welcome.id)
             playSound("joinedGroup")
+            inviteAccepted = true;
         }catch(err) {
             if(err.message === "Invite already accepted"){
                 try {
@@ -40,12 +56,9 @@ async function getWelcomes(){
             }
             console.error(err);
         }
-        finally {
-            inviteAccepted = true;
-        }
     }
     if (inviteAccepted) {
-        await uploadNewKeyPackage(userId);
+        await uploadNewKeyPackage();
     }
 }
 
@@ -127,6 +140,9 @@ async function fetchPendingMessages(){
         
         if (decryptedText === null) {   // group change, not a chat message
             try{
+                try {
+                    await e2ee.setRotationTimestamp(userId, message.conversationId, new Date(message.timestamp).getTime());    
+                } catch {}
                 await deleteFetchedMessages(message.id);
             } catch(err){
                 console.error(`failed to delete:${message.id}, Reason: ${err}`);
@@ -244,7 +260,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.unread').forEach(b => showUnread(b.dataset.conversationId));
     await getWelcomes();
     await checkMailbox();
-    //await uploadNewKeyPackage();  // TO MANY KEYS
+    await uploadKeyPackage();
     
     /*const openId = sessionStorage.getItem('openConversation'); //auto opens last open conversation
     if(openId !== null && document.getElementById('message-area')){
@@ -292,7 +308,9 @@ async function createGroupWith(memberIds, conversationName, isDirect = false) {
     });
     if (!conversationCreation.ok) throw new Error(`Failed to create conversation: ${conversationCreation.status}`);
     const welcome = await e2ee.groupCreation(userId, conversationId, members, async () => true);
-    
+    try {
+        await e2ee.setRotationTimestamp(userId, conversationId, Date.now());
+    } catch {}
     for (const member of members) {
         const res = await fetch('/Dashboard/UploadGroupInvite', {
             method: 'POST',
@@ -470,8 +488,9 @@ document.addEventListener('click', async (e) => {
     const lastRotation = await e2ee.lastRotationTimestamp(userId, conversationId)
     //checks if last rotation more than 7 days ago
     if(lastRotation < Date.now() - ( 7 * 24 * 60 * 60 * 1000 )) {
-        //await sendCommit(null, , conversationId);
-        await e2ee.rotateGroupKeys(userId, conversationId, sendCommit);
+        try {
+            await e2ee.rotateGroupKeys(userId, conversationId, sendCommit);    
+        } catch{}
     }
 });
 
