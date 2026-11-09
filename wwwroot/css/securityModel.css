@@ -1,0 +1,190 @@
+/* Security model page. Everything is scoped under .security-page so it cannot affect the rest of the site. */
+
+.security-page {
+    --sec-text: #1f2933;
+    --sec-muted: #616e7c;
+    --sec-border: #d9e0e7;
+    --sec-surface: #f5f7fa;
+    --sec-accent: #1f6feb;
+    --sec-accent-soft: #e8f0fe;
+    --sec-yes: #137a3b;
+    --sec-no: #b42318;
+    --sec-placeholder: #fff3bf;
+
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 2.5rem 1.25rem 4rem;
+    color: var(--sec-text);
+    line-height: 1.65;
+}
+
+/* Headings */
+.security-page h1 {
+    font-size: 2.1rem;
+    line-height: 1.2;
+    margin: 0 0 0.75rem;
+}
+
+.security-page h2 {
+    font-size: 1.5rem;
+    margin: 3rem 0 1rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 2px solid var(--sec-border);
+}
+
+.security-page h3 {
+    font-size: 1.15rem;
+    margin: 1.75rem 0 0.4rem;
+}
+
+.security-page p {
+    margin: 0 0 1rem;
+}
+
+/* Draft banner */
+.security-draft-note {
+    background: var(--sec-surface);
+    border-left: 4px solid var(--sec-accent);
+    color: var(--sec-muted);
+    font-size: 0.95rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 2rem;
+    border-radius: 0 6px 6px 0;
+}
+
+/* Placeholders the team still has to confirm */
+.security-page mark {
+    background: var(--sec-placeholder);
+    color: inherit;
+    padding: 0.05em 0.3em;
+    border-radius: 3px;
+}
+
+/* Intro statement */
+.security-lead {
+    font-size: 1.15rem;
+    color: var(--sec-text);
+}
+
+/* Principle cards */
+.security-principles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0 0;
+}
+
+.security-principle {
+    background: var(--sec-surface);
+    border: 1px solid var(--sec-border);
+    border-radius: 10px;
+    padding: 1.1rem 1.25rem;
+}
+
+.security-principle h3 {
+    margin: 0 0 0.4rem;
+    font-size: 1.05rem;
+    color: var(--sec-accent);
+}
+
+.security-principle p {
+    margin: 0;
+    font-size: 0.96rem;
+}
+
+/* Tables */
+.security-table-wrap {
+    overflow-x: auto;
+    margin: 1rem 0 1.5rem;
+    border: 1px solid var(--sec-border);
+    border-radius: 10px;
+}
+
+.security-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    min-width: 560px;
+}
+
+.security-table th,
+.security-table td {
+    padding: 0.7rem 0.9rem;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--sec-border);
+}
+
+.security-table thead th {
+    background: var(--sec-surface);
+    font-weight: 600;
+}
+
+.security-table tbody th {
+    font-weight: 500;
+    width: 28%;
+}
+
+.security-table tbody tr:last-child th,
+.security-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Highlight our own column in the comparison table */
+.security-table .col-us {
+    background: var(--sec-accent-soft);
+}
+
+.security-table thead .col-us {
+    background: #d3e3fd;
+}
+
+/* Yes / No colouring (always paired with the word itself, never colour alone) */
+.security-table .yes {
+    color: var(--sec-yes);
+    font-weight: 600;
+}
+
+.security-table .no {
+    color: var(--sec-no);
+    font-weight: 600;
+}
+
+/* Comparison write-ups */
+.security-versus {
+    border-left: 4px solid var(--sec-border);
+    padding-left: 1rem;
+}
+
+/* Limits list */
+.security-limits {
+    padding-left: 1.25rem;
+}
+
+.security-limits li {
+    margin-bottom: 0.6rem;
+}
+
+/* Closing statement */
+.security-summary {
+    background: var(--sec-accent-soft);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    margin-top: 3rem;
+    font-size: 1.05rem;
+}
+
+.security-summary p {
+    margin: 0;
+}
+
+/* Small screens */
+@media (max-width: 600px) {
+    .security-page {
+        padding-top: 1.5rem;
+    }
+
+    .security-page h1 {
+        font-size: 1.7rem;
+    }
+}

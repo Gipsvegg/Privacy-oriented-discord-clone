@@ -1,0 +1,198 @@
+@{
+    ViewData["Title"] = "Security model";
+}
+
+<link rel="stylesheet" href="~/css/securityModel.css" asp-append-version="true" />
+
+<div class="security-page">
+
+    <h1>Security model: privacy by architecture</h1>
+
+    <h2>Our approach</h2>
+    <p class="security-lead">
+        Most chat platforms ask you to trust their promises. Pisscord is built so that you don't have to trust us:
+        your messages are encrypted on your device, your history stays on your device, and the servers in between only pass along
+        data they cannot read.
+    </p>
+
+    <h2>Four principles</h2>
+    <div class="security-principles">
+        <div class="security-principle">
+            <h3>1. We can't read your messages</h3>
+            <p>Messages are end-to-end encrypted. They are encrypted on your device and decrypted only on the devices of the people you're talking to. Our servers never hold the keys.</p>
+        </div>
+        <div class="security-principle">
+            <h3>2. There's nothing to hand over</h3>
+            <p>Our central server is a relay, not an archive. It holds encrypted messages only for as long as it takes to deliver them. Your conversation history lives on your own devices, so there is no stored message history on our side for a breach, a data sale or a legal demand to reach.</p>
+        </div>
+        <div class="security-principle">
+            <h3>3. No single point of failure</h3>
+            <p>Anyone can host a community server. Communities don't have to live on infrastructure we control, and no company sits in the middle of every conversation.</p>
+        </div>
+        <div class="security-principle">
+            <h3>4. Security that doesn't get in the way</h3>
+            <p>If privacy is hard to use, people go back to platforms that don't protect them. We design the interface so the secure option is the default and the only option.</p>
+        </div>
+    </div>
+
+    <h2>How it works</h2>
+
+    <h3>End-to-end encryption</h3>
+    <p>
+        Every direct message and group chat is encrypted before it leaves your device.
+        <mark>[Confirm protocol, e.g. the Signal Protocol for direct messages and MLS for group chats.]</mark>
+        Voice and video calls are encrypted end to end as well. <mark>[Confirm scope for calls.]</mark>
+    </p>
+
+    <h3>Relay-only central server</h3>
+    <p>
+        Our central server's job is to deliver encrypted messages to the right place. When the recipient is offline, it holds the
+        encrypted message temporarily and deletes it once it is delivered.
+        <mark>[Confirm retention limit, e.g. deleted on delivery, or after a maximum of X days if undelivered.]</mark>
+        Because messages are encrypted before they reach us, what we hold is unreadable.
+    </p>
+
+    <h3>Local-first storage</h3>
+    <p>Your message history is stored on your own devices. If you use more than one device, they sync with each other using encrypted channels. We are not the backup of your conversations.</p>
+
+    <h3>Community servers you can host yourself</h3>
+    <p>Communities can run their own public servers. You choose who you trust with your community, and a compromise of one server does not expose everyone else on the platform.</p>
+
+    <h2>Who can see what</h2>
+    <div class="security-table-wrap">
+        <table class="security-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Pisscord relay</th>
+                    <th>Self-hosted community server operator</th>
+                    <th>Other members of a conversation</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th scope="row">Message content in private chats</th>
+                    <td class="no">No</td>
+                    <td>Not applicable</td>
+                    <td>Only the people in the chat</td>
+                </tr>
+                <tr>
+                    <th scope="row">Message content in a community channel</th>
+                    <td class="no">No</td>
+                    <td><mark>[Confirm: no, if channels are end-to-end encrypted]</mark></td>
+                    <td>Everyone who has joined that channel</td>
+                </tr>
+                <tr>
+                    <th scope="row">Your stored message history</th>
+                    <td class="no">No</td>
+                    <td class="no">No</td>
+                    <td class="no">No</td>
+                </tr>
+                <tr>
+                    <th scope="row">That a message was sent, and when</th>
+                    <td>Yes, while relaying</td>
+                    <td><mark>[Confirm]</mark></td>
+                    <td>Yes</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>How we compare</h2>
+    <p>We'd rather be accurate than flattering. This is where the platforms stand, based on public information as of November 2026.</p>
+    <div class="security-table-wrap">
+        <table class="security-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th class="col-us">Pisscord</th>
+                    <th>Discord</th>
+                    <th>Signal</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th scope="row">End-to-end encrypted text messages</th>
+                    <td class="col-us yes">Yes</td>
+                    <td><span class="no">No.</span> Discord has said it has no current plans to add this</td>
+                    <td class="yes">Yes</td>
+                </tr>
+                <tr>
+                    <th scope="row">End-to-end encrypted voice and video</th>
+                    <td class="col-us"><span class="yes">Yes</span> <mark>[confirm]</mark></td>
+                    <td><span class="yes">Yes,</span> since March 2026 (not Stage channels)</td>
+                    <td class="yes">Yes</td>
+                </tr>
+                <tr>
+                    <th scope="row">Provider can read your messages</th>
+                    <td class="col-us yes">No</td>
+                    <td class="no">Yes</td>
+                    <td class="yes">No</td>
+                </tr>
+                <tr>
+                    <th scope="row">Provider keeps message history</th>
+                    <td class="col-us yes">No, relay only</td>
+                    <td class="no">Yes</td>
+                    <td class="yes">No</td>
+                </tr>
+                <tr>
+                    <th scope="row">Public community servers</th>
+                    <td class="col-us yes">Yes</td>
+                    <td class="yes">Yes</td>
+                    <td class="no">No</td>
+                </tr>
+                <tr>
+                    <th scope="row">Host your own server</th>
+                    <td class="col-us yes">Yes</td>
+                    <td class="no">No</td>
+                    <td class="no">No</td>
+                </tr>
+                <tr>
+                    <th scope="row">Built for desktop and gaming communities</th>
+                    <td class="col-us yes">Yes</td>
+                    <td class="yes">Yes</td>
+                    <td>Mobile-first</td>
+                </tr>
+                <tr>
+                    <th scope="row">Account tied to a phone number</th>
+                    <td class="col-us"><mark>[Confirm: No]</mark></td>
+                    <td>No</td>
+                    <td>Yes, to register</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p class="security-versus">
+        <strong>Versus Discord:</strong> Discord has done serious work encrypting calls, and we respect that. But your text messages,
+        which is most of what people write, remain readable by Discord, and everything runs on its servers. Our difference is that
+        private text, not just calls, is protected, that nothing is stored centrally, and that communities can run on infrastructure
+        they control.
+    </p>
+    <p class="security-versus">
+        <strong>Versus Signal:</strong> Signal sets the standard for private messaging, and we build on the same ideas. Where we
+        differ is purpose. Signal is for private conversations. We bring the same protections to public communities, community
+        servers and a desktop-first experience built for gamers.
+    </p>
+
+    <h2>What we don't protect against</h2>
+    <p>No system is perfect, and you should know where the limits are.</p>
+    <ul class="security-limits">
+        <li><strong>A compromised device.</strong> If someone controls your computer or phone, encryption can't help. Keep your system updated.</li>
+        <li><strong>Metadata.</strong> To deliver a message, a relay has to know where it is going and when. We minimise what we collect and keep. <mark>[Describe what is logged and for how long.]</mark></li>
+        <li><strong>People in the conversation.</strong> End-to-end encryption keeps outsiders out. It can't stop someone you've chatted with from screenshotting or sharing what you said. In large public channels, anyone who joins can read them.</li>
+        <li><strong>Servers you don't run.</strong> If you join someone else's community server, the operator can see who connects to it. Choose communities you trust.</li>
+    </ul>
+
+    <h2>Verifying our claims</h2>
+    <p>
+        Security claims should be checkable, so we aim to make ours so.
+        <mark>[Choose what is true for your project: publish the source code, publish the protocol design, commission an independent review, run a vulnerability disclosure process with a contact address.]</mark>
+        We will publish the results of any review, including the problems found.
+    </p>
+
+    <div class="security-summary">
+        <p><strong>Summary:</strong> We protect your messages by design: encrypted on your device, relayed without being stored, kept only where you keep them, and hosted by communities that you choose. That is the security model.</p>
+    </div>
+
+</div>
