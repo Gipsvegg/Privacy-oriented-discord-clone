@@ -2,28 +2,27 @@
 
 
 import {
-    getCiphersuiteImpl,
-    getCiphersuiteFromName,
-    generateKeyPackage,
-    createGroup,
-    createCommit,
-    joinGroup,
     createApplicationMessage,
-    processPrivateMessage,
-    encodeMlsMessage,
+    createCommit,
+    createGroup,
+    decodeGroupState,
     decodeMlsMessage,
     defaultCapabilities,
     defaultLifetime,
     emptyPskIndex,
-    zeroOutUint8Array, 
-    encodeGroupState, 
-    decodeGroupState, 
-    defaultProposalTypes,
+    encodeGroupState,
+    encodeMlsMessage,
+    generateKeyPackage, generateKeyPackageWithKey,
+    getCiphersuiteFromName,
+    getCiphersuiteImpl,
+    joinGroup,
+    processPrivateMessage,
+    zeroOutUint8Array,
 } from "ts-mls";
 
-import { defaultClientConfig } from "ts-mls/clientConfig.js";
+import {defaultClientConfig} from "ts-mls/clientConfig.js";
 
-import { get, set, del, update } from "idb-keyval";
+import {del, get, set, update} from "idb-keyval";
 
 
 // Crypto only works on bytes (Uint8Array), never on strings.
@@ -36,12 +35,12 @@ const fromBase64 = (text) => Uint8Array.fromBase64(text);
 // This one needs no extra npm packages.
 const SUITE = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519";
 
+//generate Key
 async function makeUser(userId, impl) {
     let user;
     const credential = { credentialType: "basic", identity: toBytes(userId) };
     
     const saved = await get(`user:${userId}`);
-    
     if(saved !== undefined) {
         return saved;
     }
@@ -56,14 +55,65 @@ async function makeUser(userId, impl) {
     return user;
 }
 
+async function generateNewKeyPackage(userId) {
+    const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
+    let user;
+    const credential = { credentialType: "basic", identity: toBytes(userId) };
+    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+
+    let saved = await get(`user:${userId}`);
+    if(saved === undefined) {
+        user = await generateKeyPackage(credential, defaultCapabilities(), defaultLifetime, [], impl);
+        await set(`user:${userId}`, user);
+        return;
+    }
+    
+    await update(`user:${userId}:old`, (oldValues) => {
+        let oldKeys = [];
+        (oldValues ?? []).forEach((oldValue) => {
+            if(oldValue.retiredAt > Date.now() - thirtyDays) {
+                oldKeys.push(oldValue);
+            }
+        })
+        
+        oldKeys.push({keyPackage: saved, retiredAt: Date.now()});
+        return oldKeys;
+    });
+    
+    user = await generateKeyPackageWithKey(credential, defaultCapabilities(), defaultLifetime, [], { signKey: saved.privatePackage.signaturePrivateKey, publicKey: saved.publicPackage.leafNode.signaturePublicKey}, impl);
+    await set(`user:${userId}`, user);
+}
+
+async function getUserKeyPackage(userId) {
+    let saved = await get(`user:${userId}`);
+    if(saved !== undefined) {
+        return saved;
+    }
+    
+    await generateNewKeyPackage(userId);
+    saved = await get(`user:${userId}`);
+    if(saved === undefined) {
+        throw new Error("COULDN'T GENERATE KEYPACKAGE")
+    }
+    return saved
+}
+
+async function getOldKeyPackage(userId) {
+    let saved = await get(`user:${userId}:old`);
+    if(saved !== undefined) {
+        return saved;
+    }
+    return [];
+}
+
 const fakeServer = async () => true;
 
 // ─── STEP 5: the demo – Alice AND Bob, both inside this one browser tab ─
 async function demo(text = "Hello Bob!") {
     const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
 
-    const alice = await makeUser("alice", impl);
-    const bob = await makeUser("bob", impl);
+    const alice = await getUserKeyPackage("alice");
+    const bob = await getUserKeyPackage("bob");
     
     // Alice starts a group with only herself in it
     let aliceGroup = await createGroup(toBytes("chat-1"), alice.publicPackage, alice.privatePackage, [], impl);
@@ -312,7 +362,7 @@ async function decryptMessage(message, userId, conversationId) {
 async function groupCreation(userId, conversationId, groupMembers, sendCommit) {
     const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
     
-    const user = await makeUser(userId, impl);
+    const user = await getUserKeyPackage(userId);
     let userGroup = await createGroup(toBytes(conversationId), user.publicPackage, user.privatePackage, [], impl);
     await saveGroupState(userId, conversationId, userGroup);
     
@@ -345,12 +395,53 @@ async function inviteAccept(userId, conversationId, welcome) {
             throw new Error("Expected a welcome");
         }
 
-        const user = await makeUser(userId, impl);
-        let acceptInvite = await joinGroup(decodedWelcome.welcome, user.publicPackage, user.privatePackage, emptyPskIndex, impl);
+        const user = await getUserKeyPackage(userId);
+        let acceptInvite;
+        try {
+            acceptInvite = await joinGroup(decodedWelcome.welcome, user.publicPackage, user.privatePackage, emptyPskIndex, impl);
+        } catch (e) {
+            const oldKeys = await getOldKeyPackage(userId);
+            for(const oldKey of oldKeys.toReversed()) {
+                try {
+                    acceptInvite = await joinGroup(decodedWelcome.welcome, oldKey.keyPackage.publicPackage, oldKey.keyPackage.privatePackage, emptyPskIndex, impl);
+                    break;
+                } catch {}
+            }
+        }
+        if(acceptInvite === undefined) {
+            throw new Error("No valid keys")
+        }
+                
 
         await saveGroupState(userId, conversationId, acceptInvite);
     });
 }
+
+//rotate keys with empty commit
+async function rotateGroupKeys(userId, conversationId, sendCommit) {
+    return withGroupLock(userId, conversationId, async () => {
+        let groupState = await loadGroupState(userId, conversationId);
+        const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
+        
+        const oldEpoch = Number(groupState.groupContext.epoch);
+        const commit = await createCommit({state: groupState, cipherSuite: impl})
+        
+        groupState = commit.newState;
+        commit.consumed.forEach(zeroOutUint8Array);
+        
+        const encodedCommit = toBase64(encodeMlsMessage(commit.commit))
+        const res = await sendCommit(encodedCommit, oldEpoch, conversationId)
+        if (!res) {
+            throw new Error("Commit failed");
+        }
+        
+        await saveGroupState(userId, conversationId, groupState);
+        await setRotationTimestamp(userId, conversationId, Date.now());
+        
+        return {commit: encodedCommit}
+    })
+}
+
 
 //adding new users to the group
 async function inviteUsersToGroup(userId, conversationId, newMembers, sendCommit) {
@@ -468,10 +559,21 @@ async function getMyKeyPackage(userId){
     let keyPackage = await get(`user:${userId}`);
     if(keyPackage === undefined) {
         const impl = await getCiphersuiteImpl(getCiphersuiteFromName(SUITE));
-        keyPackage = await makeUser(userId, impl);
+        keyPackage = await getUserKeyPackage(userId);
     }
     return toBase64(encodeMlsMessage({ keyPackage: keyPackage.publicPackage, wireformat: "mls_key_package", version: "mls10" }));
 }
+
+async function lastRotationTimestamp(userId, conversationId) {
+    return (await get(`${userId}:history:${conversationId}:lastRotation`) ?? Date.now() - (10 * 24 * 60 * 60 * 1000));
+}
+async function setRotationTimestamp(userId, conversationId, time){
+    await set(`${userId}:history:${conversationId}:lastRotation`, time);
+}
+async function deleteRotationTimestamp(userId, conversationId){
+    await del(`${userId}:history:${conversationId}:lastRotation`);
+}
+
 
 async function saveToHistory(userId, conversationId, entry) {
     await update(`${userId}:history:${conversationId}`, (oldValue) => {
@@ -491,6 +593,7 @@ async function loadFromHistory(userId, conversationId) {
 }
 
 async function deleteGroupState(userId, conversationId) {
+    await deleteRotationTimestamp(userId, conversationId);
     await del(`${userId}:group:${conversationId}`);
 }
 
@@ -506,6 +609,10 @@ window.e2ee = {
     deleteGroupState,
     removeUsersFromGroup,
     getGroupMembersFromGroupState,
+    generateNewKeyPackage,
+    rotateGroupKeys,
+    lastRotationTimestamp,
+    setRotationTimestamp,
     // tests, remove later
     testGroupFlow,
     testInviteFlow,

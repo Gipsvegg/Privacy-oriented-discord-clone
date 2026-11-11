@@ -527,16 +527,6 @@ namespace ikt201_project.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ikt201_project.Models.Category", b =>
-                {
-                    b.Navigation("Channels");
-                });
-
-            modelBuilder.Entity("ikt201_project.Models.Server", b =>
-                {
-                    b.Navigation("Categories");
-                });
-
             modelBuilder.Entity("ikt201_project.Models.ConversationMember", b =>
                 {
                     b.HasOne("ikt201_project.Models.Conversation", "Conversation")
@@ -640,6 +630,11 @@ namespace ikt201_project.Data.Migrations
                     b.Navigation("Sender");
                 });
 
+            modelBuilder.Entity("ikt201_project.Models.Category", b =>
+                {
+                    b.Navigation("Channels");
+                });
+
             modelBuilder.Entity("ikt201_project.Models.Conversation", b =>
                 {
                     b.Navigation("ConversationMembers");
@@ -647,6 +642,11 @@ namespace ikt201_project.Data.Migrations
                     b.Navigation("Invites");
 
                     b.Navigation("Messages");
+                });
+
+            modelBuilder.Entity("ikt201_project.Models.Server", b =>
+                {
+                    b.Navigation("Categories");
                 });
 #pragma warning restore 612, 618
         }

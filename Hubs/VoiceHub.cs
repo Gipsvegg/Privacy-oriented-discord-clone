@@ -48,13 +48,14 @@ public class VoiceHub : Hub
     // Someone joined a room, people already in the room will send offer
     public async Task JoinRoom(string conversationId)
     {
+        if(!Guid.TryParse(conversationId, out _)) throw new HubException("invalid id");
         var isMember = await _db.ConversationMembers.AnyAsync(m => m.ConversationId == conversationId && m.MemberId == Context.UserIdentifier);
         if (!isMember) throw new HubException("You are not in this conversation");
-
+        
         await LeaveRoom();
         _inCall[Context.ConnectionId] = new CallUser(conversationId, Context.User?.Identity?.Name ?? "");
         await Groups.AddToGroupAsync(Context.ConnectionId, conversationId);
-        await Clients.OthersInGroup(conversationId).SendAsync("UserJoined", Context.ConnectionId, Context.User?.Identity?.Name);
+        await Clients.OthersInGroup(conversationId).SendAsync("UserJoined", Context.ConnectionId, Context.User?.Identity?.Name, Context.UserIdentifier);
         await SendCallChanged(conversationId);
     }
 
@@ -89,6 +90,6 @@ public class VoiceHub : Hub
         _inCall.TryGetValue(connectionId, out var them);
         if (me == null || them == null || me.ConversationId != them.ConversationId) return;
 
-        await Clients.Client(connectionId).SendAsync("Signal", Context.ConnectionId, Context.User?.Identity?.Name, data);
+        await Clients.Client(connectionId).SendAsync("Signal", Context.ConnectionId, Context.User?.Identity?.Name, Context.UserIdentifier, data);
     }
 }

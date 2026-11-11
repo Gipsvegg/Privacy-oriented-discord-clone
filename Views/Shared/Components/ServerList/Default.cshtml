@@ -23,7 +23,7 @@
                                 <a asp-action="Homepage" asp-route-serverId="@s.Id" class="srv-link" draggable="false">@s.Name</a>
                             }
                             <button type="button" class="srv-edit" title="Edit server"
-                                    data-id="@s.Id" data-name="@s.Name">✎</button>
+                                    data-id="@s.Id" data-name="@s.Name"><i class="bi bi-pencil"></i></button>
                         </div>
 
                         @* Channels come from CurrentServer, the only server loaded with its channels.
@@ -38,7 +38,7 @@
                                         <div class="srv-category" draggable="true">
                                             <span>@cat.Name</span>
                                             <button type="button" class="srv-cat-edit" title="Edit category"
-                                                    data-id="@cat.Id" data-name="@cat.Name">✎</button>
+                                                    data-id="@cat.Id" data-name="@cat.Name"><i class="bi bi-pencil"></i></button>
                                             <button type="button" class="srv-cat-add" title="Add channel"
                                                     data-category-id="@cat.Id" data-category-name="@cat.Name">+</button>
                                         </div>
@@ -48,11 +48,21 @@
                                             {
                                                 <div class="srv-chan-row @(ch.Id == Model.CurrentChannel?.Id ? "active" : "")"
                                                      draggable="true" data-channel-id="@ch.Id">
-                                                    <a asp-action="Homepage" asp-route-serverId="@s.Id" asp-route-channelId="@ch.Id"
-                                                       class="srv-channel" draggable="false">@(ch.Type == ChannelType.Voice ? "🔊" : "#") @ch.Name</a>
+                                                    <a asp-action="Homepage" asp-route-serverId="@s.Id" asp-route-channelId="@ch.Id" class="srv-channel" draggable="false">
+                                                        @{
+                                                            if (ch.Type == ChannelType.Voice)
+                                                            {
+                                                                <i class="bi bi-megaphone"></i> @ch.Name
+                                                            }
+                                                            else
+                                                            {
+                                                                <i>#</i> @ch.Name
+                                                            }
+                                                        }
+                                                    </a>
                                                     <button type="button" class="srv-chan-edit" title="Edit channel"
                                                             data-id="@ch.Id" data-name="@ch.Name" data-type="@ch.Type"
-                                                            data-readonly="@(ch.ReadOnly ? "true" : "false")">✎</button>
+                                                            data-readonly="@(ch.ReadOnly ? "true" : "false")"><i class="bi bi-pencil"></i></button>
                                                 </div>
                                             }
                                         </div>

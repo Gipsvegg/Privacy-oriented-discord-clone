@@ -10,8 +10,8 @@ else
     {
         if (friend.ConversationId != null)
         {
-            <a class="friend" data-conversation-id="@friend.ConversationId" asp-controller="Dashboard" asp-action="Conversation" asp-route-id="@friend.ConversationId">
-                @friend.Name<b class="unread" data-conversation-id="@friend.ConversationId" hidden></b><partial name="_CallCount" model="(friend.ConversationId, true)"/>
+            <a class="friend" data-friend-id="@friend.Id" data-conversation-id="@friend.ConversationId" asp-controller="Dashboard" asp-action="Conversation" asp-route-id="@friend.ConversationId">
+                <span class="friend-text">@friend.Name</span><b class="unread" data-conversation-id="@friend.ConversationId" hidden></b><partial name="_CallCount" model="(friend.ConversationId, true)"/>
             </a>
         }
         else

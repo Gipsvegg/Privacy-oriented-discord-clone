@@ -10,12 +10,12 @@
         </div>
     </dialog>
 }
-
-@{//Dialog boksen for å lage en gruppe
+else
+{//Dialog boksen for å lage en gruppe
     <dialog id="group-dialog">
         <form id="group-form">
             <h6 class="text-center">New group</h6>
-            <input name="groupName" class="dialog-input" placeholder="Group name" maxlength="50" autocomplete="off" required/>
+            <input name="groupName" class="dialog-input" placeholder="Group name" maxlength="30" autocomplete="off" required/>
             @foreach (var friend in Model)
             {
                 <label class="member-option">

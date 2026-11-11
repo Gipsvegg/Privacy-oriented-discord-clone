@@ -1,42 +1,55 @@
 ﻿@using System.Security.Claims
 
+@{
+    var name = User.FindFirstValue(ClaimTypes.Name);
+    var uuid = User.FindFirstValue(ClaimTypes.NameIdentifier);
+}
+
 <div class="sidebar">
+    @if (ViewContext.RouteData.Values["action"]?.ToString() == "Friends")
+    {
+        <a class="active manage-friends" asp-controller="Dashboard" asp-action="Friends"><i class="bi bi-people-fill"></i>  Manage friends</a>
+    }
+    else
+    {
+        <a class="manage-friends" asp-controller="Dashboard" asp-action="Friends"><i class="bi bi-people"></i>  Manage friends</a>
+    }
     <div class="sidebar-section">
-        <h6 class="text-center">Username and UUID</h6>
-        <p>@User.FindFirstValue(ClaimTypes.Name)</p>
-        <p data-uuid="@User.FindFirstValue(ClaimTypes.NameIdentifier)" data-username="@User.FindFirstValue(ClaimTypes.Name)" id="uuid">@User.FindFirstValue(ClaimTypes.NameIdentifier)</p>
+        <h6 class="text-center">Friends</h6>
+        <div id="friends-list">
+            @await Component.InvokeAsync("FriendsList")
+        </div>
     </div>
     <div class="sidebar-section">
         <h6 class="text-center" type="button">
             <button id="open-group-creator" type="button" class="group-button">
-                <h6>Friends & Groups</h6>
+                <h6>Groups</h6>
                 <i class="bi bi-plus"></i>
             </button>
         </h6>
-        
-        @if (ViewContext.RouteData.Values["action"]?.ToString() == "Friends")
-        {
-            <a class="active" asp-controller="Dashboard" asp-action="Friends">Manage friends</a>
-        }
-        else
-        {
-            <a asp-controller="Dashboard" asp-action="Friends">Manage friends</a>
-        }
-        
-        <div id="friends-list">
-            @await Component.InvokeAsync("FriendsList")
-        </div>
-        
         <div id="groups-list">
-            @await Component.InvokeAsync("GroupsList")    
+            @await Component.InvokeAsync("GroupsList")
         </div>
-        
-        
     </div>
     <div class="sidebar-section">
         <h6 class="text-center">Town-squares</h6>
         @await Component.InvokeAsync("ServerList")
     </div>
-    <partial name="_VoiceChat" />
+    
+    <div class="voice-island">
+        <div class="voice-slot">
+            <partial name="_VoiceChat"/>
+        </div>
+        <div class="user-island">
+            <a class="settings-icon" asp-area="Identity" asp-page="/Account/Manage/Index">
+                <p id="uuid" class="user-info" data-uuid="@uuid" data-username="@name">@name <i class="bi bi-gear"></i></p>
+            </a>
+            <button id="voice-mute" type="button" class="btn btn-sm btn-outline-secondary" title="Mute"><i class="bi bi-mic-fill"></i></button>
+            <button id="voice-deafen" type="button" class="btn btn-sm btn-outline-secondary" title="Deafen"><i class="bi bi-headphones"></i></button>
+        </div>
+    </div>
 </div>
-@await Component.InvokeAsync("FriendsList", new {invoker = "groupCreator"})
+<div id="group-creator-dialog">
+    @await Component.InvokeAsync("FriendsList", new { invoker = "groupCreator" })
+</div>
+

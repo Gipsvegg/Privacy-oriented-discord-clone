@@ -1,30 +1,81 @@
 ﻿@using System.Security.Claims
 @model Group
 
+@{
+    var inVoiceCall = ikt201_project.Hubs.VoiceHub.NamesInCall(Model.ConversationId);
+}
+
 <div class="conversation-information-window">
     @if (!Model.IsDirect)
     {
         var me = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var isAdmin = Model.Members.Any(m => m.MemberId == me && m.Role == "admin"); 
-        <h6>Members</h6>
-        foreach (var member in Model.Members.OrderBy(m => m.Role))
-        {
-            if (isAdmin && member.Role != "admin")
-            {
-                <div class="member-control" data-member-id="@member.MemberId">
-                    <p class="members">@member.MemberName : @member.Role</p>
-                    <button type="button" class="kill-button" data-conversation-id="@Model.ConversationId">Dissipate</button>
+        var myRole = Model.Members.FirstOrDefault(m => m.MemberId == me)?.Role ?? Role.None;
+        var currentRole = Model.Members.OrderBy(m => m.Role).FirstOrDefault()?.Role ?? Role.None;
+        var changed = true;
+        <h6 class="member-list">
+            Members
+            <div class="group-control">
+                <button id="open-group-invitor" type="button"><i class="bi bi-person-add"></i></button>
+                <div class="dropdown">
+                    <button id="group-control" class="member-control" type="button"><i class="bi bi-three-dots"></i></button>
+                    <ul class="dropdown-menu">
+                        <li><button id="open-group-renamer" class="dropdown-item" type="button"><i class="bi bi-pencil-square"></i> Rename group</button></li>
+                        <li><hr class="dropdown-divider"/></li>
+                        <li><button id="open-group-leaver" data-conversation-id="@Model.ConversationId" type="button" class="text-danger dropdown-item"><i class="bi bi-box-arrow-right"></i> Leave group</button></li>
+                    </ul>
                 </div>
-            }
-            else
+            </div>
+        </h6>
+        foreach (var member in Model.Members.OrderByDescending(m => m.Role))
+        {
+            if (member.Role != currentRole)
             {
-                <p class="member-control members" data-member-id="@member.MemberId">@member.MemberName : @member.Role</p>
+                changed = true;
+                currentRole = member.Role;
             }
+            if (changed)
+            {
+                <p class="roles">@currentRole - @Model.Members.Count(m => m.Role == currentRole)</p>
+                changed = false;
+            }
+            
+            <div class="dropdown">
+                <button class="member-control" data-member-id="@member.MemberId">
+                    @member.MemberName
+                    @if (inVoiceCall.Contains(member.MemberName))
+                    {
+                        <i class="bi bi-headset call-status"></i>
+                    }
+                </button>
+                
+                <ul class="dropdown-menu">
+                    @if (!ViewBag.FriendIds.Contains(member.MemberId) && me != member.MemberId)
+                    {
+                        <li><button class="dropdown-item add-friend">Add friend</button></li>
+                    }
+                    else
+                    {
+                        if (member.MemberId != me)
+                        {
+                            <li class="dropdown-item send-dm">Message</li>
+                        }
+                        else
+                        {
+                            <li class="dropdown-item">Fake button</li>
+                        }
+                    }
+                    @if(Roles.IsAllowed(myRole, Permissions.Promote) && Roles.IsHigherRank(myRole, member.Role))
+                    {
+                        <li><button class="dropdown-item promote" data-role="Admin">Make admin</button></li>
+                    }
+                    @if(Roles.IsAllowed(myRole, Permissions.Kick) && Roles.IsHigherRank(myRole, member.Role))
+                    {
+                        <li><hr class="dropdown-divider"/></li>
+                        <li><button class="dropdown-item text-danger kill-button">Dissipate</button></li>
+                    }
+                </ul>
+            </div>
         }
-        <div class="group-button">
-            <button id="open-group-invitor" type="button">add</button>
-            <button id="open-group-leaver" data-conversation-id="@Model.ConversationId" type="button" class="btn-outline-danger">leave</button>
-        </div>
     }
     else
     {
@@ -40,4 +91,15 @@
         }
     }
 </div>
-@await Component.InvokeAsync("FriendsList", new {invoker = "addToGroup", conversationId = Model.ConversationId})
+@await Component.InvokeAsync("FriendsList", new { invoker = "addToGroup", conversationId = Model.ConversationId })
+
+<dialog id="rename-group-dialog" class="group-dialog">
+    <form>
+        <h6 class="text-center">Rename group</h6>
+        <input id="group-name-input" name="groupName" class="dialog-input" placeholder="@Model.ConversationName" maxlength="30" autocomplete="off"/>
+        <div class="dialog-buttons">
+            <button type="submit" id="rename-group">Rename</button>
+            <button type="button" id="group-cancel">Cancel</button>
+        </div>
+    </form>
+</dialog>

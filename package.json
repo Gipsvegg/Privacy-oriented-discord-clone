@@ -1,11 +1,13 @@
 {
   "name": "ikt201",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "esbuild ClientApp/crypto.js --bundle --minify --format=esm --outfile=wwwroot/js/crypto.bundle.js"
+    "build-crypto": "esbuild ClientApp/crypto.js --bundle --minify --format=esm --outfile=wwwroot/js/crypto.bundle.js",
+    "build-markdown": "esbuild ClientApp/markdown-render.js --bundle --minify --format=esm --outfile=wwwroot/js/markdown-render.bundle.js",
+    "build": "npm run build-crypto && npm run build-markdown"
   },
   "repository": {
     "type": "git",
@@ -17,7 +19,9 @@
   "type": "commonjs",
   "dependencies": {
     "@noble/curves": "^2.0.1",
+    "dompurify": "^3.4.17",
     "idb-keyval": "^6.3.0",
+    "markdown-it": "^15.0.3",
     "ts-mls": "^1.6.4"
   },
   "devDependencies": {

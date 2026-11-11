@@ -26,7 +26,7 @@ const incomingBox = document.getElementById("incoming-call");
 const incomingText = document.getElementById("incoming-text");
 const myName = document.getElementById("uuid")?.dataset.username;
 
-const ringSound = new Audio("/sounds/ring.wav");
+const ringSound = new Audio("/sounds/bass_ring.mp3");
 ringSound.loop = true;
 const ringSeconds = 30; // hvor lenge det ringer før lyden stopper
 
@@ -40,18 +40,11 @@ function updatePeopleCount() {
     peopleCount.textContent = peopleList.children.length;
 }
 
-// use speakers and volume from audio settings
-function applySpeaker(audio, volume = 1) {
-    audio.volume = volume * Number(localStorage.getItem("output-volume") ?? 100) / 100;
-    const speaker = localStorage.getItem("audio-output");
-    if (speaker && audio.setSinkId) audio.setSinkId(speaker).catch(console.error);
-}
-
 function chatName(conversationId) {
-    return document.querySelector(`.sidebar a.friend[data-conversation-id="${conversationId}"]`)?.firstChild.textContent.trim();
+    return document.querySelector(`.sidebar a.friend[data-conversation-id="${conversationId}"] span.friend-text`)?.textContent.trim() ?? "Unknown conversation";
 }
 
-function createPeer(id, username) {
+function createPeer(id, username, userId) {
     const peer = new RTCPeerConnection(rtcConfig);
     peers[id] = peer;
 
@@ -79,9 +72,9 @@ function createPeer(id, username) {
     volume.type = "range";
     volume.className = "form-range";
     volume.title = "Volume for " + username;
-    volume.value = localStorage.getItem("volume-" + username) ?? 100;
+    volume.value = localStorage.getItem("volume-" + userId) ?? 100;
     volume.addEventListener("input", () => {
-        localStorage.setItem("volume-" + username, volume.value);
+        localStorage.setItem("volume-" + userId, volume.value);
         applySpeaker(audio, volume.value / 100);
     });
     applySpeaker(audio, volume.value / 100);
@@ -111,18 +104,19 @@ function removePeer(id) {
 }
 
 // Someone joined the call, we send them an offer
-hub.on("UserJoined", async (id, username) => {
-    const peer = createPeer(id, username);
+hub.on("UserJoined", async (id, username, userId) => {
+    const peer = createPeer(id, username, userId);
     await peer.setLocalDescription(await peer.createOffer());
     await hub.invoke("SendSignal", id, JSON.stringify({ description: peer.localDescription }));
+    playSound("callJoined")
 });
 
 // A message from someone else. an offer, an answer, or an ICE candidate
-hub.on("Signal", async (id, username, data) => {
+hub.on("Signal", async (id, username, userId, data) => {
     const message = JSON.parse(data);
 
     if (message.description?.type === "offer") {
-        const peer = createPeer(id, username);
+        const peer = createPeer(id, username, userId);
         await peer.setRemoteDescription(message.description);
         await peer.setLocalDescription(await peer.createAnswer());
         await hub.invoke("SendSignal", id, JSON.stringify({ description: peer.localDescription }));
@@ -133,10 +127,13 @@ hub.on("Signal", async (id, username, data) => {
     }
 });
 
-hub.on("UserLeft", id => removePeer(id));
+hub.on("UserLeft", id => {
+    removePeer(id)
+    playSound("callLeft")
+});
 
 // Someone joined or left a call in one of our chats, update the number next to it
-hub.on("CallChanged", (conversationId, names) => {
+hub.on("CallChanged", async (conversationId, names) => {
     const counts = document.querySelectorAll(`.call-count[data-conversation-id="${conversationId}"]`);
     const isDm = counts[0]?.classList.contains("dm");
 
@@ -155,12 +152,14 @@ hub.on("CallChanged", (conversationId, names) => {
         element.hidden = names.length === 0;
     });
     updateCallUI();
+    await refreshMemberList(conversationId);
+    
 });
 
 function startRinging(conversationId, text) {
     ringingCall = conversationId;
     incomingText.textContent = text;
-    incomingBox.hidden = false;
+    incomingBox.classList.add("open");
     ringSound.currentTime = 0;
     applySpeaker(ringSound);
     ringSound.play().catch(() => {});
@@ -170,7 +169,7 @@ function startRinging(conversationId, text) {
 
 function stopRinging() {
     ringingCall = null;
-    incomingBox.hidden = true;
+    incomingBox.classList.remove("open");
     ringSound.pause();
     clearTimeout(ringTimeout);
 }
@@ -234,7 +233,7 @@ async function joinCall(conversationId) {
         currentCall = conversationId;
         callNameText.textContent = chatName(conversationId);
         statusText.hidden = true;
-        inCallBox.hidden = false;
+        inCallBox.classList.add("open")
         updateCallUI();
     } catch (error) {
         console.error(error);
@@ -243,6 +242,7 @@ async function joinCall(conversationId) {
         if (error.message.includes("HubException: ")) showStatus(error.message.split("HubException: ")[1], true);
         else showStatus("Could not join the call, try again", true);
     }
+    playSound("callJoined")
 }
 
 async function leaveCall() {
@@ -251,8 +251,8 @@ async function leaveCall() {
     setDeafened(false);
     microphone.getTracks().forEach(track => track.stop());
     currentCall = null;
-    showStatus("Not in a call");
-    inCallBox.hidden = true;
+    statusText.hidden = true;
+    inCallBox.classList.remove("open");
     updateCallUI();
 }
 
@@ -284,8 +284,22 @@ document.getElementById("incoming-join").addEventListener("click", async () => {
 });
 
 document.getElementById("incoming-ignore").addEventListener("click", stopRinging);
-muteButton.addEventListener("click", () => setMuted(!muted));
-deafenButton.addEventListener("click", () => setDeafened(!deafened));
+muteButton.addEventListener("click", () => {
+    setMuted(!muted)
+    if(muted === true){
+        playSound("mute")
+    } else {
+        playSound("unmute")
+    }
+});
+deafenButton.addEventListener("click", () => {
+    setDeafened(!deafened)
+    if(deafened === true){
+        playSound("deafen")
+    } else {
+        playSound("undeafen")
+    }
+});
 leaveButton.addEventListener("click", leaveCall);
 
 // leave call if kicked from group
